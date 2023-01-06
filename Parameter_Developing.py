@@ -70,8 +70,8 @@ def rep_test(rep, view_lock = False):
             
         print(time.time()-t)
 
-        with open('field_data.json', 'w') as f:
-            json.dump(received_data, f, indent=2)
+        '''with open('field_data.json', 'w') as f:
+            json.dump(received_data, f, indent=2)'''
         
         #b = a.next_generation(3)
         a = Evolve(prev_scoresum = a.scoresum, nn=nn)

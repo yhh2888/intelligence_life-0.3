@@ -54,6 +54,13 @@ class Game:
                 regame = False
             if (keys[pygame.K_ESCAPE]):
                 regame = False
+
+    def networkfeed(self, view):
+        if 'nn' in dir(self):
+            max_dir = np.argmax(self.nn.update(view))
+            max_value = max(self.nn.update(view))
+            if 0<=max_dir<=3 and max_value>0.13:
+                return ['right', 'down', 'left', 'up'][max_dir]
                 
                     
     def run(self):
@@ -193,7 +200,7 @@ class Game:
         mapkde.Z = mapkde.kde_distribution(*kdeval, 0.15, 1) + mapkde.kde_distribution(*kdeval, 0.15, 0.8)
         sightkde = [mapkde.Z[self.snake.x-sighthalf+i][self.snake.y-sighthalf+j]
                         for i in range(-sighthalf, sighthalf+1) for j in range(-sighthalf, sighthalf+1)]
-
+        
         while running:
             #time_per1 = time.time()
             self.eventer_time += 1
@@ -234,7 +241,8 @@ class Game:
             
             movedir = [0,0,0,0]
             if avoidloc == None:
-                '''avoidloc = avoider(self.mobs.moblist, 20, 10, [self.snake.x, self.snake.y])'''
+                pass
+                #avoidloc = avoider(self.mobs.moblist, 20, 10, [self.snake.x, self.snake.y])
             elif avoidloc != None:
                 nearest = distance_response(distance(mobxys, [self.snake.x, self.snake.y])).nearest_response(mobxys)[0]
                 avoidaim = [self.snake.x+avoidloc[0], self.snake.y+avoidloc[1]]
@@ -259,19 +267,24 @@ class Game:
                 avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
                 
                 if pluslist == [1, 0]:
-                    self.snake.move_code('right')
+                    #self.snake.move_code('right')
                     movedir = [1, 0, 0, 0]
                 elif pluslist == [-1, 0]:
-                    self.snake.move_code('left')
+                    #self.snake.move_code('left')
                     movedir = [0, 0, 1, 0]
                 elif pluslist == [0, 1]:
-                    self.snake.move_code('down')
+                    #self.snake.move_code('down')
                     movedir = [0, 1, 0, 0]
                 elif pluslist == [0, -1]:
-                    self.snake.move_code('up')
+                    #self.snake.move_code('up')
                     movedir = [0, 0, 0, 1]
                 if avoidloc == [0, 0]:
                     avoidloc = None
+            if 'data' in locals():
+                feed = self.networkfeed(data[0][0])
+                if feed != None:
+                    self.snake.move_code(feed)
+            
 
             # attack page --------------------------------------------------------------------------------------
             
@@ -333,9 +346,9 @@ class Game:
                     #plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
                     #plt.show()
                     
-                    '''wait += 1
+                    wait += 1
                     
-                    if sew > 100 and wait > 60:
+                    if sew > 10 and wait > 30:
                         print(mobxys)
                         plt.imshow(np.array(sightkde).reshape(11, 11)[::-1], cmap=plt.cm.gist_earth_r, extent=[self.snake.x-5, self.snake.x+6, self.snake.y-5, self.snake.y+6])
                         plt.show()                        
@@ -346,7 +359,7 @@ class Game:
                         
                         
                         sew = 0
-                    sew += 1'''
+                    sew += 1
                     
             if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] \
                 or (not 6<=self.snake.x<=self.display_width[0]/self.size-6) \

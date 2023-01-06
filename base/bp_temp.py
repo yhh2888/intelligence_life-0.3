@@ -5,12 +5,15 @@ from time import perf_counter as perfc
 import traceback
 from datetime import datetime
 
-import sys, random, json, time
+import os.path
+import sys, random, json, time, os
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPainter, QColor, QFont, QPen, QBrush, QPainterPath, QPalette
 from PyQt5.QtCore import Qt, QTimer
 
 random.seed(777)
+
+path = r'C:\Users\KCDC\Desktop\intelligence life'
 
 def distrib_analyze(points):
     rdlum = [0]*5
@@ -150,7 +153,8 @@ class NeuralNetwork:
     def train(self, patterns, real_data = False):
         self.real_data = real_data
         if self.real_data == True:
-            with open('field_data.json') as f:
+            path1 = path + '\\' + 'field_data.json'
+            with open(path1) as f:
                 realdata = json.load(f)[0]
         
         print("layers : " + str(self.lengths))
@@ -200,12 +204,12 @@ class NeuralNetwork:
             'weights' : self.weights
             }]
         
-        filename = filename + '.json'
+        filename = path + '\\' + filename + '.json'
         with open(filename, 'w') as f:
             json.dump(neuron_data, f, indent=2)
 
     def load(self, filename):
-        filename = filename + '.json'
+        filename = path + '\\' + filename + '.json'
         with open(filename) as f:
             neuron_data = json.load(f)
         self.lengths = neuron_data[-1]['layers']
@@ -234,7 +238,8 @@ class NeuronViewer(QWidget):
         self.objects = [[0 for i in range(int(self.network.lengths[0]-1))] for j in range(int(self.network.lengths[0]-1))]
 
         if self.network.real_data == True:
-            with open('field_data.json') as f:
+            path1 = path + '\\' + 'field_data.json'
+            with open(path1) as f:
                 self.realdata = json.load(f)[0]
         self.realdata_num = 0
 
@@ -504,7 +509,7 @@ class NeuronViewer(QWidget):
 
     def data_preload(self, filename):
         self.items = []
-        self.filename = filename + '.json'
+        self.filename = path + '\\' + filename + '.json'
         with open(self.filename) as f:
             self.nndata = json.load(f)
         number = 1
@@ -556,7 +561,7 @@ if __name__ == '__main__':
 
     #all_neurons(data)
     t = time.time()
-    n = NeuralNetwork(layer=[11**2, 15, 15, 15, 5], iterations=1000)
+    n = NeuralNetwork(layer=[11**2, 15, 15, 15, 5], iterations=1)
     n.load('test')
     # 학습 실행
     n.train(data, real_data = True)

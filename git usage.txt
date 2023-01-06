@@ -23,3 +23,5 @@ git checkout master
 git branch main master
 git checkout main
 git push <repo> master
+
+안될 시 방법 : 새롭게 폴더 생성해서 거기서 진행
