@@ -1,0 +1,25 @@
+git init
+git status
+git config --global user.email "yhh2888@naver.com"
+(git remote add <repo> <paste>)
+git pull origin main
+
+<modification>
+
+git add .
+git commit -m "message"
+git push <repo> master
+git checkout master
+git branch main master
+git checkout main
+git push <repo> master
+
+주의 : 절대 깃헙에 있는 파일이 폴더에 없이 push하면 안됨
+
+리셋
+git reset --hard <version>
+git push <repo> +master
+git checkout master
+git branch main master
+git checkout main
+git push <repo> master
