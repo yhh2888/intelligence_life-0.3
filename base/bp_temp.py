@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QTimer
 
 random.seed(777)
 
-path = r'C:\Users\KCDC\Desktop\intelligence life'
+path = r'C:\Users\hyunhoyang\Desktop\Intelligence Life'
 
 def distrib_analyze(points):
     rdlum = [0]*5
@@ -561,10 +561,10 @@ if __name__ == '__main__':
 
     #all_neurons(data)
     t = time.time()
-    n = NeuralNetwork(layer=[11**2, 15, 15, 15, 5], iterations=1)
-    n.load('test')
+    n = NeuralNetwork(layer=[15**2, 20, 15, 15, 5], iterations=1)
+    #n.load('test')
     # 학습 실행
-    n.train(data, real_data = True)
+    n.train(data)
     print(time.time()-t)
 
     # 결괏값 출력
