@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QTimer
 
 random.seed(777)
 
-path = r'C:\Users\KCDC\Desktop\intelligence life'
+path = r'C:\Users\hyunhoyang\Desktop\Intelligence Life'
 
 def distrib_analyze(points):
     rdlum = [0]*5
@@ -35,20 +35,7 @@ def distrib_analyze(points):
     
 # 입력값 및 타겟값 XOR문제
 data = [[[random.random() for i in range(49)], [random.random()]] for j in range(5)]
-'''data=[[[0], [0]],
-[[0, 1], [1]],
-[[1, 0], [1]],
-[[1, 1], [0]]]'''
 
-# 실행 횟수(iterations), 학습률(lr), 모멘텀 계수(mo) 설정
-
-
-# 활성화 함수 - 1. 시그모이드
-# 미분할 때와 아닐 때의 각각의 값
-def sigmoid(x, derivative=False):
-    if (derivative == True):
-        return x * (1 - x)
-    return 1 / (1 + np.exp(-x))
 
 # 활성화 함수 - 2. tanh
 # tanh 함수의 미분은 1 - (활성화 함수 출력의 제곱)
@@ -561,7 +548,11 @@ if __name__ == '__main__':
 
     #all_neurons(data)
     t = time.time()
+<<<<<<< HEAD
     n = NeuralNetwork(layer=[11**2, 25, 15, 15, 15, 15, 5], iterations=1)
+=======
+    n = NeuralNetwork(layer=[15**2, 20, 15, 15, 5], iterations=1)
+>>>>>>> ea8cfda91f10d2357dbc3164e9f2b32a3c4506fe
     #n.load('test')
     # 학습 실행
     n.train(data)
