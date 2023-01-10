@@ -29,8 +29,8 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
 
         networks = []
-
-        for i in range(len(layer)-1):
+        self.layers = layer
+        for i in range(len(self.layers)-1):
             networks.append(nn.Linear(layer[i], layer[i+1]))
             if i != len(layer)-1:
                 networks.append(nn.ReLU())
@@ -91,3 +91,11 @@ epochs = 100
     train_loop(train_dataloader, model, loss_fn, optimizer)
     test_loop(test_dataloader, model, loss_fn)'''
 print("Done!")
+'''melody = [[] for i in range(len(model.layers)*2-2)]
+for i, (X, y) in enumerate(train_dataloader):
+    X = model.flatten(X)
+    melody[0].append(model.linear_relu_stack[0](X))
+
+for i in range(len(melody)-1):
+    for j in range(len(melody[i])):
+	melody[i+1].append(model.linear_relu_stack[i+1](melody[i][j]))'''
