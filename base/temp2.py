@@ -42,7 +42,7 @@ class NeuralNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-model = NeuralNetwork([28*28, 512, 512, 512, 10])
+model = NeuralNetwork([10*10, 512, 512, 512, 10])
 
 learning_rate = 1e-3
 batch_size = 64
@@ -85,7 +85,7 @@ def test_loop(dataloader, model, loss_fn):
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-epochs = 100
+epochs = 10
 '''for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
