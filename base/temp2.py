@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
 
-with open(r'C:\Users\KCDC\Desktop\intelligence life\field_data.json') as f:
+with open(r'C:\Users\hyunhoyang\Desktop\Intelligence Life\field_data.json') as f:
 	p = json.load(f)[0]
 
 for i in range(len(p)):
@@ -13,7 +13,7 @@ for i in range(len(p)):
 	p[i][1] = torch.tensor(p[i][1])
 	p[i] = tuple(p[i])
 
-p_ = DataLoader(p)
+p_ = DataLoader(p, batch_size=64)
 
 torch.set_num_threads(2)
 
@@ -59,6 +59,7 @@ learning_rate = 1e-3
 batch_size = 64
 
 loss_fn = nn.CrossEntropyLoss()
+loss_fn = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 def train_loop(dataloader, model, loss_fn, optimizer):
@@ -66,7 +67,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
     for batch, (X, y) in enumerate(dataloader):
         # 예측(prediction)과 손실(loss) 계산
         pred = model(X)
-        loss = loss_fn(pred, y)
+        loss = loss_fn(pred, y.float())
 
         # 역전파
         optimizer.zero_grad()
@@ -86,31 +87,19 @@ def test_loop(dataloader, model, loss_fn):
     with torch.no_grad():
         for X, y in dataloader:
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            test_loss += loss_fn(pred, y.float()).item()
+            correct += (pred.argmax(1) == y.float()).type(torch.float).sum().item()
 
     test_loss /= num_batches
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-def loss_func(x, y):
-    return sum(y-x)
-
-loss_fn = loss_func
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 epochs = 10
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
-    '''test_loop(test_dataloader, model, loss_fn)'''
+    test_loop(train_dataloader, model, loss_fn)
 print("Done!")
-'''
-melody = [[] for i in range(len(model.layers)*2-2)]
-for i, (X, y) in enumerate(train_dataloader):
-    X = model.flatten(X)
-    melody[0].append(model.linear_relu_stack[0](X))
-for i in range(len(melody)-1):
-    for j in range(len(melody[i])):
-	melody[i+1].append(model.linear_relu_stack[i+1](melody[i][j]))
-'''
+        
