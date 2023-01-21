@@ -1,0 +1,8 @@
+loss_fn = nn.BCEWithLogitsLoss()
+>>> model = NeuralNetwork([11*11, 512, 128, 5])
+>>> train_dataloader = DataLoader(p, batch_size=64)
+>>> 
+>>> for t in range(epochs):
+    print(f"Epoch {t+1}\n-------------------------------")
+    train_loop(train_dataloader, model, loss_fn, optimizer)
+    test_loop(train_dataloader, model, loss_fn)
