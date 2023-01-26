@@ -4,8 +4,9 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
 import numpy as np
+import time
 
-with open(r'C:\Users\KDCA\Desktop\intelligence life\field_data.json') as f:
+with open(r'C:\Users\hyunhoyang\Desktop\Intelligence Life\field_data.json') as f:
         p = json.load(f)
 
 #preprocessing data
@@ -45,7 +46,7 @@ p_ = DataLoader(p, batch_size=350)
 
 torch.set_num_threads(2)
 
-training_data = datasets.FashionMNIST(
+'''training_data = datasets.FashionMNIST(
     root="data",
     train=True,
     download=True,
@@ -57,10 +58,10 @@ test_data = datasets.FashionMNIST(
     train=False,
     download=True,
     transform=ToTensor()
-)
+)'''
 
 train_dataloader = p_
-test_dataloader = DataLoader(test_data, batch_size=64)
+test_dataloader = DataLoader(p, batch_size=350)
 
 class NeuralNetwork(nn.Module):
     def __init__(self, layer):
@@ -103,7 +104,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test_loop(dataloader, model, loss_fn):
+def test_loop(dataloader, model, loss_fn, alert=False):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
@@ -116,7 +117,8 @@ def test_loop(dataloader, model, loss_fn):
 
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    if alert == True:
+        print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=0,
@@ -125,11 +127,45 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0
 epochs = 1000
 
 
-def test(epochs):
+def test(epochs, alert=1):
+        times = time.time()
+        ale = False
         for t in range(epochs):
-            print(f"Epoch {t+1}\n")
+            if t % alert == 0:
+                print(f"Epoch {t+1}\n")
+                ale = True
             train_loop(train_dataloader, model, loss_fn, optimizer)
-            test_loop(train_dataloader, model, loss_fn)
+            test_loop(test_dataloader, model, loss_fn, ale)
+            ale = False
+        print(time.time()-times)
             
 print("Done!")
 
+
+def primecall():
+	global train_dataloader, test_dataloader, model, data, optimizer
+	with open('tensored_stockdata.json') as f:
+		data = json.load(f)
+
+	main_digit = len(str(data[0][0][0]))
+	classify_count = 2
+	
+	for i in range(len(data)):
+		data[i] = torch.tensor(data[i])
+		
+	del data[2000:]
+	for i in range(len(data)-1):
+		data[i] = [data[i], int(min(torch.tensor(max(0, (data[i][3][24]-(sum(data[i+1].T[0:5])/5)[0])//20+classify_count/2)).tolist(), classify_count))]
+		
+	del data[1999]
+	for i in range(len(data)):
+		data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0], dtype=torch.float32).reshape(5, 100)))])
+		data[i][0][0][0:4] = (data[i][0][0][0:4]-min(data[i][0][0][2]))/(10**main_digit)
+		data[i][0][0][4] = (data[i][0][0][4]/50000)**0.7*10
+		
+	model = NeuralNetwork([500, 1024, 128, classify_count+1])
+	train_dataloader = DataLoader(data[0:int(len(data)//1.2)], batch_size=1000)
+	test_dataloader = DataLoader(data[int(len(data)//1.2):], batch_size=1000)
+                                     
+	optimizer = torch.optim.SGD(model.parameters(), lr=0.1, nesterov=False, momentum=0.01)
+                    
