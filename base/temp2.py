@@ -4,9 +4,12 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
 import numpy as np
-import time
+import time, os, sys
+from pathlib import Path
 
-with open(r'C:\Users\KDCA\Desktop\Intelligence Life\field_data.json') as f:
+paths = str(Path(os.getcwd()).parent)
+
+with open(paths+'\\\\'+'field_data.json') as f:
         p = json.load(f)
 
 #preprocessing data
@@ -42,7 +45,7 @@ for j in range(len(p)):
 
 #--------------------------------------------
 
-p_ = DataLoader(p, batch_size=350)
+p_ = DataLoader(p[0:int(len(p)//1.2)], batch_size=350)
 
 torch.set_num_threads(2)
 
@@ -61,10 +64,10 @@ test_data = datasets.FashionMNIST(
 )'''
 
 train_dataloader = p_
-test_dataloader = DataLoader(p, batch_size=350)
+test_dataloader = DataLoader(p[int(len(p)//1.2):], batch_size=350)
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, layer):
+    def __init__(self, layer, drop_prob = 0.1):
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
 
@@ -74,6 +77,7 @@ class NeuralNetwork(nn.Module):
             networks.append(nn.Linear(layer[i], layer[i+1]))
             if i != len(layer)-1:
                 networks.append(nn.ReLU())
+                networks.append(nn.Dropout(p=drop_prob))
         
         self.linear_relu_stack = nn.Sequential(*networks)
 
@@ -82,7 +86,7 @@ class NeuralNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-model = NeuralNetwork([11*11, 256, 128, 128, 6])
+model = NeuralNetwork([11*11, 128, 110, 80, 40, 20, 10, 6])
 
 learning_rate = 0.001
 batch_size = 64
@@ -141,31 +145,3 @@ def test(epochs, alert=1):
             
 print("Done!")
 
-
-def primecall():
-	global train_dataloader, test_dataloader, model, data, optimizer
-	with open('tensored_stockdata.json') as f:
-		data = json.load(f)
-
-	main_digit = len(str(data[0][0][0]))
-	classify_count = 2
-	
-	for i in range(len(data)):
-		data[i] = torch.tensor(data[i])
-		
-	del data[2000:]
-	for i in range(len(data)-1):
-		data[i] = [data[i], int(min(torch.tensor(max(0, (data[i][3][24]-(sum(data[i+1].T[0:5])/5)[0])//20+classify_count/2)).tolist(), classify_count))]
-		
-	del data[1999]
-	for i in range(len(data)):
-		data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0], dtype=torch.float32).reshape(5, 100)))])
-		data[i][0][0][0:4] = (data[i][0][0][0:4]-min(data[i][0][0][2]))/(10**main_digit)
-		data[i][0][0][4] = (data[i][0][0][4]/50000)**0.7*10
-		
-	model = NeuralNetwork([500, 1024, 128, classify_count+1])
-	train_dataloader = DataLoader(data[0:int(len(data)//1.2)], batch_size=1000)
-	test_dataloader = DataLoader(data[int(len(data)//1.2):], batch_size=1000)
-                                     
-	optimizer = torch.optim.SGD(model.parameters(), lr=0.1, nesterov=False, momentum=0.01)
-                    

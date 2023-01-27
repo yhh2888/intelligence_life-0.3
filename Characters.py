@@ -1,11 +1,11 @@
 import pygame
 from pygame.locals import *
-import random
+import random, os, sys
 
 class Snake:
     def __init__(self, surface, size):
         self.parent_screen = surface
-        self.img = pygame.image.load(r"C:\Users\KDCA\Desktop\intelligence life\resources\block.jpg").convert()
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\block.jpg').convert()
         self.size = size
         self.img = pygame.transform.scale(self.img, (self.size, self.size))
         self.x = 10

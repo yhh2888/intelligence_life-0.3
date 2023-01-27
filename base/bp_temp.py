@@ -6,6 +6,7 @@ import traceback
 from datetime import datetime
 
 import os.path
+from pathlib import Path
 import sys, random, json, time, os
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPainter, QColor, QFont, QPen, QBrush, QPainterPath, QPalette
@@ -13,7 +14,26 @@ from PyQt5.QtCore import Qt, QTimer
 
 random.seed(777)
 
-path = r'C:\Users\KDCA\Desktop\intelligence life'
+if __name__ == '__main__':
+    path = str(Path(os.getcwd()).parent)
+    
+else :
+    tobe_append = []
+    
+    try:
+        tobe_append.extend(os.listdir(sys.path[0]))
+    except FileNotFoundError:
+        pass
+
+    for i in tobe_append:
+        sys.path.append(sys.path[0]+'\\'+i)
+    
+    for i in sys.path:
+        try:
+            if 'test.json' in os.listdir(i):
+                path = i
+        except Exception:
+            pass
 
 def distrib_analyze(points):
     rdlum = [0]*5
