@@ -2,6 +2,7 @@ git init
 git status
 git config --global user.email "yhh2888@naver.com"
 (git remote add <repo> <paste>)
+export GIT_SSL_NO_VERIFY=0
 git pull origin main
 
 <modification>

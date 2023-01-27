@@ -267,23 +267,23 @@ class Game:
                 avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
                 
                 if pluslist == [1, 0]:
-                    #self.snake.move_code('right')
+                    self.snake.move_code('right')
                     movedir = [1, 0, 0, 0]
                 elif pluslist == [-1, 0]:
-                    #self.snake.move_code('left')
+                    self.snake.move_code('left')
                     movedir = [0, 0, 1, 0]
                 elif pluslist == [0, 1]:
-                    #self.snake.move_code('down')
+                    self.snake.move_code('down')
                     movedir = [0, 1, 0, 0]
                 elif pluslist == [0, -1]:
-                    #self.snake.move_code('up')
+                    self.snake.move_code('up')
                     movedir = [0, 0, 0, 1]
                 if avoidloc == [0, 0]:
                     avoidloc = None
-            if 'data' in locals():
+            '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
                 if feed != None:
-                    self.snake.move_code(feed)
+                    self.snake.move_code(feed)'''
             
 
             # attack page --------------------------------------------------------------------------------------
@@ -346,7 +346,7 @@ class Game:
                     #plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
                     #plt.show()
                     
-                    wait += 1
+                    '''wait += 1
                     
                     if sew > 10 and wait > 30:
                         print(mobxys)
@@ -359,7 +359,7 @@ class Game:
                         
                         
                         sew = 0
-                    sew += 1
+                    sew += 1'''
                     
             if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] \
                 or (not 6<=self.snake.x<=self.display_width[0]/self.size-6) \
