@@ -32,3 +32,6 @@ git push <repo> main
 
  You have not concluded your merge (MERGE_HEAD exists).
 -> git merge --abort (먹힘 1)
+
+100메가 넘어서 안될시 바로
+git reset HEAD^ 입력
