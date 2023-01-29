@@ -163,6 +163,18 @@ class NeuralNetwork:
             path1 = path + '\\' + 'field_data.json'
             with open(path1) as f:
                 realdata = json.load(f)[0]
+
+        setter = 0
+        
+        for j in range(len(realdata)):
+            disc = False
+            j -= setter
+            if len(set(realdata[j][0][0])) != 1:
+                disc = True
+            if disc == False:
+                del realdata[j]
+                setter += 1
+
         
         #print("layers : " + str(self.lengths))
         errorlist = []
@@ -188,7 +200,7 @@ class NeuralNetwork:
             #print(error)
             errorlist.append(error)
             if i % 1000 == 0:
-                #print('error: %-.11f' % (sum(errorlist)/len(errorlist)))
+                print('error: %-.11f' % (sum(errorlist)/len(errorlist)))
                 errorlist=[]
                 
                 #print(variety_test)
@@ -568,10 +580,10 @@ if __name__ == '__main__':
 
     #all_neurons(data)
     t = time.time()
-    n = NeuralNetwork(layer=[15**2, 20, 15, 15, 5], iterations=1)
+    n = NeuralNetwork(layer=[11**2, 15, 15, 15, 5], iterations=1)
     #n.load('test')
     # 학습 실행
-    n.train(data)
+    n.train(data, True)
     print(time.time()-t)
 
     # 결괏값 출력
