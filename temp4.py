@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import json
 
-with open(r'C:\Users\hyunhoyang\Desktop\IL\field_data.json') as f:
+with open(r'C:\Users\KDCA\Desktop\IL\field_data.json') as f:
         p = json.load(f)
 
 p = p[0]

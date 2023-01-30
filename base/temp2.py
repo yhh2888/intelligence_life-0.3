@@ -46,9 +46,25 @@ for j in range(len(p)):
         del p[j]
         setter += 1
 
+def labelchange():
+    global p
+    er = []
+    p_temp = []
+    for i in range(len(p)):
+        ton = dir_dist_labeler(p[i][0][0], directions(main), min_size=0.01)
+        er.append(ton)
+    for i in range(len(p)):
+        temp_ = list(p[i])
+        if er[i] != None:
+            temp_[1] = er[i]
+            p_temp.append(temp_)
+    p = p_temp
+        
+labelchange()        
+
 #--------------------------------------------
 
-p_ = DataLoader(p[0:int(len(p)//1.2)], batch_size=50)
+p_ = DataLoader(p[0:int(len(p)//1.2)], batch_size=100)
 
 torch.set_num_threads(2)
 
@@ -69,32 +85,29 @@ test_data = datasets.FashionMNIST(
 
 
 train_dataloader = p_
-test_dataloader = DataLoader(p[int(len(p)//1.2):], batch_size=50)
+test_dataloader = DataLoader(p[int(len(p)//1.2):], batch_size=100)
 
 class NeuralNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, layer, drop_prob = 0.1):
         super(NeuralNetwork, self).__init__()
+        self.flatten = nn.Flatten()
+
+        networks = []
+        self.layers = layer
+        for i in range(len(self.layers)-1):
+            networks.append(nn.Linear(layer[i], layer[i+1]))
+            if i != len(layer)-1:
+                networks.append(nn.ReLU())
+                networks.append(nn.Dropout(p=drop_prob))
         
-        self.model = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Flatten(),
-            nn.Linear(in_features=128, out_features=256),
-            nn.ReLU(),
-            nn.Linear(in_features=256, out_features=6)
-        )
+        self.stack = nn.Sequential(*networks)
 
     def forward(self, x):
-        return self.model(x)
+        x = self.flatten(x)
+        logits = self.stack(x)
+        return logits
 
-model = NeuralNetwork()
+model = NeuralNetwork([11*11, 128, 128, 128, 4])
 
 learning_rate = 0.001
 batch_size = 64
@@ -133,7 +146,7 @@ def test_loop(dataloader, model, loss_fn, alert=False):
         print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=0,
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
 
 epochs = 1000
