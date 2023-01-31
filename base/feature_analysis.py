@@ -42,13 +42,7 @@ for j in range(len(data)):
         del data[j]
         setter += 1
 
-try:
-    with open(paths+"\\\\"+"base"+'\\\\'+'features_data.json') as f:
-        features = json.load(f)
-except Exception:
-    features = []
-
-def dir_dist_labeler(tensor, function, min_size=0.003, min_dist=3, middle=[5, 5], speed_print=False):
+def labeler(tensor, function, min_size=0.003, min_dist=3, middle=[5, 5], speed_print=False):
     if speed_print == True:
         timp = perf_counter()
         
@@ -99,6 +93,9 @@ def directions(position):
     elif abs(position[0])>abs(position[1]) and position[0]<0:
         return 1
 
+def distances(dist, crit_dist=4):
+    return [0 if dist >= crit_dist else 1][0]
+
 def labelchange(function):
     global data
     feature = []
@@ -108,12 +105,12 @@ def labelchange(function):
         if func_speed_test > 0:
             speed_test = True
             func_speed_test -= 1
-        ton = dir_dist_labeler(data[i][0][0], function, min_size=0.01, speed_print=speed_test)
+        ton = labeler(data[i][0][0], function, min_size=0.01, speed_print=speed_test)
         if ton != None:
-            flist.append(ton)
+            flist.append([i, ton])
         speed_test = False
     return flist
 
-def save(flist):
-    with open(paths+"\\\\"+"base"+'\\\\'+'features_data.json', 'w') as f:
+def save(flist, name='features'):
+    with open(paths+"\\\\"+"base"+'\\\\'+name+'_data.json', 'w') as f:
         json.dump(flist, f)

@@ -6,6 +6,7 @@ from torchvision.transforms import ToTensor, Lambda
 import numpy as np
 import time, os, sys
 from pathlib import Path
+from feature_analysis import *
 
 paths = str(Path(os.getcwd()).parent)
 
@@ -26,7 +27,7 @@ for i in range(len(p)):
 	p[i] = [[p[i][0][0]], p[i][0][1]]
 	p[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(p[i][0]).reshape(11, 11)))])
 	p[i][1] = torch.tensor(p[i][1])
-	p[i] = tuple(p[i])
+	p[i] = list(p[i])
 
 for i in range(len(p)):
         if max(p[i][1])!=0:
@@ -45,22 +46,20 @@ for j in range(len(p)):
     if disc == False:
         del p[j]
         setter += 1
-
-def labelchange():
-    global p
-    er = []
-    p_temp = []
-    for i in range(len(p)):
-        ton = dir_dist_labeler(p[i][0][0], directions(main), min_size=0.01)
-        er.append(ton)
-    for i in range(len(p)):
-        temp_ = list(p[i])
-        if er[i] != None:
-            temp_[1] = er[i]
-            p_temp.append(temp_)
-    p = p_temp
         
-labelchange()        
+def featurecall(name):
+    with open(os.getcwd()+'\\\\'+name+'_data.json') as f:
+        flist = json.load(f)
+    return flist
+
+def feature_change(data, feature):
+    goer = 0
+    flist = []
+    for i in range(len(data)):
+        if feature[goer][0] == i:
+            flist.append((data[i][0], torch.tensor(feature[goer][1])))
+            goer += 1
+    return flist
 
 #--------------------------------------------
 
@@ -151,18 +150,27 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0
 
 epochs = 1000
 
-
-def test(epochs, alert=1):
+def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_dataloader, optim = optimizer):
         times = time.time()
         ale = False
         for t in range(epochs):
             if t % alert == 0:
                 print(f"Epoch {t+1}\n")
                 ale = True
-            train_loop(train_dataloader, model, loss_fn, optimizer)
-            test_loop(test_dataloader, model, loss_fn, ale)
+            train_loop(trd, mod, loss_fn, optim)
+            test_loop(ted, mod, loss_fn, ale)
             ale = False
         print(time.time()-times)
             
 print("Done!")
 
+'''
+flist = featurecall('distances')
+flist1 = feature_change(p, flist)
+model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
+ted = trd = DataLoader(p[int(len(flist)//1.2):], batch_size=170)
+trd = DataLoader(p[0:int(len(flist)//1.2)], batch_size=170)
+optim_dist = torch.optim.Adam(model_dist.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+test(30, 10, model_dist, trd, ted, optim_dist)
+'''
