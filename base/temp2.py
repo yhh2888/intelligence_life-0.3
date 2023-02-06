@@ -106,7 +106,9 @@ class NeuralNetwork(nn.Module):
         logits = self.stack(x)
         return logits
 
-model = NeuralNetwork([11*11, 128, 128, 128, 4])
+connect_number = 128
+model = NeuralNetwork([11*11, connect_number, 128, 128, 6])
+models = [NeuralNetwork([121, connect_number]) for i in range(8)]
 
 learning_rate = 0.001
 batch_size = 64
@@ -164,13 +166,28 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
             
 print("Done!")
 
-'''
 flist = featurecall('distances')
 flist1 = feature_change(p, flist)
 model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
-ted = trd = DataLoader(p[int(len(flist)//1.2):], batch_size=170)
-trd = DataLoader(p[0:int(len(flist)//1.2)], batch_size=170)
+ted = DataLoader(flist1[int(len(flist)//1.2):], batch_size=170)
+trd = DataLoader(flist1[0:int(len(flist)//1.2)], batch_size=170)
 optim_dist = torch.optim.Adam(model_dist.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
 test(30, 10, model_dist, trd, ted, optim_dist)
+
+flist = featurecall('directions')
+flist2 = feature_change(p, flist)
+model_dir = NeuralNetwork([11*11, 128, 128, 128, 4])
+optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
+trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
+test(30, 10, model_dir, trd1, ted1, optim_dir)
+
+
+'''
+for i in range(len(flist)):
+    model.stack[0] = models[(torch.argmax(model_dist(trd.dataset[0][0])).item()+1)*torch.argmax(model_dir(trd1.dataset[0][0])).item()].stack[0]
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3, amsgrad=False)
+    train_loop(train_dataloader, model, loss_fn, optimizer)
 '''
