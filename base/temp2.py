@@ -107,7 +107,7 @@ class NeuralNetwork(nn.Module):
         return logits
 
 connect_number = 128
-model = NeuralNetwork([11*11, connect_number, 128, 128, 6])
+model = NeuralNetwork([11*11, connect_number, 128, 128, 8])
 models = [NeuralNetwork([121, connect_number]) for i in range(8)]
 
 learning_rate = 0.001
@@ -118,6 +118,24 @@ def train_loop(dataloader, model, loss_fn, optimizer):
     for batch, (X, y) in enumerate(dataloader):
         # 예측(prediction)과 손실(loss) 계산
         pred = model(X)
+        loss = loss_fn(pred, y)
+
+        # 역전파
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        if batch % 100 == 0 and batch != 0:
+            loss, current = loss.item(), batch * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+def train_loop_pret(dataloader, model, models, loss_fn):
+    size = len(dataloader.dataset)
+    for batch, (X, y) in enumerate(dataloader):
+        # 예측(prediction)과 손실(loss) 계산
+        model.stack[0] = models[(torch.argmax(model_dist(trd.dataset[batch*100+][0])).item()+1)*torch.argmax(model_dir(trd1.dataset[batch][0])).item()].stack[0]
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3, amsgrad=False)
+            
         loss = loss_fn(pred, y)
 
         # 역전파
@@ -182,12 +200,6 @@ optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.
                              amsgrad=False)
 ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
 trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
-test(30, 10, model_dir, trd1, ted1, optim_dir)
+test(40, 10, model_dir, trd1, ted1, optim_dir)
 
-
-'''
-for i in range(len(flist)):
-    model.stack[0] = models[(torch.argmax(model_dist(trd.dataset[0][0])).item()+1)*torch.argmax(model_dir(trd1.dataset[0][0])).item()].stack[0]
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3, amsgrad=False)
-    train_loop(train_dataloader, model, loss_fn, optimizer)
-'''
+train_loop_pret(train_dataloader, model, models, loss_fn)
