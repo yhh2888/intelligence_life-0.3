@@ -93,7 +93,7 @@ def directions(position):
     elif abs(position[0])>abs(position[1]) and position[0]<0:
         return 1
 
-def distances(dist, crit_dist=4):
+def distances(dist, crit_dist=3):
     return [0 if dist >= crit_dist else 1][0]
 
 def labelchange(function):
@@ -114,3 +114,6 @@ def labelchange(function):
 def save(flist, name='features'):
     with open(paths+"\\\\"+"base"+'\\\\'+name+'_data.json', 'w') as f:
         json.dump(flist, f)
+
+
+'''labelchange(['distances', 'maindist'])'''

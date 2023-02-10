@@ -108,12 +108,12 @@ class NeuralNetwork(nn.Module):
 
 connect_number = 128
 model = NeuralNetwork([11*11, connect_number, 128, 128, 8])
-models = [NeuralNetwork([121, connect_number]) for i in range(8)]
 
 learning_rate = 0.001
 batch_size = 64
 
 def train_loop(dataloader, model, loss_fn, optimizer):
+    losses_list = []
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         # 예측(prediction)과 손실(loss) 계산
@@ -127,27 +127,9 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         
         if batch % 100 == 0 and batch != 0:
             loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
-def train_loop_pret(dataloader, model, models, loss_fn):
-    size = len(dataloader.dataset)
-    for batch, (X, y) in enumerate(dataloader):
-        # 예측(prediction)과 손실(loss) 계산
-        model.stack[0] = models[(torch.argmax(model_dist(trd.dataset[batch*100+][0])).item()+1)*torch.argmax(model_dir(trd1.dataset[batch][0])).item()].stack[0]
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3, amsgrad=False)
-            
-        loss = loss_fn(pred, y)
-
-        # 역전파
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        if batch % 100 == 0 and batch != 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
-
+            '''print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")'''
+            losses_list.append(loss)
+    return losses_list
 def test_loop(dataloader, model, loss_fn, alert=False):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -177,9 +159,12 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
             if t % alert == 0:
                 print(f"Epoch {t+1}\n")
                 ale = True
-            train_loop(trd, mod, loss_fn, optim)
+            losses = train_loop(trd, mod, loss_fn, optim)
             test_loop(ted, mod, loss_fn, ale)
+            if ale == True:
+                print(sum(losses)/len(losses))
             ale = False
+            
         print(time.time()-times)
             
 print("Done!")
@@ -202,4 +187,30 @@ ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
 trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
 test(40, 10, model_dir, trd1, ted1, optim_dir)
 
-train_loop_pret(train_dataloader, model, models, loss_fn)
+li68=[]
+for i in range(len(p)):
+    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(p[i][0])[0], model_dir(p[i][0])[0]))))]), p[i][1]))
+
+model_fin = NeuralNetwork([6, 8, 6])
+optim_fin = torch.optim.Adam(model_fin.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+
+
+train_fin = DataLoader(li68[0:int(len(p)//1.2)], batch_size=100)
+test_fin = DataLoader(li68[int(len(p)//1.2):], batch_size=100)
+
+test(100, 30, model_fin, train_fin, test_fin, optim_fin)
+
+def rangetest():
+    erer = []
+    for i in range(len(p)):
+        erer.append((torch.argmax(model_dist(p[i][0])[0]).item(), torch.argmax(model_dir(p[i][0])[0]).item(), p[i][1].item()))
+
+    seter = set(erer)
+    count = {}
+    for i in seter:
+        count[i] = 0
+    for i in erer:
+        count[i] += 1
+        
+    return ((2*4*6)/len(set(erer)), count)
