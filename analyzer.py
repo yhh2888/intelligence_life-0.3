@@ -17,8 +17,8 @@ for i in range(len(p)-1):
 
 p = p[0]
 
-matrices = [np.array(p[i+6000][0][0]).reshape(11, 11) for i in range(6000)]
-labels = [np.argmax(p[i+6000][0][1]) if max(p[i+3000][0][1]) != 0 else 4 for i in range(6000)]
+matrices = [np.array(p[i+24000][0][0]).reshape(11, 11) for i in range(6000)]
+labels = [np.argmax(p[i+24000][0][1]) if max(p[i+24000][0][1]) != 0 else 4 for i in range(6000)]
 
 flat_matrices = [matrix.flatten() for matrix in matrices]
 flat_matrices = np.array(flat_matrices)
@@ -35,6 +35,20 @@ TSNE_result = TSNE.fit_transform(flat_matrices)
 plotlist = [[0, 1, 2]]*4
 
 kmeans = KMeans(n_clusters=14, random_state=0).fit(TSNE_result)
+kmeans.cluster_centers_ = [[ -1.6113825,  -11.776322  ,  -6.2725334 ],
+ [ 20.4018   ,   11.200725  ,  14.084091  ],
+ [-19.402718 ,   14.705777  ,   0.3977431 ],
+ [ -4.392994 ,   23.281418  ,  -5.8265095 ],
+ [ 11.36924  ,    9.648315  , -12.070533  ],
+ [ -2.0048246,   12.036908  ,  20.15881   ],
+ [-27.9152   ,   -2.6704535 ,  -3.331529  ],
+ [ 14.665374 ,  -10.29683   ,  16.674274  ],
+ [ 26.568914 ,   -0.06886899,  -2.4736588 ],
+ [-10.412287 ,   10.184992  , -18.050188  ],
+ [ -0.05335304,   2.4861832 ,   7.491411  ],
+ [-15.108258 ,   -1.212327  ,  21.36461   ],
+ [ -2.0516012,   28.79581   ,   8.063751  ],
+ [ 15.721546 ,   22.389694  ,  -3.957288  ]]
 
 def pltdraw(plotlist, size=2):
     fig = plt.figure()
