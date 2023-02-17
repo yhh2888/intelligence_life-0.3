@@ -55,11 +55,13 @@ def featurecall(name):
 def feature_change(data, feature):
     goer = 0
     flist = []
+    labelist = []
     for i in range(len(data)):
         if feature[goer][0] == i:
             flist.append((data[i][0], torch.tensor(feature[goer][1])))
             goer += 1
-    return flist
+            labelist.append(data[i][1])
+    return (flist, labelist)
 
 #--------------------------------------------
 
@@ -170,7 +172,7 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
 print("Done!")
 
 flist = featurecall('distances')
-flist1 = feature_change(p, flist)
+flist1, remain_labels = feature_change(p, flist)
 model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
 ted = DataLoader(flist1[int(len(flist)//1.2):], batch_size=170)
 trd = DataLoader(flist1[0:int(len(flist)//1.2)], batch_size=170)
@@ -179,7 +181,7 @@ optim_dist = torch.optim.Adam(model_dist.parameters(), lr=learning_rate, betas=(
 test(30, 10, model_dist, trd, ted, optim_dist)
 
 flist = featurecall('directions')
-flist2 = feature_change(p, flist)
+flist2 = feature_change(p, flist)[0]
 model_dir = NeuralNetwork([11*11, 128, 128, 128, 4])
 optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
@@ -188,8 +190,8 @@ trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
 test(40, 10, model_dir, trd1, ted1, optim_dir)
 
 li68=[]
-for i in range(len(p)):
-    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(p[i][0])[0], model_dir(p[i][0])[0]))))]), p[i][1]))
+for i in range(len(flist1)):
+    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flist1[i][0])[0], model_dir(flist1[i][0])[0]))))]), remain_labels[i]))
 
 model_fin = NeuralNetwork([6, 8, 6])
 optim_fin = torch.optim.Adam(model_fin.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
