@@ -7,6 +7,7 @@ import numpy as np
 import time, os, sys
 from pathlib import Path
 from feature_analysis import *
+from torch.optim.lr_scheduler import ExponentialLR
 
 paths = str(Path(os.getcwd()).parent)
 
@@ -151,10 +152,11 @@ def test_loop(dataloader, model, loss_fn, alert=False):
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
+scheduler = ExponentialLR(optimizer, gamma=0.9)
 
 epochs = 1000
 
-def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_dataloader, optim = optimizer):
+def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_dataloader, optim = optimizer, scheduler=scheduler):
         times = time.time()
         ale = False
         for t in range(epochs):
@@ -162,6 +164,7 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
                 print(f"Epoch {t+1}\n")
                 ale = True
             losses = train_loop(trd, mod, loss_fn, optim)
+            scheduler.step()
             test_loop(ted, mod, loss_fn, ale)
             if ale == True:
                 print(sum(losses)/len(losses))
@@ -172,13 +175,34 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
 print("Done!")
 
 flist = featurecall('distances')
-flist1, remain_labels = feature_change(p, flist)
+flistd, remain_labels = feature_change(p, flist)
 model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
-ted = DataLoader(flist1[int(len(flist)//1.2):], batch_size=170)
-trd = DataLoader(flist1[0:int(len(flist)//1.2)], batch_size=170)
+ted = DataLoader(flistd[int(len(flist)//1.2):], batch_size=170)
+trd = DataLoader(flistd[0:int(len(flist)//1.2)], batch_size=170)
 optim_dist = torch.optim.Adam(model_dist.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
-test(30, 10, model_dist, trd, ted, optim_dist)
+sched_dist = ExponentialLR(optim_dist, gamma=0.9)
+test(30, 10, model_dist, trd, ted, optim_dist, sched_dist)
+
+flist = featurecall('distances01')
+flist01 = feature_change(p, flist)[0]
+model_dist01 = NeuralNetwork([11*11, 128, 128, 128, 2])
+ted01 = DataLoader(flist01[int(len(flist)//1.2):], batch_size=170)
+trd01 = DataLoader(flist01[0:int(len(flist)//1.2)], batch_size=170)
+optim_dist01 = torch.optim.Adam(model_dist01.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+sched_dist01 = ExponentialLR(optim_dist01, gamma=0.9)
+test(30, 10, model_dist01, trd01, ted01, optim_dist01, sched_dist01)
+
+flist = featurecall('distances02')
+flist02 = feature_change(p, flist)[0]
+model_dist02 = NeuralNetwork([11*11, 128, 128, 128, 2])
+ted02 = DataLoader(flist02[int(len(flist)//1.2):], batch_size=170)
+trd02 = DataLoader(flist02[0:int(len(flist)//1.2)], batch_size=170)
+optim_dist02 = torch.optim.Adam(model_dist02.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+sched_dist02 = ExponentialLR(optim_dist02, gamma=0.9)
+test(30, 10, model_dist02, trd02, ted02, optim_dist02, sched_dist02)
 
 flist = featurecall('directions')
 flist2 = feature_change(p, flist)[0]
@@ -187,11 +211,13 @@ optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.
                              amsgrad=False)
 ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
 trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
-test(40, 10, model_dir, trd1, ted1, optim_dir)
+
+sched_dir = ExponentialLR(optim_dir, gamma=0.9)
+test(40, 10, model_dir, trd1, ted1, optim_dir, sched_dir)
 
 li68=[]
-for i in range(len(flist1)):
-    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flist1[i][0])[0], model_dir(flist1[i][0])[0]))))]), remain_labels[i]))
+for i in range(len(flistd)):
+    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flistd[i][0])[0], model_dir(flistd[i][0])[0]))))]), remain_labels[i]))
 
 model_fin = NeuralNetwork([6, 8, 6])
 optim_fin = torch.optim.Adam(model_fin.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
@@ -201,8 +227,15 @@ optim_fin = torch.optim.Adam(model_fin.parameters(), lr=learning_rate, betas=(0.
 train_fin = DataLoader(li68[0:int(len(p)//1.2)], batch_size=100)
 test_fin = DataLoader(li68[int(len(p)//1.2):], batch_size=100)
 
-test(100, 30, model_fin, train_fin, test_fin, optim_fin)
+sched_fin = ExponentialLR(optim_fin, gamma=0.9)
+test(100, 30, model_fin, train_fin, test_fin, optim_fin, sched_fin)
 
+code = {1:0, 2:1, 3:2, 4:3, 5:1, 6:0, 7:3, 8:2}
+
+se1 = [[p[i*11+j][1].item() for j in range(11)] for i in range(10)]
+se2 = [[code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()] \
+        for j in range(11)] for i in range(10)]
+     
 def rangetest():
     erer = []
     for i in range(len(p)):

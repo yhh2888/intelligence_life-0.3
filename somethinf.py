@@ -6,283 +6,236 @@ Done!
 Epoch 1
 
 Test Error: 
- Accuracy: 78.9%, Avg loss: 0.204651 
+ Accuracy: 79.6%, Avg loss: 0.205241 
 
-0.2138201743364334
+0.24136117100715637
 Epoch 11
 
 Test Error: 
- Accuracy: 90.5%, Avg loss: 0.105027 
+ Accuracy: 89.7%, Avg loss: 0.106323 
 
-0.0709671825170517
+0.08953502029180527
 Epoch 21
 
 Test Error: 
- Accuracy: 89.6%, Avg loss: 0.099769 
+ Accuracy: 89.9%, Avg loss: 0.107254 
 
-0.09590719640254974
-26.26060152053833
+0.10781226307153702
+26.42795729637146
 Epoch 1
 
 Test Error: 
- Accuracy: 56.8%, Avg loss: 1.002889 
+ Accuracy: 62.5%, Avg loss: 1.005740 
 
-0.9871430993080139
+0.9890037775039673
 Epoch 11
 
 Test Error: 
- Accuracy: 74.2%, Avg loss: 0.686076 
+ Accuracy: 74.8%, Avg loss: 0.683018 
 
-0.4830787181854248
+0.538800835609436
 Epoch 21
 
 Test Error: 
- Accuracy: 74.7%, Avg loss: 0.686956 
+ Accuracy: 75.4%, Avg loss: 0.680063 
 
-0.4828234612941742
+0.41347527503967285
 Epoch 31
 
 Test Error: 
- Accuracy: 75.2%, Avg loss: 0.669085 
+ Accuracy: 76.0%, Avg loss: 0.678232 
 
-0.5231573581695557
-34.052966356277466
+0.47649437189102173
+33.5936918258667
 Epoch 1
 
 Test Error: 
- Accuracy: 36.3%, Avg loss: 1.570389 
+ Accuracy: 29.6%, Avg loss: 1.691158 
 
-1.5011616945266724
+1.7591647505760193
 Epoch 31
 
 Test Error: 
- Accuracy: 39.2%, Avg loss: 1.472358 
+ Accuracy: 41.1%, Avg loss: 1.441404 
 
-1.3998377323150635
+1.450009286403656
 Epoch 61
 
 Test Error: 
- Accuracy: 39.8%, Avg loss: 1.467228 
+ Accuracy: 41.7%, Avg loss: 1.410498 
 
-1.4392598867416382
+1.405554473400116
 Epoch 91
 
 Test Error: 
- Accuracy: 39.1%, Avg loss: 1.471669 
+ Accuracy: 41.5%, Avg loss: 1.396931 
 
-1.390067994594574
-19.662441730499268
-len(ted1)
-23
-len(ted1.dataset)
-3792
-len(ted2.dataset)
+1.324802279472351
+19.65841507911682
+for i in range(10):
+    print([p[i*11+j][1].item() for j in range(11)])
+
+    
+[2, 2, 3, 2, 3, 2, 3, 3, 3, 2, 2]
+[2, 2, 3, 3, 3, 2, 2, 2, 0, 0, 2]
+[5, 2, 0, 0, 2, 5, 2, 5, 0, 5, 5]
+[0, 5, 2, 2, 0, 3, 5, 0, 5, 0, 5]
+[5, 5, 0, 2, 0, 5, 5, 5, 5, 5, 0]
+[0, 5, 2, 0, 0, 5, 5, 5, 0, 5, 5]
+[5, 2, 5, 0, 5, 5, 5, 0, 5, 0, 2]
+[5, 5, 5, 2, 3, 3, 2, 2, 2, 2, 2]
+[2, 3, 3, 2, 2, 3, 3, 2, 3, 3, 0]
+[0, 5, 0, 2, 3, 2, 5, 5, 5, 3, 0]
+model_dist(p[i][0])[0], model_dir(p[i][0])[0]
+(tensor([0., 0.], grad_fn=<SelectBackward0>), tensor([0.0000, 1.9254, 2.5359, 0.0000], grad_fn=<SelectBackward0>))
+((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1))
+tensor(2)
+code = {1:0, 2:2, 3:3, 4:1, 5:1, 6:2, 7:0, 8:3}
+code[i]
 Traceback (most recent call last):
-  File "<pyshell#2>", line 1, in <module>
-    len(ted2.dataset)
-NameError: name 'ted2' is not defined. Did you mean: 'ted'?
-len(ted.dataset)
-3792
-len(flist)
-22748
-flist[0]
-[8, 2]
-flist[0:5]
-[[8, 2], [9, 1], [10, 1], [11, 2], [12, 2]]
-len(p)
-24750
-len(ted.dataset[30500)
-    
-SyntaxError: closing parenthesis ')' does not match opening parenthesis '['
-len(ted.dataset[3795])
-    
-Traceback (most recent call last):
-  File "<pyshell#9>", line 1, in <module>
-    len(ted.dataset[3795])
-IndexError: list index out of range
-len(train_fin)
-    
-207
-len(li68)
-    
-24750
-flist = featurecall('distances')
-    
-flist1 = feature_change(p, flist)
-    
-len(flist1)
-    
-22748
-len(flist)
-    
-22748
-len(trd1.dataset)
-    
-18956
-len(trd1.dataset)+len(ted1.dataset)
-    
-22748
-li68=[]
-    
-flist1[0][0]
-    
-tensor([[[0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [1.0000e-04, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [1.0000e-04, 1.0000e-04, 1.0000e-04, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [3.0000e-04, 2.0000e-04, 1.0000e-04, 0.0000e+00, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [7.0000e-04, 3.0000e-04, 2.0000e-04, 1.0000e-04, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [9.1000e-03, 6.0000e-04, 2.0000e-04, 1.0000e-04, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00],
-         [5.0000e-02, 9.0000e-04, 3.0000e-04, 1.0000e-04, 0.0000e+00,
-          0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00, 0.0000e+00,
-          0.0000e+00]]])
-for i in range(len(flist1)):
-    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flist1[i][0])[0], model_dir(flist1[i][0])[0]))))]), [i][1]))
-
-    
-Traceback (most recent call last):
-  File "<pyshell#21>", line 2, in <module>
-    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flist1[i][0])[0], model_dir(flist1[i][0])[0]))))]), [i][1]))
-IndexError: list index out of range
-model_dir(flist1[i][0])[0]
-    
-tensor([0.0943, 0.0000, 2.0451, 0.1532], grad_fn=<SelectBackward0>)
-[i][-]
-    
-SyntaxError: incomplete input
-[i][0]
-    
-0
-[i][1]
-    
-Traceback (most recent call last):
-  File "<pyshell#25>", line 1, in <module>
-    [i][1]
-IndexError: list index out of range
-len(ted.dataset)
-    
-3792
-len(ted.dataset)+len(trd.dataset)
-    
-22748
-len(ted1.dataset)+len(trd1.dataset)
-    
-22748
-
-================ RESTART: C:\Users\KDCA\Desktop\IL\base\temp2.py ===============
-Done!
-Epoch 1
-
-Test Error: 
- Accuracy: 80.1%, Avg loss: 0.194449 
-
-0.21449466049671173
-Epoch 11
-
-Test Error: 
- Accuracy: 90.6%, Avg loss: 0.095828 
-
-0.07183440774679184
-Epoch 21
-
-Test Error: 
- Accuracy: 89.5%, Avg loss: 0.111006 
-
-0.08230527490377426
-26.60735321044922
-Epoch 1
-
-Test Error: 
- Accuracy: 42.5%, Avg loss: 1.187782 
-
-0.8993905186653137
-Epoch 11
-
-Test Error: 
- Accuracy: 44.3%, Avg loss: 1.160984 
-
-0.7891863584518433
-Epoch 21
-
-Test Error: 
- Accuracy: 44.0%, Avg loss: 1.145337 
-
-0.7970719337463379
-Epoch 31
-
-Test Error: 
- Accuracy: 44.5%, Avg loss: 1.146998 
-
-0.8037713170051575
-33.78865051269531
-Epoch 1
-
-Test Error: 
- Accuracy: 37.6%, Avg loss: 1.579117 
-
-1.6213458776474
-Epoch 31
-
-Test Error: 
- Accuracy: 40.8%, Avg loss: 1.423245 
-
-1.4005001187324524
-Epoch 61
-
-Test Error: 
- Accuracy: 38.9%, Avg loss: 1.465934 
-
-1.385396957397461
-Epoch 91
-
-Test Error: 
- Accuracy: 39.8%, Avg loss: 1.447742 
-
-1.4355759024620056
-18.98026990890503
->>> len(li68)
-...     
-22748
->>> for i in range(10):
+  File "<pyshell#7>", line 1, in <module>
+    code[i]
+KeyError: 9
+for i in range(10):
 ...     es = []
 ...     for j in range(11):
-...         es.append(torch.argmax(model_fin(torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(p[i][0])[0], model_dir(p[i][0])[0]))))]))[0][0:5]).item())
-...     print(es)
+...         es.append(((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)))
+SyntaxError: expected an indented block after 'for' statement on line 1
+
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)))
+
+         
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)))
+     print(es)
+
+     
+[tensor(3), tensor(3), tensor(4), tensor(3), tensor(3), tensor(3), tensor(3), tensor(1), tensor(4), tensor(3), tensor(4)]
+[tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(4), tensor(4), tensor(1), tensor(1)]
+[tensor(3), tensor(4), tensor(3), tensor(4), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(1)]
+[tensor(4), tensor(3), tensor(3), tensor(3), tensor(1), tensor(4), tensor(3), tensor(4), tensor(3), tensor(4), tensor(3)]
+[tensor(3), tensor(4), tensor(3), tensor(3), tensor(4), tensor(4), tensor(1), tensor(3), tensor(4), tensor(3), tensor(3)]
+[tensor(4), tensor(3), tensor(4), tensor(3), tensor(3), tensor(3), tensor(1), tensor(4), tensor(4), tensor(4), tensor(4)]
+[tensor(4), tensor(4), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(4), tensor(4), tensor(3), tensor(3)]
+[tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3), tensor(3)]
+[tensor(3), tensor(3), tensor(3), tensor(3), tensor(4), tensor(3), tensor(3), tensor(3), tensor(4), tensor(1), tensor(3)]
+[tensor(3), tensor(2), tensor(2), tensor(3), tensor(2), tensor(3), tensor(3), tensor(3), tensor(2), tensor(2), tensor(3)]
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item())
+     print(es)
+
+     
+[3, 3, 3, 3, 1, 3, 3, 4, 3, 3, 4]
+[3, 3, 4, 3, 4, 4, 3, 3, 3, 4, 3]
+[3, 3, 3, 3, 4, 3, 3, 3, 1, 3, 4]
+[4, 4, 3, 3, 4, 3, 3, 3, 3, 3, 3]
+[3, 1, 3, 1, 3, 3, 4, 4, 4, 3, 1]
+[4, 3, 4, 3, 4, 3, 3, 1, 3, 3, 4]
+[3, 1, 3, 3, 1, 3, 4, 3, 3, 3, 3]
+[3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3]
+[3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3]
+[3, 2, 2, 2, 2, 3, 2, 2, 3, 3, 3]
+for i in range(10):
+    print([p[i*11+j][1].item() for j in range(11)])
+
+    
+[2, 2, 3, 2, 3, 2, 3, 3, 3, 2, 2]
+[2, 2, 3, 3, 3, 2, 2, 2, 0, 0, 2]
+[5, 2, 0, 0, 2, 5, 2, 5, 0, 5, 5]
+[0, 5, 2, 2, 0, 3, 5, 0, 5, 0, 5]
+[5, 5, 0, 2, 0, 5, 5, 5, 5, 5, 0]
+[0, 5, 2, 0, 0, 5, 5, 5, 0, 5, 5]
+[5, 2, 5, 0, 5, 5, 5, 0, 5, 0, 2]
+[5, 5, 5, 2, 3, 3, 2, 2, 2, 2, 2]
+[2, 3, 3, 2, 2, 3, 3, 2, 3, 3, 0]
+[0, 5, 0, 2, 3, 2, 5, 5, 5, 3, 0]
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()])
+     print(es)
+
+     
+[0, 0, 3, 3, 3, 0, 3, 1, 3, 3, 3]
+[1, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3]
+[3, 3, 3, 1, 3, 3, 3, 3, 1, 3, 0]
+[3, 3, 1, 0, 3, 1, 3, 3, 1, 3, 3]
+[1, 3, 0, 3, 3, 3, 3, 3, 3, 1, 1]
+[0, 1, 3, 1, 3, 3, 0, 3, 3, 3, 1]
+[1, 2, 3, 3, 3, 0, 3, 0, 1, 3, 3]
+[3, 1, 1, 3, 0, 3, 3, 3, 0, 1, 0]
+[1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0]
+[2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2]
+code = {1:0, 2:2, 3:3, 4:1, 5:1, 6:2, 7:0, 8:3}
+\
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()])
+     print(es)
+
+     
+[3, 3, 1, 3, 3, 3, 0, 3, 3, 1, 0]
+[0, 0, 3, 3, 3, 3, 1, 0, 3, 3, 3]
+[3, 0, 3, 3, 3, 3, 3, 3, 1, 1, 3]
+[3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3]
+[3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 0]
+[3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3]
+[3, 3, 3, 3, 3, 0, 3, 3, 3, 3, 3]
+[3, 3, 3, 1, 0, 1, 0, 3, 3, 3, 0]
+[1, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+[3, 3, 2, 3, 3, 2, 3, 3, 3, 3, 3]
+for i in range(10):
+    print([p[i*11+j][1].item() for j in range(11)])for i in range(10):
+         es = []
+         for j in range(11):
+             es.append(((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item())
+         print(es)
+         
+SyntaxError: invalid syntax
+for i in range(10):
+     es = []
+     for j in range(11):
+         es.append(code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()])
+     print(es)
+
+     
+[3, 3, 1, 1, 3, 3, 3, 1, 3, 1, 0]
+[3, 3, 1, 3, 1, 3, 1, 1, 3, 3, 3]
+[0, 3, 3, 3, 3, 0, 3, 3, 3, 0, 3]
+[3, 3, 3, 3, 1, 3, 3, 1, 2, 3, 1]
+[3, 3, 3, 1, 3, 3, 1, 3, 3, 3, 3]
+[3, 1, 3, 3, 3, 0, 3, 1, 3, 3, 0]
+[0, 3, 1, 3, 0, 1, 1, 1, 3, 3, 0]
+[3, 3, 0, 3, 3, 1, 3, 3, 3, 1, 1]
+[3, 3, 3, 3, 3, 3, 3, 3, 0, 3, 3]
+[3, 3, 2, 3, 3, 3, 2, 2, 3, 3, 2]
+>>> code = {1:0, 2:2, 3:3, 4:1, 5:1, 6:2, 7:0, 8:3}
+>>> code = {1:0, 2:1, 3:2, 4:3, 5:1, 6:0, 7:3, 8:2}
+>>> for i in range(10):
+...      es = []
+...      for j in range(11):
+...          es.append(code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()])
+...      print(es)
 ... 
-...     
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3]
-[0, 2, 0, 0, 0, 0, 2, 2, 0, 0, 0]
-[0, 0, 0, 2, 0, 0, 3, 2, 0, 0, 0]
-[0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0]
-[0, 3, 0, 0, 0, 0, 0, 2, 0, 0, 2]
-[3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]
-[0, 0, 3, 2, 0, 0, 0, 0, 2, 0, 0]
-[0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0]
-[0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]
-[2, 0, 0, 0, 3, 0, 0, 2, 3, 0, 0]
+...      
+[2, 2, 3, 3, 2, 3, 2, 0, 2, 2, 2]
+[0, 3, 0, 2, 3, 3, 2, 2, 0, 2, 2]
+[2, 2, 3, 2, 2, 2, 3, 2, 2, 3, 0]
+[2, 3, 3, 2, 0, 2, 3, 2, 3, 2, 3]
+[3, 2, 2, 2, 2, 2, 2, 3, 2, 2, 3]
+[3, 2, 2, 3, 2, 0, 2, 3, 2, 2, 2]
+[2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2]
+[2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 0]
+[2, 2, 2, 2, 2, 2, 2, 3, 2, 3, 2]
+[2, 1, 2, 2, 2, 2, 1, 1, 2, 2, 1]
 >>> for i in range(10):
 ...     print([p[i*11+j][1].item() for j in range(11)])
 ... 
@@ -297,3 +250,31 @@ Test Error:
 [5, 5, 5, 2, 3, 3, 2, 2, 2, 2, 2]
 [2, 3, 3, 2, 2, 3, 3, 2, 3, 3, 0]
 [0, 5, 0, 2, 3, 2, 5, 5, 5, 3, 0]
+>>> se1 = [[p[i*11+j][1].item() for j in range(11)] for i in range(10)]
+>>> se2 = [[code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()] for j in range(11)] for i in range(10)]
+>>> 
+se2
+[[3, 0, 2, 2, 0, 2, 2, 2, 2, 0, 2], [3, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2], [2, 2, 2, 3, 2, 2, 2, 2, 2, 3, 2], [2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2], [2, 3, 2, 2, 2, 3, 2, 2, 2, 2, 2], [2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2], [2, 2, 0, 2, 0, 2, 2, 2, 2, 0, 3], [2, 0, 2, 2, 0, 3, 2, 1, 2, 3, 2], [0, 2, 2, 2, 0, 2, 2, 0, 2, 2, 3], [2, 2, 1, 2, 2, 2, 2, 2, 0, 2, 1]]
+torch.tensor(se2)==torch.tensor(se1)
+tensor([[False, False, False,  True, False,  True, False, False, False, False,
+          True],
+        [False, False,  True, False, False,  True,  True,  True, False, False,
+          True],
+        [False,  True, False, False,  True, False,  True, False, False, False,
+         False],
+        [False, False,  True,  True, False, False, False, False, False, False,
+         False],
+        [False, False, False,  True, False, False, False, False, False, False,
+         False],
+        [False, False,  True, False, False, False, False, False, False, False,
+         False],
+        [False,  True, False, False, False, False, False, False, False,  True,
+         False],
+        [False, False, False,  True, False,  True,  True, False,  True, False,
+          True],
+        [False, False, False,  True, False, False, False, False, False, False,
+         False],
+        [False, False, False,  True, False,  True, False, False, False, False,
+         False]])
+22/121
+0.18181818181818182
