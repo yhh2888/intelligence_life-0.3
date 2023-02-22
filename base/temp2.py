@@ -212,7 +212,7 @@ optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.
 ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
 trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
 
-sched_dir = ExponentialLR(optim_dir, gamma=0.9)
+sched_dir = ExponentialLR(optim_dir, gamma=0.0)
 test(40, 10, model_dir, trd1, ted1, optim_dir, sched_dir)
 
 li68=[]
@@ -230,7 +230,7 @@ test_fin = DataLoader(li68[int(len(p)//1.2):], batch_size=100)
 sched_fin = ExponentialLR(optim_fin, gamma=0.9)
 test(100, 30, model_fin, train_fin, test_fin, optim_fin, sched_fin)
 
-code = {1:0, 2:1, 3:2, 4:3, 5:1, 6:0, 7:3, 8:2}
+code = {1:0, 2:2, 3:3, 4:1, 5:2, 6:0, 7:1, 8:3}
 
 se1 = [[p[i*11+j][1].item() for j in range(11)] for i in range(10)]
 se2 = [[code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()] \
@@ -249,3 +249,4 @@ def rangetest():
         count[i] += 1
         
     return ((2*4*6)/len(set(erer)), count)
+
