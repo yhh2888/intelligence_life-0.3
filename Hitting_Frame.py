@@ -380,6 +380,7 @@ class Game:
             self.snake.x, self.snake.y = 99-self.snake.y, self.snake.x
             sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
             data = [[sightkde, [movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
+
             self.snake.x, self.snake.y = self.snake.y, 99-self.snake.x
             self.nn.train_once(data)
             self.nn.received_data.append(data)

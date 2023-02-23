@@ -47,11 +47,6 @@ for j in range(len(p)):
     if disc == False:
         del p[j]
         setter += 1
-        
-def featurecall(name):
-    with open(os.getcwd()+'\\\\'+name+'_data.json') as f:
-        flist = json.load(f)
-    return flist
 
 def feature_change(data, feature):
     goer = 0
@@ -91,11 +86,17 @@ test_dataloader = DataLoader(p[int(len(p)//1.2):], batch_size=100)
 
 class NeuralNetwork(nn.Module):
     def __init__(self, layer, drop_prob = 0.1):
+
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
 
         networks = []
         self.layers = layer
+        self.flist
+        self.feature_label = []
+        self.labelist = []
+        self.f_on = False
+        
         for i in range(len(self.layers)-1):
             networks.append(nn.Linear(layer[i], layer[i+1]))
             if i != len(layer)-1:
@@ -108,6 +109,39 @@ class NeuralNetwork(nn.Module):
         x = self.flatten(x)
         logits = self.stack(x)
         return logits
+
+    def featurecall(self, name):
+        with open(os.getcwd()+'\\\\'+name+'_data.json') as f:
+            self.flist = json.load(f)
+        self.f_on = True
+        
+    def feature_change(self, data):
+        goer = 0
+        
+        if self.f_on == True:
+            self.feature_label = []
+            self.remain_labels = []
+            for i in range(len(data)):
+                if self.flist[goer][0] == i:
+                    self.feature_label.append((data[i][0], torch.tensor(self.flist[goer][1])))
+                    goer += 1
+                    self.remain_labels.append(data[i][1])
+
+    def base_set(self, name, gamma = 0.99):
+        try:
+            self.featurecall(name)
+            self.feature_change(p)
+            self.ted = DataLoader(self.feature_label[int(len(self.flist)//1.2):], batch_size=170)
+            self.trd = DataLoader(self.feature_label[0:int(len(self.flist)//1.2)], batch_size=170)
+            self.optim = torch.optim.Adam(self.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+            self.sched = ExponentialLR(self.optim, gamma=gamma)
+            
+        except Exception as e:
+            pass
+
+    def roll(self, epoch, alert=10):
+        reinforce(30, 10, self, self.trd, self.ted, optim, sched)
 
 connect_number = 128
 model = NeuralNetwork([11*11, connect_number, 128, 128, 8])
@@ -156,7 +190,7 @@ scheduler = ExponentialLR(optimizer, gamma=0.9)
 
 epochs = 1000
 
-def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_dataloader, optim = optimizer, scheduler=scheduler):
+def reinforce(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_dataloader, optim = optimizer, scheduler=scheduler):
         times = time.time()
         ale = False
         for t in range(epochs):
@@ -174,35 +208,18 @@ def test(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_datalo
             
 print("Done!")
 
-flist = featurecall('distances')
-flistd, remain_labels = feature_change(p, flist)
+
 model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
-ted = DataLoader(flistd[int(len(flist)//1.2):], batch_size=170)
-trd = DataLoader(flistd[0:int(len(flist)//1.2)], batch_size=170)
-optim_dist = torch.optim.Adam(model_dist.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
-                             amsgrad=False)
-sched_dist = ExponentialLR(optim_dist, gamma=0.9)
-test(30, 10, model_dist, trd, ted, optim_dist, sched_dist)
+model_dist.base_set('distances')
+model_dist.roll(30, 10)
 
-flist = featurecall('distances01')
-flist01 = feature_change(p, flist)[0]
-model_dist01 = NeuralNetwork([11*11, 128, 128, 128, 2])
-ted01 = DataLoader(flist01[int(len(flist)//1.2):], batch_size=170)
-trd01 = DataLoader(flist01[0:int(len(flist)//1.2)], batch_size=170)
-optim_dist01 = torch.optim.Adam(model_dist01.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
-                             amsgrad=False)
-sched_dist01 = ExponentialLR(optim_dist01, gamma=0.9)
-test(30, 10, model_dist01, trd01, ted01, optim_dist01, sched_dist01)
+model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
+model_dist.base_set('distances01')
+model_dist.roll(30, 10)
 
-flist = featurecall('distances02')
-flist02 = feature_change(p, flist)[0]
-model_dist02 = NeuralNetwork([11*11, 128, 128, 128, 2])
-ted02 = DataLoader(flist02[int(len(flist)//1.2):], batch_size=170)
-trd02 = DataLoader(flist02[0:int(len(flist)//1.2)], batch_size=170)
-optim_dist02 = torch.optim.Adam(model_dist02.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
-                             amsgrad=False)
-sched_dist02 = ExponentialLR(optim_dist02, gamma=0.9)
-test(30, 10, model_dist02, trd02, ted02, optim_dist02, sched_dist02)
+model_dist = NeuralNetwork([11*11, 128, 128, 128, 2])
+model_dist.base_set('distances02')
+model_dist.roll(30, 10)
 
 flist = featurecall('directions')
 flist2 = feature_change(p, flist)[0]
@@ -212,14 +229,17 @@ optim_dir = torch.optim.Adam(model_dir.parameters(), lr=learning_rate, betas=(0.
 ted1 = DataLoader(flist2[int(len(flist)//1.2):], batch_size=170)
 trd1 = DataLoader(flist2[0:int(len(flist)//1.2)], batch_size=170)
 
-sched_dir = ExponentialLR(optim_dir, gamma=0.0)
+sched_dir = ExponentialLR(optim_dir, gamma=0.99)
 test(40, 10, model_dir, trd1, ted1, optim_dir, sched_dir)
 
 li68=[]
 for i in range(len(flistd)):
-    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flistd[i][0])[0], model_dir(flistd[i][0])[0]))))]), remain_labels[i]))
+    li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(flistd[i][0])[0],
+                                                               model_dir(flistd[i][0])[0],
+                                                               torch.tensor([0 if remain_labels[i].item() != 5 else 1])))))]),
+                 remain_labels[i]))
 
-model_fin = NeuralNetwork([6, 8, 6])
+model_fin = NeuralNetwork([len(li68[0][0][0]), 15, 15, 6])
 optim_fin = torch.optim.Adam(model_fin.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
 
@@ -233,8 +253,7 @@ test(100, 30, model_fin, train_fin, test_fin, optim_fin, sched_fin)
 code = {1:0, 2:2, 3:3, 4:1, 5:2, 6:0, 7:1, 8:3}
 
 se1 = [[p[i*11+j][1].item() for j in range(11)] for i in range(10)]
-se2 = [[code[((torch.argmax(model_dist(p[i][0])[0])*4)+(torch.argmax(model_dir(p[i][0])[0])+1)).item()] \
-        for j in range(11)] for i in range(10)]
+se2 = [[torch.argmax(model_fin(li68[i*11+j][0])).item() for j in range(11)] for i in range(10)]
      
 def rangetest():
     erer = []
