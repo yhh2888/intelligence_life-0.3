@@ -111,6 +111,45 @@ def labelchange(function):
         speed_test = False
     return flist
 
+def get_matrix(size=(11, 11),
+               point=(5, 5),
+               scale=0.7,
+               scope_value=(0, 0.5),
+               reverse = False):
+
+    matrix = np.zeros(shape=size)
+    max_value = round(((size[0]**2)+(size[1]**2))**0.5, 3)
+    x = np.arange(-max_value, max_value, 0.001)
+    dists = norm.pdf(x, loc=0, scale=scale)
+
+    for i in range(11):
+        for j in range(11):
+            distance = ((point[0]-i)**2+(point[1]-j)**2)**0.5
+            if dists[int(-1+max_value*1000+round(distance*500))]>np.random.uniform(*scope_value):
+                matrix[i][j] = 1
+
+    if reverse == True:
+        matrix = ((matrix-1)*-1)+0
+    return matrix
+
+def plus_and(matrix1, matrix2):
+    matrix = matrix1+matrix2
+    for i in range(11):
+        for j in range(11):
+            if matrix[i][j] <= 1:
+                matrix[i][j] = 0
+            elif matrix[i][j] > 1:
+                matrix[i][j] = 1
+    return matrix
+
+def plus_or(matrix1, matrix2):
+    matrix = matrix1+matrix2
+    for i in range(11):
+        for j in range(11):
+            if matrix[i][j] > 1:
+                matrix[i][j] = 1
+    return matrix
+
 def save(flist, name='features'):
     with open(paths+"\\\\"+"base"+'\\\\'+name+'_data.json', 'w') as f:
         json.dump(flist, f)
