@@ -2,6 +2,7 @@ import torch, json, os
 import numpy as np
 from pathlib import Path
 from time import perf_counter
+from scipy.stats import norm
 
 paths = str(Path(os.getcwd()).parent)
 
@@ -111,44 +112,74 @@ def labelchange(function):
         speed_test = False
     return flist
 
-def get_matrix(size=(11, 11),
-               point=(5, 5),
-               scale=0.7,
-               scope_value=(0, 0.5),
-               reverse = False):
+class matrix_generator:
+    def __init__(self, mat_var : list, unify_var : list, size=11):
+        self.mat_var = mat_var
+        self.unify_var = unify_var
+        self.mats = []
+        self.unified = []
+        
+        for i in mat_var:
+            self.mats.append(get_matrix(size=(size, size),
+                                        point=i[0]
+                                        scale=i[1]
+                                        scope_value=i[2]
+                                        reverse=i[3]))
 
-    matrix = np.zeros(shape=size)
-    max_value = round(((size[0]**2)+(size[1]**2))**0.5, 3)
-    x = np.arange(-max_value, max_value, 0.001)
-    dists = norm.pdf(x, loc=0, scale=scale)
+        for i in unify_var:
+            if i[0][0:7] == 'unified':
+                first_mat = self.unified[int(i[0][7])]
+            else :
+                first_mat = self.mats[i[0]]
 
-    for i in range(11):
-        for j in range(11):
-            distance = ((point[0]-i)**2+(point[1]-j)**2)**0.5
-            if dists[int(-1+max_value*1000+round(distance*500))]>np.random.uniform(*scope_value):
-                matrix[i][j] = 1
+            if i[1][0:7] == 'unified':
+                second_mat = self.unified[int(i[1][7])]
+            else :
+                second_mat = self.mats[i[1]]
 
-    if reverse == True:
-        matrix = ((matrix-1)*-1)+0
-    return matrix
+            if i[2] == 'and':
+                self.unified.append(self.plus_and(first_mat, second_mat))
+            elif i[2] == 'or':
+                self.unified.append(self.plus_or(first_mat, second_mat))
+        
+    def get_matrix(size=(11, 11),
+                   point=(5, 5),
+                   scale=0.7,
+                   scope_value=(0, 0.5),
+                   reverse = False):
 
-def plus_and(matrix1, matrix2):
-    matrix = matrix1+matrix2
-    for i in range(11):
-        for j in range(11):
-            if matrix[i][j] <= 1:
-                matrix[i][j] = 0
-            elif matrix[i][j] > 1:
-                matrix[i][j] = 1
-    return matrix
+        matrix = np.zeros(shape=size)
+        max_value = round(((size[0]**2)+(size[1]**2))**0.5, 3)
+        x = np.arange(-max_value, max_value, 0.001)
+        dists = norm.pdf(x, loc=0, scale=scale)
 
-def plus_or(matrix1, matrix2):
-    matrix = matrix1+matrix2
-    for i in range(11):
-        for j in range(11):
-            if matrix[i][j] > 1:
-                matrix[i][j] = 1
-    return matrix
+        for i in range(11):
+            for j in range(11):
+                distance = ((point[0]-i)**2+(point[1]-j)**2)**0.5
+                if dists[int(-1+max_value*1000+round(distance*500))]>np.random.uniform(*scope_value):
+                    matrix[i][j] = 1
+
+        if reverse == True:
+            matrix = ((matrix-1)*-1)+0
+        return matrix
+
+    def plus_and(matrix1, matrix2):
+        matrix = matrix1+matrix2
+        for i in range(11):
+            for j in range(11):
+                if matrix[i][j] <= 1:
+                    matrix[i][j] = 0
+                elif matrix[i][j] > 1:
+                    matrix[i][j] = 1
+        return matrix
+
+    def plus_or(matrix1, matrix2):
+        matrix = matrix1+matrix2
+        for i in range(11):
+            for j in range(11):
+                if matrix[i][j] > 1:
+                    matrix[i][j] = 1
+        return matrix
 
 def save(flist, name='features'):
     with open(paths+"\\\\"+"base"+'\\\\'+name+'_data.json', 'w') as f:
