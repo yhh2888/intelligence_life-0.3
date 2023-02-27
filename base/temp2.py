@@ -172,6 +172,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             '''print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")'''
             losses_list.append(loss)
     return losses_list
+
 def test_loop(dataloader, model, loss_fn, alert=False):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -205,14 +206,25 @@ def reinforce(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_d
             losses = train_loop(trd, mod, loss_fn, optim)
             scheduler.step()
             test_loop(ted, mod, loss_fn, ale)
-            if ale == True:
+            if ale == True and len(losses) != 0:
                 print(sum(losses)/len(losses))
+            elif ale == True and len(losses) == 0:
+                print(sum(losses))
             ale = False
-            
+
         print(time.time()-times)
             
 print("Done!")
 
+'''
+#other data uses
+data =[(torch.tensor([[float(i//10), float(i%10)]]),
+                      torch.tensor(random.randint(0, 1))) for i in range(50)]
+                      
+new = NeuralNetwork([len(data[0][0][0]), 2, 2])
+new.base_set(data, call=False)
+new.roll(15)
+'''
 
 model_dist = NeuralNetwork([11*11, 32, 32, 2])
 model_dist.base_set('distances')
