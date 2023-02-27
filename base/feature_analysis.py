@@ -121,9 +121,9 @@ class matrix_generator:
         
         for i in mat_var:
             self.mats.append(get_matrix(size=(size, size),
-                                        point=i[0]
-                                        scale=i[1]
-                                        scope_value=i[2]
+                                        point=i[0],
+                                        scale=i[1],
+                                        scope_value=i[2],
                                         reverse=i[3]))
 
         for i in unify_var:

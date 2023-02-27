@@ -45,10 +45,12 @@ def datatest(num, leng, data = None):
             data = [random.randint(1, 16) for i in range(leng)]
         else :
             alter_data = []
-            nth_perm = next(itertools.islice(perms, had, None))
+            tbp = 0
             for i in data:
+                nth_perm = next(itertools.islice(perms, tbp, None))
                 alter_data.append(int(nth_perm[i], 16))
                 data = alter_data
+                tbp += 1
         data_dic = {}
         for i in range(len(data)-1):
             if str(data[i])+'+'+str(data[i+1]) in data_dic:
