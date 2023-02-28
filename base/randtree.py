@@ -41,6 +41,7 @@ class randtree:
                 self.nodes.extend(dif_branch)
                 codeinterp_ += 1
             self.steps = list(reversed(self.steps))
+            self.edge = edge
         
         return self.steps
 

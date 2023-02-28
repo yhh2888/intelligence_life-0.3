@@ -1,5 +1,6 @@
 import random
 from randtree import randtree
+from feature_analysis import matrix_generator
 
 class ununited_matrix_DNA:
     def __init__(self, code=None):
@@ -45,3 +46,31 @@ class united_matrix_DNA:
             self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
                        if random.random() < prob else i for i in self.unite_method]
             
+def combiner(dna):
+    matrice_params = []
+    for i in dna.matricecodes:
+
+        point_fin = (5, 5)
+        for j in i.points:
+            add = [(1, 0), (0, 1), (-1, 0), (0, -1)][['r','d','l','u'].index(j)]
+            point_fin = (point_fin[0]+add[0], point_fin[1]+add[1])
+
+        scale_fin = 0.5
+        for j in i.scales:
+            mul = [0.9, 1.1][['b','s'].index(j)]
+            scale_fin = scale_fin*mul
+
+        ranges_fin = (0.2, 0.5)
+        for j in i.ranges:
+            mul = [(1.1, 1), (1, 1.1), (0.9, 1), (1, 0.9)][['i','n','a','x'].index(j)]
+            ranges_fin = (ranges_fin[0]*mul[0], ranges_fin[1]*mul[1])
+
+        if i.reverse[0] == '1' and i.reverse[1] == '1':
+            rev_fin = True
+        else :
+            rev_fin = False
+
+        matrice_params.append([point_fin, scale_fin, ranges_fin, rev_fin])
+    return matrice_params
+    for i in dna.code:
+        pass
