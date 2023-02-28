@@ -12,6 +12,7 @@ class randtree:
         self.nodes = [i for i in range(self.startnum)]
         self.steps = []
         self.ables = [i for i in self.nodes]
+        self.branch = None
         
         if code == None:
             while len(self.ables) > 1:
@@ -25,64 +26,24 @@ class randtree:
                                    self.nodes.index(chosen[1]),
                                    new_nodes])
         
+        if code != None:
+            self.nodes = [1, 2, 3]
+            self.steps = [[2, 3, 1]]
+            edge = [2, 3]
+            codeinterp_ = 0
+            while len(edge) != self.startnum:
+                call_num = max(edge)
+                dif_node = edge[code[codeinterp_]%len(edge)]
+                del edge[int(code[codeinterp_])%len(edge)]
+                dif_branch = [call_num+1, call_num+2]
+                self.steps.append([dif_branch[0], dif_branch[1], dif_node])
+                edge.extend(dif_branch)
+                self.nodes.extend(dif_branch)
+                codeinterp_ += 1
+            self.steps = list(reversed(self.steps))
+        
         return self.steps
-    
-def datatest(num, leng, data = None):
-    done = False
-    had = 0
-    datanone = True
-    alter_data = []
-    letters = "0123456789abcdef"
-    perms = itertools.permutations(letters)
-    
-    if data != None:
-        for i in data:
-            alter_data.append(int(i, 16))
-        data = alter_data
-        datanone = False
-    while done == False and 2<=num<=7:
-        if datanone == True:
-            data = [random.randint(1, 16) for i in range(leng)]
-        else :
-            alter_data = []
-            tbp = 0
-            for i in data:
-                nth_perm = next(itertools.islice(perms, tbp, None))
-                alter_data.append(int(nth_perm[i], 16))
-                data = alter_data
-                tbp += 1
-        data_dic = {}
-        for i in range(len(data)-1):
-            if str(data[i])+'+'+str(data[i+1]) in data_dic:
-                data_dic[str(data[i])+'+'+str(data[i+1])] += 1
-            else:
-                data_dic[str(data[i])+'+'+str(data[i+1])] = 1
-        for i in data_dic:
-            if data_dic[i] >= num and len(set(data)) != 16:
-                done = True
-        had += 1
 
-    return had
-
-hexacodes = []
-
-for i in range(16):
-    dic = {}
-    for j in range(16):
-        dic[hex(j)[2:]] = hex((j+i)%16)[2:]
-    hexacodes.append(dic)
-
-thenumb = ''.join([hex(random.randint(0, 15))[2:] for i in range(500)])
-
-def timetest(num):
-    t = time.time()
-    for i in range(num):
-        for j in range(4096):
-            e = datatest(1, 50, thenumb[0:50])
-    print(time.time()-t)
-    
-letters = "abcde"
-n = 42  # 출력할 순열 번호 - 이 경우 42번째 순열을 출력합니다.
-
-perms = itertools.permutations(letters)
-nth_perm = next(itertools.islice(perms, n-1, None))
+code = [random.randint(0, 20) for i in range(24)]
+a = randtree(24)
+print(a.generate_random_tree(code))
