@@ -113,20 +113,21 @@ def labelchange(function):
     return flist
 
 class matrix_generator:
-    def __init__(self, mat_var : list, unify_var : list, size=11):
+    def __init__(self, mat_var : list, size=11):
         self.mat_var = mat_var
-        self.unify_var = unify_var
         self.mats = []
         self.unified = []
         
         for i in mat_var:
-            self.mats.append(get_matrix(size=(size, size),
+            self.mats.append(self.get_matrix(size=(size, size),
                                         point=i[0],
                                         scale=i[1],
                                         scope_value=i[2],
                                         reverse=i[3]))
-
-        for i in unify_var:
+    def unify(self, unify_var : list):
+        self.unify_var = unify_var
+        
+        for i in self.unify_var:
             if i[0][0:7] == 'unified':
                 first_mat = self.unified[int(i[0][7])]
             else :
@@ -142,7 +143,8 @@ class matrix_generator:
             elif i[2] == 'or':
                 self.unified.append(self.plus_or(first_mat, second_mat))
         
-    def get_matrix(size=(11, 11),
+    def get_matrix(self,
+                   size=(11, 11),
                    point=(5, 5),
                    scale=0.7,
                    scope_value=(0, 0.5),
@@ -163,7 +165,7 @@ class matrix_generator:
             matrix = ((matrix-1)*-1)+0
         return matrix
 
-    def plus_and(matrix1, matrix2):
+    def plus_and(self, matrix1, matrix2):
         matrix = matrix1+matrix2
         for i in range(11):
             for j in range(11):
@@ -173,7 +175,7 @@ class matrix_generator:
                     matrix[i][j] = 1
         return matrix
 
-    def plus_or(matrix1, matrix2):
+    def plus_or(self, matrix1, matrix2):
         matrix = matrix1+matrix2
         for i in range(11):
             for j in range(11):

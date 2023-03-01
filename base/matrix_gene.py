@@ -13,7 +13,7 @@ class ununited_matrix_DNA:
         else :
             self.points = self.code[0:48]
             self.scales = self.code[48:64]
-            self.ranges = self.code[48:80]
+            self.ranges = self.code[64:80]
             self.reverse = self.code[80:]
 
     def mutation(self, prob=0.01):
@@ -38,13 +38,13 @@ class united_matrix_DNA:
             self.orders = self.code[0]
             self.unite_method = self.code[1]
 
-        def total_mutation(self, prob=0.01):
-            for i in self.matricecodes:
-                i.mutation()
+    def total_mutation(self, prob=0.01):
+        for i in self.matricecodes:
+            i.mutation()
 
-            self.orders = [random.randint(0, 24) if random.random() < prob else i for i in self.orders]
-            self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
-                       if random.random() < prob else i for i in self.unite_method]
+        self.orders = [random.randint(0, 24) if random.random() < prob else i for i in self.orders]
+        self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
+                            if random.random() < prob else i for i in self.unite_method]
             
 def combiner(dna):
     matrice_params = []
@@ -55,7 +55,7 @@ def combiner(dna):
             add = [(1, 0), (0, 1), (-1, 0), (0, -1)][['r','d','l','u'].index(j)]
             point_fin = (point_fin[0]+add[0], point_fin[1]+add[1])
 
-        scale_fin = 0.5
+        scale_fin = 1
         for j in i.scales:
             mul = [0.9, 1.1][['b','s'].index(j)]
             scale_fin = scale_fin*mul
@@ -72,5 +72,49 @@ def combiner(dna):
 
         matrice_params.append([point_fin, scale_fin, ranges_fin, rev_fin])
     return matrice_params
-    for i in dna.code:
-        pass
+
+def matfin(dna = None):
+
+    if dna == None:
+        code = [random.randint(0, 24) for i in range(24)]
+        mergecode = [['o','a'][random.randint(0, 1)] for i in range(23)]
+    else :
+        code = dna[0]
+        mergecode = dna[1]
+        
+    randt = randtree(24)
+    randt.generate_random_tree(code)
+    
+    if dna == None:
+        b = united_matrix_DNA([ununited_matrix_DNA() for i in range(24)])
+    else :
+        b = united_matrix_DNA([ununited_matrix_DNA(dna[2+i]) for i in range(24)], code = [code, mergecode])
+        for i in range(24):
+            b.total_mutation()
+    
+    mat_sets = matrix_generator(combiner(b))
+    edges = randt.edge
+    mats = mat_sets.mats
+    for i in randt.steps:
+        edges.append(i[2])
+        added = [mat_sets.plus_and(mat_sets.mats[edges.index(i[0])],
+                                   mat_sets.mats[edges.index(i[1])]),
+                 mat_sets.plus_or(mat_sets.mats[edges.index(i[0])],
+                                  mat_sets.mats[edges.index(i[1])])] \
+                                  [random.randint(0, 1)]
+        mats.append(added)
+
+        del mats[edges.index(i[0])]
+        del mats[edges.index(i[1])]
+        del edges[edges.index(i[0])]
+        del edges[edges.index(i[1])]
+    return mats, b
+
+
+'''
+e = matfin()
+dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+e = matfin(dna)
+dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+#계속....
+'''

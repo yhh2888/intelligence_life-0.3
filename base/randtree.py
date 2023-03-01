@@ -45,6 +45,8 @@ class randtree:
         
         return self.steps
 
+'''
 code = [random.randint(0, 20) for i in range(24)]
 a = randtree(24)
 print(a.generate_random_tree(code))
+'''
