@@ -40,7 +40,7 @@ class united_matrix_DNA:
 
     def total_mutation(self, prob=0.01):
         for i in self.matricecodes:
-            i.mutation()
+            i.mutation(prob)
 
         self.orders = [random.randint(0, 24) if random.random() < prob else i for i in self.orders]
         self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
@@ -95,26 +95,50 @@ def matfin(dna = None):
     mat_sets = matrix_generator(combiner(b))
     edges = randt.edge
     mats = mat_sets.mats
+    call = 0
     for i in randt.steps:
         edges.append(i[2])
         added = [mat_sets.plus_and(mat_sets.mats[edges.index(i[0])],
                                    mat_sets.mats[edges.index(i[1])]),
                  mat_sets.plus_or(mat_sets.mats[edges.index(i[0])],
                                   mat_sets.mats[edges.index(i[1])])] \
-                                  [random.randint(0, 1)]
+                                  [['a','o'].index(b.unite_method[call])]
         mats.append(added)
 
         del mats[edges.index(i[0])]
         del mats[edges.index(i[1])]
         del edges[edges.index(i[0])]
         del edges[edges.index(i[1])]
+        call += 1
     return mats, b
 
 
 '''
-e = matfin()
-dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
-e = matfin(dna)
-dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
-#계속....
+er = []
+for j in range(100):
+    for i in range(1000):
+        dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+        e = matfin(dna)
+        if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
+            er.append(i)
+            break
+
+with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
+        p = json.load(f)
+
+
+for i in range(len(p)-1):
+    p[0].extend(p[i+1])
+
+p=p[0]
+
+for i in range(len(p)):
+	p[i] = [[p[i][0][0]], p[i][0][1]]
+	p[i][0] = np.array([np.array(p[i][0]).reshape(11, 11)])
+	p[i][1] = np.array(p[i][1])
+	p[i] = list(p[i])
+
+for k in range(len(p)):
+    tot_points.append(sum([p[k][0][0].flatten()[i] for i in [i for i in range(len(e[0][0].flatten())) if e[0][0].flatten()[i] == 1]]))
+
 '''
