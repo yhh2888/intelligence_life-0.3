@@ -1,6 +1,7 @@
-import random
+import random, json
 from randtree import randtree
 from feature_analysis import matrix_generator
+import numpy as np
 
 class ununited_matrix_DNA:
     def __init__(self, code=None):
@@ -34,9 +35,11 @@ class united_matrix_DNA:
         if self.code == None:
             self.orders = [random.randint(0, 24) for i in range(24)]
             self.unite_method = [['o','a'][random.randint(0, 1)] for i in range(23)]
+            self.special = set([[random.randint(0, 10), random.randint(0, 10)] for i in range(10)])
         else :
             self.orders = self.code[0]
             self.unite_method = self.code[1]
+            self.special = self.code[2]
 
     def total_mutation(self, prob=0.01):
         for i in self.matricecodes:
@@ -112,8 +115,7 @@ def matfin(dna = None):
         call += 1
     return mats, b
 
-
-'''
+e = matfin()
 er = []
 for j in range(100):
     for i in range(1000):
@@ -132,13 +134,48 @@ for i in range(len(p)-1):
 
 p=p[0]
 
+tot_points = []
+
 for i in range(len(p)):
 	p[i] = [[p[i][0][0]], p[i][0][1]]
 	p[i][0] = np.array([np.array(p[i][0]).reshape(11, 11)])
 	p[i][1] = np.array(p[i][1])
 	p[i] = list(p[i])
 
-for k in range(len(p)):
-    tot_points.append(sum([p[k][0][0].flatten()[i] for i in [i for i in range(len(e[0][0].flatten())) if e[0][0].flatten()[i] == 1]]))
+def genetest(matrix):
+    tot_points = []
+    crit = [i for i in range(len(matrix[0][0].flatten())) if matrix[0][0].flatten()[i] == 1]
+    for k in range(len(p)):
+        tot_points.append(sum([p[k][0][0].flatten()[i] for i in crit]))
 
-'''
+    labels = [np.argmax(p[i][1]) if max(p[i][1]) != 0 else 5 for i in range(len(p))]
+    labelpoints = [0,0,0,0,0]
+    
+    for i in range(len(labels)):
+        if 0<=labels[i]<=4:
+            labelpoints[labels[i]] += tot_points[i]
+
+    return labelpoints
+
+cut = 0
+while cut < 2:
+    for i in range(1000):
+        dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+        e = matfin(dna)
+        if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
+            er.append(i)
+            break
+    test = genetest(e)
+    print(test)
+    cut = 0
+    for i in test:
+        if i/sum(test) < 0.02:
+            cut += 1
+
+nextgens = []
+for i in range(100):
+     gene = np.zeros(shape=(11, 11))
+     gene[random.randint(0, 10)][random.randint(0, 10)] += 1
+     nextg = e[0] + gene
+     nextgens.append(nextg)
+
