@@ -35,7 +35,7 @@ class united_matrix_DNA:
         if self.code == None:
             self.orders = [random.randint(0, 24) for i in range(24)]
             self.unite_method = [['o','a'][random.randint(0, 1)] for i in range(23)]
-            self.special = set([[random.randint(0, 10), random.randint(0, 10)] for i in range(10)])
+            self.special = []
         else :
             self.orders = self.code[0]
             self.unite_method = self.code[1]
@@ -48,6 +48,15 @@ class united_matrix_DNA:
         self.orders = [random.randint(0, 24) if random.random() < prob else i for i in self.orders]
         self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
                             if random.random() < prob else i for i in self.unite_method]
+
+    def special_mutation(self, prob=0.3):
+        addpoint = (random.randint(0, 10), random.randint(0, 10))
+        if prob > random.random() and self.special != []:
+            del self.special[random.randint(0, len(self.special)-1)]
+        elif prob <= random.random() and len(self.special) < 20:
+            while addpoint not in self.special:
+                self.special.append(addpoint)
+        
             
 def combiner(dna):
     matrice_params = []
@@ -81,9 +90,11 @@ def matfin(dna = None):
     if dna == None:
         code = [random.randint(0, 24) for i in range(24)]
         mergecode = [['o','a'][random.randint(0, 1)] for i in range(23)]
+        specode = []
     else :
         code = dna[0]
         mergecode = dna[1]
+        specode = dna[2]
         
     randt = randtree(24)
     randt.generate_random_tree(code)
@@ -91,7 +102,7 @@ def matfin(dna = None):
     if dna == None:
         b = united_matrix_DNA([ununited_matrix_DNA() for i in range(24)])
     else :
-        b = united_matrix_DNA([ununited_matrix_DNA(dna[2+i]) for i in range(24)], code = [code, mergecode])
+        b = united_matrix_DNA([ununited_matrix_DNA(dna[3+i]) for i in range(24)], code = [code, mergecode, specode])
         for i in range(24):
             b.total_mutation()
     
@@ -107,19 +118,23 @@ def matfin(dna = None):
                                   mat_sets.mats[edges.index(i[1])])] \
                                   [['a','o'].index(b.unite_method[call])]
         mats.append(added)
-
+        
         del mats[edges.index(i[0])]
         del mats[edges.index(i[1])]
         del edges[edges.index(i[0])]
         del edges[edges.index(i[1])]
         call += 1
+    
+    for i in b.special:
+        mats[0][i[0]][i[1]] = 1
+
     return mats, b
 
 e = matfin()
 er = []
 for j in range(100):
     for i in range(1000):
-        dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+        dna = [e[1].orders, e[1].unite_method, e[1].special, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
         e = matfin(dna)
         if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
             er.append(i)
@@ -160,7 +175,8 @@ def genetest(matrix):
 cut = 0
 while cut < 2:
     for i in range(1000):
-        dna = [e[1].orders, e[1].unite_method, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+        dna = [e[1].orders, e[1].unite_method, e[1].special,
+               *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
         e = matfin(dna)
         if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
             er.append(i)
@@ -172,10 +188,13 @@ while cut < 2:
         if i/sum(test) < 0.02:
             cut += 1
 
-nextgens = []
-for i in range(100):
-     gene = np.zeros(shape=(11, 11))
-     gene[random.randint(0, 10)][random.randint(0, 10)] += 1
-     nextg = e[0] + gene
-     nextgens.append(nextg)
+nextgens = [e for i in range(100)]
 
+for j in range(10):
+    for i in range(len(nextgens)):
+        for j in range(15):
+            nextgens[i][1].special_mutation()
+        dna = [nextgens[i][1].orders, nextgens[i][1].unite_method, nextgens[i][1].special,
+               *[nextgens[i][1].matricecodes[i].points+nextgens[i][1].matricecodes[i].scales+\
+                 nextgens[i][1].matricecodes[i].ranges+nextgens[i][1].matricecodes[i].reverse for i in range(24)]]
+        print(genetest(matfin(dna)))
