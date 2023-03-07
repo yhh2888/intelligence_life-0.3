@@ -49,8 +49,10 @@ class united_matrix_DNA:
         self.unite_method = [['o','a'][(['o','a'].index(i)+[-1, 1][random.randint(0, 1)])%2] \
                             if random.random() < prob else i for i in self.unite_method]
 
-    def special_mutation(self, prob=0.3):
-        addpoint = (random.randint(0, 10), random.randint(0, 10))
+    def special_mutation(self, mat, prob=0.2):
+        addpoint = mutational(mat)
+        addpoint = [min(10, max(0, i)) for i in addpoint]
+        addpoint.reverse()
         if prob > random.random() and self.special != []:
             del self.special[random.randint(0, len(self.special)-1)]
         elif prob <= random.random() and len(self.special) < 20:
@@ -85,7 +87,7 @@ def combiner(dna):
         matrice_params.append([point_fin, scale_fin, ranges_fin, rev_fin])
     return matrice_params
 
-def matfin(dna = None):
+def matfin(dna = None, mutate = True):
 
     if dna == None:
         code = [random.randint(0, 24) for i in range(24)]
@@ -103,8 +105,9 @@ def matfin(dna = None):
         b = united_matrix_DNA([ununited_matrix_DNA() for i in range(24)])
     else :
         b = united_matrix_DNA([ununited_matrix_DNA(dna[3+i]) for i in range(24)], code = [code, mergecode, specode])
-        for i in range(24):
-            b.total_mutation()
+        if mutate == True:
+            for i in range(1):
+                b.total_mutation()
     
     mat_sets = matrix_generator(combiner(b))
     edges = randt.edge
@@ -188,13 +191,58 @@ while cut < 2:
         if i/sum(test) < 0.02:
             cut += 1
 
-nextgens = [e for i in range(100)]
+dna = [e[1].orders, e[1].unite_method, e[1].special, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
 
-for j in range(10):
-    for i in range(len(nextgens)):
-        for j in range(15):
-            nextgens[i][1].special_mutation()
-        dna = [nextgens[i][1].orders, nextgens[i][1].unite_method, nextgens[i][1].special,
-               *[nextgens[i][1].matricecodes[i].points+nextgens[i][1].matricecodes[i].scales+\
-                 nextgens[i][1].matricecodes[i].ranges+nextgens[i][1].matricecodes[i].reverse for i in range(24)]]
-        print(genetest(matfin(dna)))
+nextgens = [matfin(dna) for i in range(30)]
+print("done!")
+
+def mutational(mat, num=2.3):
+    matL = []
+    matx = 0
+    maty = 0
+
+    for i in range(len(mat)):
+        for j in range(len(mat[i])):
+            if mat[i][j] == 1.:
+                matL.append((j, i))
+
+    for i in matL:
+        matx += i[0]
+        maty += i[1]
+
+    if matL != []:
+        matx = matx/len(matL)
+        maty = maty/len(matL)
+    else:
+        matx = 5
+        maty = 5
+    matmid = [matx, maty]
+
+    pluscode = [np.random.normal()*num]*2
+    mutatecode = [int(i+np.random.normal()*num) for i in matmid]
+
+    return mutatecode
+
+for i in range(5):
+    print(("\ngen"+ str(i)))
+    points = []
+    for k in range(len(nextgens)):
+        for j in range(7):
+            if k > 4:
+                nextgens[k][1].special_mutation(nextgens[k][0][0])
+        dna = [nextgens[k][1].orders, nextgens[k][1].unite_method, nextgens[k][1].special,
+                *[nextgens[k][1].matricecodes[i].points+nextgens[k][1].matricecodes[i].scales+\
+                nextgens[k][1].matricecodes[i].ranges+nextgens[k][1].matricecodes[i].reverse for i in range(24)]]
+        lis = genetest(matfin(dna, mutate=False))
+        if sum(lis) != 0:
+            points.append(min(lis[0:4])/sum(lis))
+            print(min(lis[0:4])/sum(lis), lis)
+            
+    nextg = [i for i in points]
+    nextg.sort()
+    chosen = [nextgens[points.index(nextg[i])] for i in range(5)]
+    chosendna = [[chosen[k][1].orders, chosen[k][1].unite_method, chosen[k][1].special,
+                *[chosen[k][1].matricecodes[i].points+chosen[k][1].matricecodes[i].scales+\
+                chosen[k][1].matricecodes[i].ranges+chosen[k][1].matricecodes[i].reverse for i in range(24)]] for k in range(5)]
+    nextgens = [matfin(chosendna[i], mutate = False) for j in range(6) for i in range(5)]
+    
