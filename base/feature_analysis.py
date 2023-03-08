@@ -158,7 +158,7 @@ class matrix_generator:
         for i in range(11):
             for j in range(11):
                 distance = ((point[0]-i)**2+(point[1]-j)**2)**0.5
-                if dists[int(-1+max_value*1000+round(distance*500))]>np.random.uniform(*scope_value):
+                if dists[int(-1+max_value*1000+round(distance*500))]>np.random.uniform(0.3, 0.3):
                     matrix[i][j] = 1
 
         if reverse == True:

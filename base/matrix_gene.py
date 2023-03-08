@@ -162,7 +162,7 @@ for i in range(len(p)):
 
 def genetest(matrix):
     tot_points = []
-    crit = [i for i in range(len(matrix[0][0].flatten())) if matrix[0][0].flatten()[i] == 1]
+    crit = [i for i in range(len(matrix.flatten())) if matrix.flatten()[i] == 1]
     for k in range(len(p)):
         tot_points.append(sum([p[k][0][0].flatten()[i] for i in crit]))
 
@@ -184,16 +184,14 @@ while cut < 2:
         if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
             er.append(i)
             break
-    test = genetest(e)
+    test = genetest(e[0][0])
     print(test)
     cut = 0
     for i in test:
         if i/sum(test) < 0.02:
             cut += 1
 
-dna = [e[1].orders, e[1].unite_method, e[1].special, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
-
-nextgens = [matfin(dna) for i in range(30)]
+dna = [[[i, j] for i in range(len(e[0][0])) for j in range(len(e[0][0][i]))  if e[0][0][i][j] == 1] for i in range(30)]
 print("done!")
 
 def mutational(mat, num=2.3):
@@ -223,26 +221,42 @@ def mutational(mat, num=2.3):
 
     return mutatecode
 
-for i in range(5):
-    print(("\ngen"+ str(i)))
-    points = []
-    for k in range(len(nextgens)):
-        for j in range(7):
-            if k > 4:
-                nextgens[k][1].special_mutation(nextgens[k][0][0])
-        dna = [nextgens[k][1].orders, nextgens[k][1].unite_method, nextgens[k][1].special,
-                *[nextgens[k][1].matricecodes[i].points+nextgens[k][1].matricecodes[i].scales+\
-                nextgens[k][1].matricecodes[i].ranges+nextgens[k][1].matricecodes[i].reverse for i in range(24)]]
-        lis = genetest(matfin(dna, mutate=False))
-        if sum(lis) != 0:
-            points.append(min(lis[0:4])/sum(lis))
-            print(min(lis[0:4])/sum(lis), lis)
-            
-    nextg = [i for i in points]
-    nextg.sort()
-    chosen = [nextgens[points.index(nextg[i])] for i in range(5)]
-    chosendna = [[chosen[k][1].orders, chosen[k][1].unite_method, chosen[k][1].special,
-                *[chosen[k][1].matricecodes[i].points+chosen[k][1].matricecodes[i].scales+\
-                chosen[k][1].matricecodes[i].ranges+chosen[k][1].matricecodes[i].reverse for i in range(24)]] for k in range(5)]
-    nextgens = [matfin(chosendna[i], mutate = False) for j in range(6) for i in range(5)]
+def special_mutation(dna, prob=0.4):
+    for codes in range(len(dna)):
+        testmat = get_matrix(dna[codes])
+        codelength = len(dna[codes])
+        if prob > random.random():
+            del dna[codes][random.randint(0, len(dna[codes])-1)]
+        else :
+            while len(dna[codes]) == codelength:
+                addpoint = mutational(testmat)
+                if addpoint not in dna[codes]:
+                    dna[codes].append(addpoint)
+    return dna
+
+def get_matrix(dna):
+    mat = np.zeros(shape=(11, 11))
+    for i in dna:
+        x = min(10, max(0, i[0]))
+        y = min(10, max(0, i[1]))
+        mat[x][y] = 1
+    return mat
+
+epochs = 1
+
+for i in range(epochs):
+    print('\ngen'+str(i))
+    if i > 0:
+        dna = [chosen[i] for j in range(6) for i in range(5)]
+    dna[5:] = special_mutation(dna[5:])
     
+    points = []
+    for i in range(len(dna)):
+        label = genetest(get_matrix(dna[i]))
+        points.append(min(label[0:4])/sum(label))
+        print(min(label[0:4])/sum(label))
+
+    sortpoint = list(set([i for i in points]))
+    sortpoint.sort()
+    
+    chosen = [dna[points.index(sortpoint[i])] for i in range(5)]
