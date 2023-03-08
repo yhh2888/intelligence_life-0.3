@@ -143,7 +143,7 @@ for j in range(100):
             er.append(i)
             break
 
-with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 
@@ -242,12 +242,12 @@ def get_matrix(dna):
         mat[x][y] = 1
     return mat
 
-epochs = 1
+epochs = 5
 
 for i in range(epochs):
     print('\ngen'+str(i))
     if i > 0:
-        dna = [chosen[i] for j in range(6) for i in range(5)]
+        dna = [[chosen[i][k] for k in range(len(chosen[i]))] for j in range(6) for i in range(5)]
     dna[5:] = special_mutation(dna[5:])
     
     points = []
