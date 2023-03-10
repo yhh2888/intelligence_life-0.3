@@ -2,6 +2,7 @@ import random, json
 from randtree import randtree
 from feature_analysis import matrix_generator
 import numpy as np
+from pathlib import Path
 
 class ununited_matrix_DNA:
     def __init__(self, code=None):
@@ -134,16 +135,8 @@ def matfin(dna = None, mutate = True):
     return mats, b
 
 e = matfin()
-er = []
-for j in range(100):
-    for i in range(1000):
-        dna = [e[1].orders, e[1].unite_method, e[1].special, *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
-        e = matfin(dna)
-        if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
-            er.append(i)
-            break
 
-with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 
@@ -175,23 +168,35 @@ def genetest(matrix):
 
     return labelpoints
 
-cut = 0
-while cut < 2:
-    for i in range(1000):
-        dna = [e[1].orders, e[1].unite_method, e[1].special,
-               *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
-        e = matfin(dna)
-        if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
-            er.append(i)
-            break
-    test = genetest(e[0][0])
-    print(test)
+def fit(crit = 0.03, labelnum = None, reverse=False):
+    
+    er = []
+    e = matfin()
     cut = 0
-    for i in test:
-        if i/sum(test) < 0.02:
-            cut += 1
+    
+    while cut < 2:
+        for i in range(1000):
+            dna = [e[1].orders, e[1].unite_method, e[1].special,
+                   *[e[1].matricecodes[i].points+e[1].matricecodes[i].scales+e[1].matricecodes[i].ranges+e[1].matricecodes[i].reverse for i in range(24)]]
+            e = matfin(dna)
+            if 7<len([0 for i in e[0][0].flatten() if i == 1])<85:
+                er.append(i)
+                break
+        test = genetest(e[0][0])
+        print(test)
+        cut = 0
+        if labelnum == None:
+            labelnum = np.argmin(test[0:4])
+        for i in test:
+            if test[labelnum]/sum(test) < crit and reverse == False:
+                cut += 1
+            elif test[labelnum]/sum(test) > crit and reverse == True:
+                cut += 1
+        print(test[labelnum]/sum(test))
 
-dna = [[[i, j] for i in range(len(e[0][0])) for j in range(len(e[0][0][i]))  if e[0][0][i][j] == 1] for i in range(30)]
+    return e
+
+
 print("done!")
 
 def mutational(mat, num=2.3):
@@ -221,11 +226,11 @@ def mutational(mat, num=2.3):
 
     return mutatecode
 
-def special_mutation(dna, prob=0.4):
+def special_mutation(dna, prob=0.1, least = 8):
     for codes in range(len(dna)):
         testmat = get_matrix(dna[codes])
         codelength = len(dna[codes])
-        if prob > random.random():
+        if prob > random.random() and len(dna[codes]) >= 8:
             del dna[codes][random.randint(0, len(dna[codes])-1)]
         else :
             while len(dna[codes]) == codelength:
@@ -242,21 +247,52 @@ def get_matrix(dna):
         mat[x][y] = 1
     return mat
 
-epochs = 5
+epochs = 60
 
-for i in range(epochs):
-    print('\ngen'+str(i))
-    if i > 0:
-        dna = [[chosen[i][k] for k in range(len(chosen[i]))] for j in range(6) for i in range(5)]
-    dna[5:] = special_mutation(dna[5:])
-    
-    points = []
-    for i in range(len(dna)):
-        label = genetest(get_matrix(dna[i]))
-        points.append(min(label[0:4])/sum(label))
-        print(min(label[0:4])/sum(label))
+def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False):
+    dna = [[[i, j] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] == 1] for i in range(30)]
+    for i in range(epochs):
+        print('\ngen'+str(i))
+        if i > 0:
+            dna = [[chosen[i][k] for k in range(len(chosen[i]))] for j in range(6) for i in range(5)]
 
-    sortpoint = list(set([i for i in points]))
-    sortpoint.sort()
+        for j in range(step):
+            dna[5:] = special_mutation(dna[5:])
+        
+        points = []
+        for j in range(len(dna)):
+            label = genetest(get_matrix(dna[j]))
+            if labelnum == None:
+                labelnum = np.argmin(label[0:4])
+                
+            if sum(label) != 0:
+                points.append(label[labelnum]/sum(label))
+                print(label[labelnum]/sum(label))
+            else :
+                points.append(50)
+                
+        sortpoint = list(set([i for i in points]))
+        sortpoint.sort()
+        
+        chosen = [dna[points.index(sortpoint[i])] if reverse==False else dna[points.index(sortpoint[-i-1])] for i in range(5)]
     
-    chosen = [dna[points.index(sortpoint[i])] for i in range(5)]
+    return chosen
+
+'''
+evolution(fit(), 5)
+'''
+
+def save(chosen, type='awareness', label=None, direction = 'least'):
+    if label == None:
+        jsond = [[chosen[i], type, min(genetest(get_matrix(chosen[i]))[0:4])/sum(genetest(get_matrix(chosen[i]))),
+                  genetest(get_matrix(chosen[i])).index(min(genetest(get_matrix(chosen[i])))[0:4]),
+                  direction] for i in range(5)]
+    else :
+        jsond = [[chosen[i], type, genetest(get_matrix(chosen[i]))[label]/sum(genetest(get_matrix(chosen[i]))),
+                  label, direction] for i in range(5)]
+    if Path(r'featured_matrix\featurematrixes.json').exists():
+        with open(r'featured_matrix\featurematrixes.json') as f:
+            loaded = json.load(f)
+            jsond = loaded+jsond
+    with open(r'featured_matrix\featurematrixes.json', 'w') as f:
+        json.dump(jsond, f)

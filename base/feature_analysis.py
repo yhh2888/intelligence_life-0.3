@@ -9,6 +9,8 @@ paths = str(Path(os.getcwd()).parent)
 try:
     with open(paths+'\\\\'+'field_data.json') as f:
         data = json.load(f)
+    with open(r'featured_matrix\featurematrixes.json') as f:
+        fm = json.load(f)
 except Exception:
     pass
 
@@ -62,10 +64,13 @@ def labeler(tensor, function, min_size=0.003, min_dist=3, middle=[5, 5], speed_p
         
         func_params = []
         for i in function:
-            if i in locals():
+            if type(i) == list or type(i) == torch.Tensor:
+                func_params.append(i)
+            elif i in locals():
                 func_params.append(locals()[i])
             elif i in globals():
                 func_params.append(globals()[i])
+            
             else:
                 raise ValueError
             
@@ -97,6 +102,14 @@ def directions(position):
 def distances(dist, crit_dist=3):
     return [0 if dist >= crit_dist else 1][0]
 
+def get_matrix(dna):
+    mat = np.zeros(shape=(11, 11))
+    for i in dna:
+        x = min(10, max(0, i[0]))
+        y = min(10, max(0, i[1]))
+        mat[x][y] = 1
+    return mat
+
 def labelchange(function):
     global data
     feature = []
@@ -111,6 +124,10 @@ def labelchange(function):
             flist.append([i, ton])
         speed_test = False
     return flist
+
+def matrix_feature_(matrix, crit):
+    return float(sum((matrix*crit).flatten()))
+    
 
 class matrix_generator:
     def __init__(self, mat_var : list, size=11):
@@ -188,4 +205,5 @@ def save(flist, name='features'):
         json.dump(flist, f)
 
 
-'''labelchange(['distances', 'maindist'])'''
+'''labelchange(['distances', 'maindist'])
+flist= labelchange(['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[0][0]))])'''
