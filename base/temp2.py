@@ -48,17 +48,6 @@ for j in range(len(p)):
         del p[j]
         setter += 1
 
-def feature_change(data, feature):
-    goer = 0
-    flist = []
-    labelist = []
-    for i in range(len(data)):
-        if feature[goer][0] == i:
-            flist.append((data[i][0], torch.tensor(feature[goer][1])))
-            goer += 1
-            labelist.append(data[i][1])
-    return (flist, labelist)
-
 #--------------------------------------------
 
 p_ = DataLoader(p[0:int(len(p)//1.2)], batch_size=100)
@@ -111,7 +100,7 @@ class NeuralNetwork(nn.Module):
         return logits
 
     def featurecall(self, name):
-        with open(os.getcwd()+'\\\\'+name+'_data.json') as f:
+        with open(os.getcwd()+'\\preprocessed\\'+name+'_data.json') as f:
             self.flist = json.load(f)
         self.f_on = True
         
@@ -230,26 +219,38 @@ model_dist = NeuralNetwork([11*11, 32, 32, 2])
 model_dist.base_set('distances')
 model_dist.roll(30, 10)
 
-model_dist01 = NeuralNetwork([11*11, 32, 32, 2])
+'''model_dist01 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist01.base_set('distances01')
 model_dist01.roll(30, 10)
 
 model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
-model_dist02.roll(30, 10)
+model_dist02.roll(30, 10)'''
 
 model_dir = NeuralNetwork([11*11, 32, 32, 4])
 model_dir.base_set('directions')
 model_dir.roll(50, 10)
 
+datakinds = ['maf_3least', 'maf_1least', 'maf_2least', 'maf_0least']
+
+for i in datakinds:
+    globals()['models_'+i] = NeuralNetwork([1])
+    globals()['models_'+i].base_set(i)
+
+
 li68=[]
 for i in range(len(model_dist.feature_label)):
     li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(model_dist.feature_label[i][0])[0],
                                                                model_dir(model_dist.feature_label[i][0])[0],
-                                                               torch.tensor([0 if model_dist.remain_labels[i].item() != 5 else 1])))))]),
-                 model_dist.remain_labels[i]))
+                                                               torch.tensor([0 if model_dist.remain_labels[i].item() != 5 else 1]),
+                                                               *[torch.tensor([globals()['models_'+j].feature_label[i][1]]) for j in datakinds]
+                                                               ))
+                                                    ))
+                               ]),
+                 model_dist.remain_labels[i]
+                 ))
 
-model_fin = NeuralNetwork([len(li68[0][0][0]), 15, 15, 6])
+model_fin = NeuralNetwork([len(li68[0][0][0]), 25, 25, 6])
 model_fin.base_set(li68, call = False)
 model_fin.roll(100, 30)
 

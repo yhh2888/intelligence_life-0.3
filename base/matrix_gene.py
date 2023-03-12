@@ -136,7 +136,7 @@ def matfin(dna = None, mutate = True):
 
 e = matfin()
 
-with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 
@@ -279,7 +279,8 @@ def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False):
     return chosen
 
 '''
-evolution(fit(), 5)
+evolution(fit(crit, label)[0][0], epoch, label, step, reverse)
+evolution(get_matrix(chosen[0]), epoch, label, step, reverse)
 '''
 
 def save(chosen, type='awareness', label=None, direction = 'least'):

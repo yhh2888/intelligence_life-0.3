@@ -201,7 +201,7 @@ class matrix_generator:
         return matrix
 
 def save(flist, name='features'):
-    with open(paths+"\\\\"+"base"+'\\\\'+name+'_data.json', 'w') as f:
+    with open(paths+"\\\\"+"base\\preprocessed"+'\\\\'+name+'_data.json', 'w') as f:
         json.dump(flist, f)
 
 
