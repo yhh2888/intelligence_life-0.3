@@ -136,7 +136,7 @@ def matfin(dna = None, mutate = True):
 
 e = matfin()
 
-with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 

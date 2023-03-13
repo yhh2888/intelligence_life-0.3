@@ -243,7 +243,8 @@ for i in range(len(model_dist.feature_label)):
     li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(model_dist.feature_label[i][0])[0],
                                                                model_dir(model_dist.feature_label[i][0])[0],
                                                                torch.tensor([0 if model_dist.remain_labels[i].item() != 5 else 1]),
-                                                               *[torch.tensor([globals()['models_'+j].feature_label[i][1]]) for j in datakinds]
+                                                               *[torch.tensor([globals()['models_'+j].feature_label[i][1]]) for j in datakinds],
+                                                               *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)]
                                                                ))
                                                     ))
                                ]),
