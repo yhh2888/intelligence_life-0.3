@@ -219,19 +219,21 @@ model_dist = NeuralNetwork([11*11, 32, 32, 2])
 model_dist.base_set('distances')
 model_dist.roll(30, 10)
 
-'''model_dist01 = NeuralNetwork([11*11, 32, 32, 2])
+model_dist01 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist01.base_set('distances01')
 model_dist01.roll(30, 10)
 
 model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
-model_dist02.roll(30, 10)'''
+model_dist02.roll(30, 10)
 
 model_dir = NeuralNetwork([11*11, 32, 32, 4])
 model_dir.base_set('directions')
-model_dir.roll(50, 10)
+model_dir.roll(60, 10)
 
-datakinds = ['maf_3least', 'maf_1least', 'maf_2least', 'maf_0least']
+datakinds = ['maf_3least', 'maf_1least', 'maf_2least', 'maf_0least',
+             'maf_1most', 'maf_3most',
+             'maf_0leastElite', 'maf_1leastElite', 'maf_2leastElite', 'maf_3leastElite']
 
 for i in datakinds:
     globals()['models_'+i] = NeuralNetwork([1])
@@ -242,9 +244,11 @@ li68=[]
 for i in range(len(model_dist.feature_label)):
     li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((model_dist(model_dist.feature_label[i][0])[0],
                                                                model_dir(model_dist.feature_label[i][0])[0],
+                                                               model_dist01(model_dist.feature_label[i][0])[0],
+                                                               model_dist02(model_dist.feature_label[i][0])[0],
                                                                torch.tensor([0 if model_dist.remain_labels[i].item() != 5 else 1]),
                                                                *[torch.tensor([globals()['models_'+j].feature_label[i][1]]) for j in datakinds],
-                                                               *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)]
+                                                               *[torch.tensor([0]) if i-1-j < 2 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(2)]
                                                                ))
                                                     ))
                                ]),

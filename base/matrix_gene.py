@@ -136,7 +136,7 @@ def matfin(dna = None, mutate = True):
 
 e = matfin()
 
-with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 
@@ -283,6 +283,32 @@ evolution(fit(crit, label)[0][0], epoch, label, step, reverse)
 evolution(get_matrix(chosen[0]), epoch, label, step, reverse)
 '''
 
+def total_by_point(labelnum):
+	totals = []
+	for i in range(11):
+		semitotal = []
+		for j in range(11):
+			labels = genetest(get_matrix([[i, j]]))
+			semitotal.append(labels[labelnum]/sum(labels))
+		totals.append(semitotal)
+	return np.array(totals)
+
+def matsort(stand, mat):
+	matrix = []
+	for i in mat:
+		row = []
+		for j in i:
+			if j > stand:
+                                row.append(0)
+			else :
+				row.append(1)
+		matrix.append(row)
+	return np.array(matrix)
+
+for i in range(4):
+    globals()['label'+str(i)] = total_by_point(i)
+
+
 def save(chosen, type='awareness', label=None, direction = 'least'):
     if label == None:
         jsond = [[chosen[i], type, min(genetest(get_matrix(chosen[i]))[0:4])/sum(genetest(get_matrix(chosen[i]))),
@@ -290,7 +316,7 @@ def save(chosen, type='awareness', label=None, direction = 'least'):
                   direction] for i in range(5)]
     else :
         jsond = [[chosen[i], type, genetest(get_matrix(chosen[i]))[label]/sum(genetest(get_matrix(chosen[i]))),
-                  label, direction] for i in range(5)]
+                  label, direction] for i in range(len(chosen))]
     if Path(r'featured_matrix\featurematrixes.json').exists():
         with open(r'featured_matrix\featurematrixes.json') as f:
             loaded = json.load(f)
