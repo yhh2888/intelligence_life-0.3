@@ -136,7 +136,7 @@ def matfin(dna = None, mutate = True):
 
 e = matfin()
 
-with open(r'C:\Users\hyunhoyang\Desktop\IL'+'\\'+'field_data.json') as f:
+with open(r'C:\Users\KDCA\Desktop\IL'+'\\'+'field_data.json') as f:
         p = json.load(f)
 
 
@@ -153,19 +153,33 @@ for i in range(len(p)):
 	p[i][1] = np.array(p[i][1])
 	p[i] = list(p[i])
 
-def genetest(matrix):
-    tot_points = []
-    crit = [i for i in range(len(matrix.flatten())) if matrix.flatten()[i] == 1]
-    for k in range(len(p)):
-        tot_points.append(sum([p[k][0][0].flatten()[i] for i in crit]))
+labels = [np.argmax(p[i][1]) if max(p[i][1]) != 0 else 4 for i in range(len(p))]
 
-    labels = [np.argmax(p[i][1]) if max(p[i][1]) != 0 else 5 for i in range(len(p))]
+def genetest(matrix, type_='awareness'):
+    global labels
     labelpoints = [0,0,0,0,0]
-    
-    for i in range(len(labels)):
-        if 0<=labels[i]<=4:
-            labelpoints[labels[i]] += tot_points[i]
+    if type_ == 'awareness':
+        tot_points = []
+        crit = [i for i in range(len(matrix.flatten())) if matrix.flatten()[i] == 1]
+        for k in range(len(p)):
+            tot_points.append(sum([p[k][0][0].flatten()[i] for i in crit]))
+        
+        for i in range(len(labels)):
+            if 0<=labels[i]<=4:
+                labelpoints[labels[i]] += tot_points[i]
 
+    elif type_ == 'requirements':
+        crit = [[i, j, matrix[i][j]] for i in range(len(matrix)) for j in range(len(matrix[i]))  if matrix[i][j] > 0]
+        for i in p:
+            plus = True
+            for j in crit:
+                if i[0][0][j[0]][j[1]] < j[2]:
+                    plus = False
+            if plus == True:
+                if max(i[1]) == 0:
+                    labelpoints[4] += 1
+                else:
+                    labelpoints[np.argmax(i[1])] += 1
     return labelpoints
 
 def fit(crit = 0.03, labelnum = None, reverse=False):
@@ -206,7 +220,7 @@ def mutational(mat, num=2.3):
 
     for i in range(len(mat)):
         for j in range(len(mat[i])):
-            if mat[i][j] == 1.:
+            if mat[i][j] > 0:
                 matL.append((j, i))
 
     for i in matL:
@@ -226,17 +240,39 @@ def mutational(mat, num=2.3):
 
     return mutatecode
 
-def special_mutation(dna, prob=0.1, least = 8):
-    for codes in range(len(dna)):
-        testmat = get_matrix(dna[codes])
-        codelength = len(dna[codes])
-        if prob > random.random() and len(dna[codes]) >= 8:
-            del dna[codes][random.randint(0, len(dna[codes])-1)]
-        else :
-            while len(dna[codes]) == codelength:
+def special_mutation(dna, prob=0.1, least = 8, type_='awareness'):
+           
+    if type_ == 'awareness':
+        for codes in range(len(dna)):
+            testmat = get_matrix(dna[codes])
+            codelength = len(dna[codes])
+            if prob > random.random() and len(dna[codes]) >= least:
+                del dna[codes][random.randint(0, len(dna[codes])-1)]
+            else :
+                while len(dna[codes]) == codelength:
+                    addpoint = mutational(testmat)
+                    if addpoint not in dna[codes]:
+                        dna[codes].append(addpoint)
+                        
+    elif type_ == 'requirements':
+        for codes in range(len(dna)):
+            testmat = get_matrix(dna[codes])
+            codelength = len(dna[codes])
+            if prob > random.random() and len(dna[codes]) >= least:
+                dna[codes][random.randint(0, len(dna[codes])-1)][2] -= round(0.0001*random.randint(1, 3), 6)
+            else :
                 addpoint = mutational(testmat)
                 if addpoint not in dna[codes]:
-                    dna[codes].append(addpoint)
+                    dna[codes].append([*addpoint, round(0.0001*random.randint(1, 3), 6)])
+                else :
+                    for i in range(len(dna)):
+                        if dna[i][0:2] == addpoint:
+                            dna[i][2] += round(0.0001*random.randint(1, 3), 6)
+                            break
+            for i in range(len(dna[codes])):
+                if not 0 <= dna[codes][i][2] <= 0.0015:
+                    dna[codes][i][2] = 0
+
     return dna
 
 def get_matrix(dna):
@@ -244,37 +280,58 @@ def get_matrix(dna):
     for i in dna:
         x = min(10, max(0, i[0]))
         y = min(10, max(0, i[1]))
-        mat[x][y] = 1
+        if len(i) <= 3:
+            toadd = i[2]
+        else :
+            toadd = 1
+        mat[x][y] = toadd
     return mat
 
 epochs = 60
 
-def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False):
-    dna = [[[i, j] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] == 1] for i in range(30)]
+def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False, type_='awareness'):
+
+    if type_ == 'awareness':
+        dna = [[[i, j] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] == 1] for k in range(30)]
+    if type_ == 'requirements':
+        dna = [[[i, j, dnamat[i][j]] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] != 0] for k in range(30)]
+    
     for i in range(epochs):
         print('\ngen'+str(i))
         if i > 0:
-            dna = [[chosen[i][k] for k in range(len(chosen[i]))] for j in range(6) for i in range(5)]
+            dna = [[chosen[l][k] for k in range(len(chosen[l]))] for j in range(6) for l in range(5)]
 
         for j in range(step):
-            dna[5:] = special_mutation(dna[5:])
+            dna[5:] = special_mutation(dna[5:], type_=type_)
         
         points = []
         for j in range(len(dna)):
-            label = genetest(get_matrix(dna[j]))
+            label = genetest(get_matrix(dna[j]), type_ = type_)
             if labelnum == None:
-                labelnum = np.argmin(label[0:4])
+                labelnum = np.argmin(label)
                 
-            if sum(label) != 0:
+            if type_ == 'awareness' and sum(label) >= 200:
                 points.append(label[labelnum]/sum(label))
                 print(label[labelnum]/sum(label))
+            elif type_ == 'requirements' and sum(label) >= 100:
+                    points.append(label[labelnum]/sum(label))
+                    print(label[labelnum]/sum(label))
             else :
                 points.append(50)
                 
-        sortpoint = list(set([i for i in points]))
+        sortpoint = list(set([k for k in points]))
         sortpoint.sort()
+        print(sortpoint)
+        print(points)
         
-        chosen = [dna[points.index(sortpoint[i])] if reverse==False else dna[points.index(sortpoint[-i-1])] for i in range(5)]
+        if len(sortpoint) >= 5:
+            chosen = [dna[points.index(sortpoint[m])] if reverse==False else dna[points.index(sortpoint[-m-1])] for m in range(5)]
+        elif len(sortpoint) >= 1 or 50 in sortpoint[0:5]:
+            i = 0
+            chosen = [dna[points.index(sortpoint[0])] for m in range(5)]
+        else :
+            raise ValueError
+            
     
     return chosen
 
@@ -284,38 +341,40 @@ evolution(get_matrix(chosen[0]), epoch, label, step, reverse)
 '''
 
 def total_by_point(labelnum):
-	totals = []
-	for i in range(11):
-		semitotal = []
-		for j in range(11):
-			labels = genetest(get_matrix([[i, j]]))
-			semitotal.append(labels[labelnum]/sum(labels))
-		totals.append(semitotal)
-	return np.array(totals)
+    totals = []
+    for i in range(11):
+        semitotal = []
+        for j in range(11):
+            labels = genetest(get_matrix([[i, j]]))
+            semitotal.append(labels[labelnum]/sum(labels))
+        totals.append(semitotal)
+    return np.array(totals)
 
 def matsort(stand, mat):
-	matrix = []
-	for i in mat:
-		row = []
-		for j in i:
-			if j > stand:
-                                row.append(0)
-			else :
-				row.append(1)
-		matrix.append(row)
-	return np.array(matrix)
+    matrix = []
+    for i in mat:
+        row = []
+        for j in i:
+            if j > stand:
+                row.append(0)
+            else :
+                row.append(1)
+            matrix.append(row)
+    return np.array(matrix)
 
+'''
 for i in range(4):
     globals()['label'+str(i)] = total_by_point(i)
+'''
 
 
-def save(chosen, type='awareness', label=None, direction = 'least'):
+def save(chosen, type_='awareness', label=None, direction = 'least'):
     if label == None:
-        jsond = [[chosen[i], type, min(genetest(get_matrix(chosen[i]))[0:4])/sum(genetest(get_matrix(chosen[i]))),
+        jsond = [[chosen[i], type_, min(genetest(get_matrix(chosen[i]))[0:4])/sum(genetest(get_matrix(chosen[i]))),
                   genetest(get_matrix(chosen[i])).index(min(genetest(get_matrix(chosen[i])))[0:4]),
                   direction] for i in range(5)]
     else :
-        jsond = [[chosen[i], type, genetest(get_matrix(chosen[i]))[label]/sum(genetest(get_matrix(chosen[i]))),
+        jsond = [[chosen[i], type_, genetest(get_matrix(chosen[i]))[label]/sum(genetest(get_matrix(chosen[i]))),
                   label, direction] for i in range(len(chosen))]
     if Path(r'featured_matrix\featurematrixes.json').exists():
         with open(r'featured_matrix\featurematrixes.json') as f:
