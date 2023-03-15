@@ -269,9 +269,11 @@ def special_mutation(dna, prob=0.1, least = 8, type_='awareness'):
                         if dna[i][0:2] == addpoint:
                             dna[i][2] += round(0.0001*random.randint(1, 3), 6)
                             break
+            deleted = 0
             for i in range(len(dna[codes])):
-                if not 0 <= dna[codes][i][2] <= 0.0015:
-                    dna[codes][i][2] = 0
+                if not 0 <= dna[codes][i-deleted][2] <= 0.0015:
+                    del dna[codes][i-deleted]
+                    deleted += 1
 
     return dna
 
@@ -280,7 +282,7 @@ def get_matrix(dna):
     for i in dna:
         x = min(10, max(0, i[0]))
         y = min(10, max(0, i[1]))
-        if len(i) <= 3:
+        if len(i) >= 3:
             toadd = i[2]
         else :
             toadd = 1
@@ -294,12 +296,12 @@ def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False, type_='aware
     if type_ == 'awareness':
         dna = [[[i, j] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] == 1] for k in range(30)]
     if type_ == 'requirements':
-        dna = [[[i, j, dnamat[i][j]] for i in range(len(dnamat)) for j in range(len(dnamat[i]))  if dnamat[i][j] != 0] for k in range(30)]
-    
+        dna = [[[i, j, dnamat[i][j]] for i in range(len(dnamat)) for j in range(len(dnamat[i])) if dnamat[i][j] != 0] for k in range(30)]
+
     for i in range(epochs):
         print('\ngen'+str(i))
         if i > 0:
-            dna = [[chosen[l][k] for k in range(len(chosen[l]))] for j in range(6) for l in range(5)]
+            dna = [[chosen[l][k][0:3] for k in range(len(chosen[l]))] for j in range(6) for l in range(5)]
 
         for j in range(step):
             dna[5:] = special_mutation(dna[5:], type_=type_)
@@ -321,13 +323,10 @@ def evolution(dnamat, epochs, labelnum=None, step=1, reverse=False, type_='aware
                 
         sortpoint = list(set([k for k in points]))
         sortpoint.sort()
-        print(sortpoint)
-        print(points)
         
         if len(sortpoint) >= 5:
             chosen = [dna[points.index(sortpoint[m])] if reverse==False else dna[points.index(sortpoint[-m-1])] for m in range(5)]
         elif len(sortpoint) >= 1 or 50 in sortpoint[0:5]:
-            i = 0
             chosen = [dna[points.index(sortpoint[0])] for m in range(5)]
         else :
             raise ValueError
@@ -374,7 +373,7 @@ def save(chosen, type_='awareness', label=None, direction = 'least'):
                   genetest(get_matrix(chosen[i])).index(min(genetest(get_matrix(chosen[i])))[0:4]),
                   direction] for i in range(5)]
     else :
-        jsond = [[chosen[i], type_, genetest(get_matrix(chosen[i]))[label]/sum(genetest(get_matrix(chosen[i]))),
+        jsond = [[chosen[i], type_, genetest(get_matrix(chosen[i]), type_)[label]/sum(genetest(get_matrix(chosen[i]), type_)),
                   label, direction] for i in range(len(chosen))]
     if Path(r'featured_matrix\featurematrixes.json').exists():
         with open(r'featured_matrix\featurematrixes.json') as f:
