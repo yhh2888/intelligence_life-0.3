@@ -1,8 +1,9 @@
 # Make it all object oriented by converting the code in various classes
 
-import pygame, sys
+import pygame, sys, os
 import random, time
 import numpy as np
+import torch, json
 
 from pygame.locals import *
 from Characters import *
@@ -10,9 +11,16 @@ from geometry.calculation import *
 from geometry.default_functions import *
 from base.kde_temp import *
 from base.bp_temp import *
+from base.temp2 import NeuralNetwork
+from base.feature_analysis import labeler, distances, directions, get_matrix, cross_dir
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+with open(os.getcwd()+r'\base\modelparam_data.json') as f:
+    mp = json.load(f)
+with open(os.getcwd()+r'\base\featured_matrix\featurematrixes.json') as f:
+    fm = json.load(f)
 
 class Game:
     def __init__(self, start_x, start_y):
@@ -200,6 +208,34 @@ class Game:
         mapkde.Z = mapkde.kde_distribution(*kdeval, 0.15, 1) + mapkde.kde_distribution(*kdeval, 0.15, 0.8)
         sightkde = [mapkde.Z[self.snake.x-sighthalf+i][self.snake.y-sighthalf+j]
                         for i in range(-sighthalf, sighthalf+1) for j in range(-sighthalf, sighthalf+1)]
+
+        maf_dic = {'3least':30, '3most':5, '1least':10, '1most':15, '2least':20, '0least':25,
+                   '0leastElite':35, '1leastElite':36, '2leastElite':37, '9leastElite':38,
+                   '0leastRequire':39, '1leastRequire':44, '2leastRequire':49, '3leastRequire':54
+                   }
+
+        dist_3 = [torch.tensor([0]) for i in range(3)]
+        dir_3 = [torch.tensor([0]) for i in range(3)]
+        ismoving_3 = [torch.tensor([0]) for i in range(3)]
+        maf_3 = [torch.tensor([torch.tensor([0]) for m in range(14)]) for m in range(3)]
+        mat_3 = [torch.tensor([0 for i in range(121)]) for m in range(3)]
+        move_3 = [torch.tensor([0]) for i in range(3)]
+        cdir_3 = [torch.tensor([0]) for i in range(3)]
+
+        fnlist = ['dist_3', 'dir_3', 'ismoving_3', 'maf_3', 'mat_3', 'move_3', 'cdir_3']
+
+        dist_now, dir_now, ismoving_now, maf_now, mat_now, move_now = [[None]]*6
+
+        netmodel = NeuralNetwork([420, 25, 25, 6])
+        netresult = torch.tensor([0])
+        netparams = []
+        
+        for n in range(len(mp)):
+            netparams.append(torch.tensor(mp[n]))
+        
+        for n in range(3):
+            netmodel.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
+            netmodel.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])
         
         while running:
             #time_per1 = time.time()
@@ -266,16 +302,16 @@ class Game:
                 pluslist = [[xdir, 0], [0, ydir]][random.randint(0, 1)]
                 avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
                 
-                if pluslist == [1, 0]:
+                if netresult == 0:
                     self.snake.move_code('right')
                     movedir = [1, 0, 0, 0]
-                elif pluslist == [-1, 0]:
+                elif netresult == 2:
                     self.snake.move_code('left')
                     movedir = [0, 0, 1, 0]
-                elif pluslist == [0, 1]:
+                elif netresult == 1:
                     self.snake.move_code('down')
                     movedir = [0, 1, 0, 0]
-                elif pluslist == [0, -1]:
+                elif netresult == 3:
                     self.snake.move_code('up')
                     movedir = [0, 0, 0, 1]
                 if avoidloc == [0, 0]:
@@ -381,6 +417,37 @@ class Game:
             sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
             data = [[sightkde, [movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
 
+            #---------- feature setting page ----------#
+            mat_sight = torch.tensor(sightkde).reshape(11, 11)
+            
+            dist_now = [labeler(mat_sight, ['distances', 'maindist'])]
+            dir_now = [labeler(mat_sight, ['directions', 'main'])]
+            if dist_now[0] != None:
+                ismoving_now = [1 if netresult == 5 else 0]
+                maf_now = [torch.tensor(labeler(mat_sight,
+                           ['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[maf_dic[m]][0]))])) for m in list(maf_dic.keys())]
+                cdir_now = [labeler(mat_sight, ['cross_dir', 'main'])]
+                mat_now = torch.tensor(sightkde)
+                move_now = torch.tensor([netresult])
+
+            #---------- feature memory page ----------#
+
+            if dist_now[0] != None:
+                for n in fnlist:
+                    del locals()[n][0]
+                    locals()[n].append(torch.tensor(locals()[n[0:n.index('_')+1]+'now']))
+
+            #---------- final feature ----------#
+            if dist_now[0] != None:
+                fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
+                                                                        *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]],
+                                                                        *locals()[fnlist[6]]
+                                                                           ))
+                                                                ))
+                                           ])
+
+                netresult = torch.argmax(netmodel(fin_feature))
+                    
             self.snake.x, self.snake.y = self.snake.y, 99-self.snake.x
             self.nn.train_once(data)
             self.nn.received_data.append(data)
