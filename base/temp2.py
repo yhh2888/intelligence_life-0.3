@@ -92,7 +92,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         # 예측(prediction)과 손실(loss) 계산
-        pred = model(X)
+        pred = model.forward(X)
         loss = loss_fn(pred, y)
 
         # 역전파

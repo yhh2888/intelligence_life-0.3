@@ -1,21 +1,32 @@
 import numpy as np
-import time
+import time, random
 
 from Hitting_Frame import *
-from base.bp_temp import *
+from base.temp2 import NeuralNetwork as Nets
 
 class Evolve:
-    def __init__(self, amount=10, prev_scoresum = 0, nn=None):
-        self.nn = nn
+    def __init__(self, amount=20, prev_scoresum = 0, net=None):
+        self.nn = net
         self.prev_scoresum = prev_scoresum
         self.reevolve = False
-        self.paramgens = [i for i in range(amount)]
         self.circumstances = Game(50, 50)
+        self.amountsleft = amount
+        self.amounts = amount
 
+        ext = netdata_extract(self.nn)
+
+        self.paramgens = [NeuralNetwork(self.nn.layers) for i in range(amount)]
+
+        for i in range(len(self.paramgens)):
+            netdata_substitute(self.paramgens[i], ext)
+        
     def test(self, next_gen, view_lock = False):
         self.scorelist = []
+        for i in range(len(self.paramgens[next_gen:])):
+            net_mutate(self.paramgens[next_gen+i])
+            
         for i in range(len(self.paramgens)):
-            score = self.circumstances.run_by_AI(view_lock = view_lock, nn=self.nn)
+            score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i])
             self.scorelist.append(score)
             self.circumstances = Game(50, 50)
             
@@ -32,41 +43,42 @@ class Evolve:
             del self.paramgens[np.argmax(self.scorelist)]
             del self.scorelist[np.argmax(self.scorelist)]
 
-    '''def next_generation(self, sons):
-        new_gen = []
-        for i in range(len(self.news)):
-            new_gen.append(self.news[i].params)
-        for j in range(sons):
-            duple = []
-            for i in range(len(self.news)):
-                duple.append(self.news[i])
-            for i in duple:
-                i.m_params()
-                some = i.params
-                new_gen.append(some)
-        return new_gen'''
-
+        self.paramgens = []
+        count = 0
+        while self.amountsleft>1:
+            self.paramgens.append(self.news[i])
+            count += 1
+            count = count%next_gen
+            self.amountsleft -= 1
+        self.amountsleft = self.amounts
 
 def rep_test(rep, view_lock = False):
     
     try:
         with open('field_data.json') as f:
             received_data = json.load(f)
+        with open(os.getcwd()+r'\base\modelparam_data.json') as f:
+            mp = json.load(f)
     except Exception as e:
         received_data = []
+
+    ns = Nets([420, 25, 25, 6])
+    netparams = []
         
-    nn = NeuralNetwork(layer=[11**2, 15, 15, 15, 5])
-    nn.load('test')
+    for n in range(len(mp)):
+        netparams.append(torch.tensor(mp[n]))
+        
+    for n in range(3):
+            ns.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
+            ns.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])
     
-    a = Evolve(nn=nn)
+    a = Evolve(net=ns)
     
     for i in [i for i in range(rep)]:
         
         t = time.time()
         
-        a.test(10, view_lock = view_lock)
-        received_data.append(nn.received_data)
-        nn.received_data = []
+        a.test(5, view_lock = view_lock)
             
         print(time.time()-t)
 
@@ -74,6 +86,26 @@ def rep_test(rep, view_lock = False):
         #    json.dump(received_data, f, indent=2)
         
         #b = a.next_generation(3)
-        a = Evolve(prev_scoresum = a.scoresum, nn=nn)
-        
-    nn.save('test')
+        a = Evolve(prev_scoresum = a.scoresum, net=ns)
+
+def net_mutate(net, prob=0.03, width=0.03):
+    with torch.no_grad():
+        for i in range(len(net.stack[0].weight)):
+            for j in range(len(net.stack[0].weight[i])):
+                if random.random() < prob:
+                    net.stack[0].weight[i][j] += torch.tensor(random.random()*width,
+                                                                  requires_grad=True)
+
+def netdata_extract(net, length=4):
+    extracted_weights = []
+    extracted_biases = []
+    for n in range(length-1):
+        extracted_weights.append(torch.tensor(net.stack[n*(length-1)].weight))
+        extracted_biases.append(torch.tensor(net.stack[n*(length-1)].bias))
+    return extracted_weights, extracted_biases
+
+def netdata_substitute(net, extracted, length=4):
+    with torch.no_grad():
+        for i in range(length-1):
+            net.stack[i*(length-1)].weight = torch.nn.parameter.Parameter(extracted[0][i])
+            net.stack[i*(length-1)].biases = torch.nn.parameter.Parameter(extracted[1][i])

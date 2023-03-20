@@ -17,8 +17,6 @@ from base.feature_analysis import labeler, distances, directions, get_matrix, cr
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-with open(os.getcwd()+r'\base\modelparam_data.json') as f:
-    mp = json.load(f)
 with open(os.getcwd()+r'\base\featured_matrix\featurematrixes.json') as f:
     fm = json.load(f)
 
@@ -63,12 +61,12 @@ class Game:
             if (keys[pygame.K_ESCAPE]):
                 regame = False
 
-    def networkfeed(self, view):
+    '''def networkfeed(self, view):
         if 'nn' in dir(self):
             max_dir = np.argmax(self.nn.update(view))
             max_value = max(self.nn.update(view))
             if 0<=max_dir<=3 and max_value>0.13:
-                return ['right', 'down', 'left', 'up'][max_dir]
+                return ['right', 'down', 'left', 'up'][max_dir]'''
                 
                     
     def run(self):
@@ -180,7 +178,7 @@ class Game:
                                 
             #print(time_per1-time.time())       
 
-    def run_by_AI(self, view_lock = False, nn=None):
+    def run_by_AI(self, view_lock = False, net=None):
         
         sew = 0
         wait = 0
@@ -198,8 +196,7 @@ class Game:
         supervise = []
 
         #----initial----
-        self.nn = nn
-        sightrange = int((self.nn.lengths[0]-1)**0.5)
+        sightrange = 11
         sighthalf = int((sightrange-1)/2)
         mapkde = spreader(typ=[], mrec_disp=False)
         mapkde.test_data = [[100, 0], [0, 100], [0, 0], [100, 100]]
@@ -226,19 +223,11 @@ class Game:
 
         dist_now, dir_now, ismoving_now, maf_now, mat_now, move_now = [[None]]*6
 
-        netmodel = NeuralNetwork([420, 25, 25, 6])
+        netmodel = net
         netresult = torch.tensor([0])
-        netparams = []
-        
-        for n in range(len(mp)):
-            netparams.append(torch.tensor(mp[n]))
-        
-        for n in range(3):
-            netmodel.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
-            netmodel.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])
         
         while running:
-            #time_per1 = time.time()
+            time_per1 = time.time()
             self.eventer_time += 1
             '''vision = np.zeros((11, 11))
             realmob = []'''
@@ -336,7 +325,6 @@ class Game:
                 if i[0:2] in sides and self.snake.att == []:
                     self.snake.attack()
                     self.killscore += self.hit()
-                    print(round(self.nn.error, 11))
                     break
             
             if contemp in self.key_value[1:6]:
@@ -396,27 +384,17 @@ class Game:
                         
                         sew = 0
                     sew += 1'''
-                    
-            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] \
-                or (not 6<=self.snake.x<=self.display_width[0]/self.size-6) \
-                or (not 6<=self.snake.y<=self.display_width[1]/self.size-6):
-                running = False
-                
-                pygame.init()
-                #print(supervise)
-                print(self.turns)
-                return self.turns+self.killscore
-            
-            #print(time_per1-time.time())
             
             mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
             
             kdeval = mapkde.kde_set(mapkde.test_data)
             mapkde.Z = mapkde.kde_distribution(*kdeval, 0.03, 30) + mapkde.kde_distribution(*kdeval, 0.1, 0.5)
             self.snake.x, self.snake.y = 99-self.snake.y, self.snake.x
-            sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
+            try:
+                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
+            except Exception:
+                sigthkde = [0 for i in range(121)]
             data = [[sightkde, [movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
-
             #---------- feature setting page ----------#
             mat_sight = torch.tensor(sightkde).reshape(11, 11)
             
@@ -429,14 +407,12 @@ class Game:
                 cdir_now = [labeler(mat_sight, ['cross_dir', 'main'])]
                 mat_now = torch.tensor(sightkde)
                 move_now = torch.tensor([netresult])
-
             #---------- feature memory page ----------#
 
             if dist_now[0] != None:
                 for n in fnlist:
                     del locals()[n][0]
                     locals()[n].append(torch.tensor(locals()[n[0:n.index('_')+1]+'now']))
-
             #---------- final feature ----------#
             if dist_now[0] != None:
                 fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
@@ -449,11 +425,22 @@ class Game:
                 netresult = torch.argmax(netmodel(fin_feature))
                     
             self.snake.x, self.snake.y = self.snake.y, 99-self.snake.x
-            self.nn.train_once(data)
-            self.nn.received_data.append(data)
+            
+            
+            
+            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] \
+                or (not 6<=self.snake.x<=self.display_width[0]/self.size-6) \
+                or (not 6<=self.snake.y<=self.display_width[1]/self.size-6):
+                running = False
+                
+                pygame.init()
+                #print(supervise)
+                print(self.turns, self.killscore)
+                return self.turns+self.killscore
+            
             #print(time_per1-time.time())
             
-              
+            
 if __name__ == '__main__':
     game = Game(20, 20)
     game.run()
