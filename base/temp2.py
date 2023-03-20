@@ -9,6 +9,7 @@ import time, os, sys
 from pathlib import Path
 
 sys.path.append(r'C:\Users\KDCA\Desktop\IL\base')
+sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\base')
 
 from feature_analysis import *
 
@@ -172,44 +173,54 @@ if __name__ == '__main__':
     paths = str(Path(os.getcwd()).parent)
 
     try:
+        with open(paths+r'\base\preprocessed\mul_downmat.json') as f:
+            mdm = json.load(f)
         with open(paths+'\\\\'+'field_data.json') as f:
             p = json.load(f)
+            
+        for i in range(len(p)-1):
+            p[0].extend(p[i+1])
+
+        p = p[0]
+        
     except Exception:
         pass
 
     #preprocessing data--------------------------
 
-    for i in range(len(p)-1):
-        p[0].extend(p[i+1])
+    def structure_set(data):
+        
+        for i in range(len(data)):
+                data[i] = [[data[i][0][0]], data[i][0][1]]
+                data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0]).reshape(11, 11)))])
+                data[i][1] = torch.tensor(data[i][1])
+                data[i] = list(data[i])
 
-    p = p[0]
+        for i in range(len(data)):
+                if max(data[i][1])!=0:
+                        data[i] = (data[i][0], np.argmax(data[i][1]))
+                else:
+                        data[i] = (data[i][0], torch.tensor(5))
 
-    for i in range(len(p)):
-            p[i] = [[p[i][0][0]], p[i][0][1]]
-            p[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(p[i][0]).reshape(11, 11)))])
-            p[i][1] = torch.tensor(p[i][1])
-            p[i] = list(p[i])
+        setter = 0
 
-    for i in range(len(p)):
-            if max(p[i][1])!=0:
-                    p[i] = (p[i][0], np.argmax(p[i][1]))
-            else:
-                    p[i] = (p[i][0], torch.tensor(5))
-
-    setter = 0
-
-    for j in range(len(p)):
-        disc = False
-        j -= setter
-        for i in p[j][0][0].tolist():
-            if len(set(i)) != 1:
-                   disc = True
-        if disc == False:
-            del p[j]
-            setter += 1
+        for j in range(len(data)):
+            disc = False
+            j -= setter
+            for i in data[j][0][0].tolist():
+                if len(set(i)) != 1:
+                       disc = True
+            if disc == False:
+                del data[j]
+                setter += 1
+                
+        return data
 
     #--------------------------------------------
 
+    mdm = structure_set(mdm)
+    p = structure_set(p)
+    
     p_ = DataLoader(p[0:int(len(p)//1.2)], batch_size=100)
 
     torch.set_num_threads(2)
@@ -250,7 +261,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 25, 25, 6])
+    model_fin = NeuralNetwork([len(li68[0][0][0]), 20, 150, 6])
     model_fin.base_set(li68, call = False)
     model_fin.roll(100, 30)
 
