@@ -22,8 +22,9 @@ class Evolve:
         
     def test(self, next_gen, view_lock = False):
         self.scorelist = []
-        for i in range(len(self.paramgens[next_gen:])):
-            net_mutate(self.paramgens[next_gen+i])
+        
+        '''for i in range(len(self.paramgens[next_gen:])):
+            net_mutate(self.paramgens[next_gen+i])'''
             
         for i in range(len(self.paramgens)):
             score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i])
@@ -62,7 +63,7 @@ def rep_test(rep, view_lock = False):
     except Exception as e:
         received_data = []
 
-    ns = Nets([420, 25, 25, 6])
+    ns = Nets([380, 50, 30, 6])
     netparams = []
         
     for n in range(len(mp)):

@@ -206,23 +206,22 @@ class Game:
         sightkde = [mapkde.Z[self.snake.x-sighthalf+i][self.snake.y-sighthalf+j]
                         for i in range(-sighthalf, sighthalf+1) for j in range(-sighthalf, sighthalf+1)]
 
-        maf_dic = {'3least':30, '3most':5, '1least':10, '1most':15, '2least':20, '0least':25,
-                   '0leastElite':35, '1leastElite':36, '2leastElite':37, '9leastElite':38,
-                   '0leastRequire':39, '1leastRequire':44, '2leastRequire':49, '3leastRequire':54
-                   }
+        maf_dic = {}
 
         dist_3 = [torch.tensor([0]) for i in range(3)]
         dir_3 = [torch.tensor([0]) for i in range(3)]
-        ismoving_3 = [torch.tensor([0]) for i in range(3)]
-        maf_3 = [torch.tensor([torch.tensor([0]) for m in range(14)]) for m in range(3)]
+        ismoving_3 = [torch.tensor([0]) for i in range(5)]
+        #maf_3 = [torch.tensor([torch.tensor([0]) for m in range(14)]) for m in range(3)]
+        cdir_3 = [torch.tensor([0]) for i in range(3)]
         mat_3 = [torch.tensor([0 for i in range(121)]) for m in range(3)]
         move_3 = [torch.tensor([0]) for i in range(3)]
-        cdir_3 = [torch.tensor([0]) for i in range(3)]
 
-        fnlist = ['dist_3', 'dir_3', 'ismoving_3', 'maf_3', 'mat_3', 'move_3', 'cdir_3']
+        fnlist = ['dist_3', 'dir_3', 'ismoving_3', 'cdir_3', 'move_3', 'mat_3']
 
-        dist_now, dir_now, ismoving_now, maf_now, mat_now, move_now = [[None]]*6
-
+        dist_now, dir_now, ismoving_now,  cdir_now, mat_now, move_now = [[None]]*6
+        
+        '''maf_now,'''
+        
         netmodel = net
         netresult = torch.tensor([0])
         
@@ -402,8 +401,8 @@ class Game:
             dir_now = [labeler(mat_sight, ['directions', 'main'])]
             if dist_now[0] != None:
                 ismoving_now = [1 if netresult == 5 else 0]
-                maf_now = [torch.tensor(labeler(mat_sight,
-                           ['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[maf_dic[m]][0]))])) for m in list(maf_dic.keys())]
+                #maf_now = [torch.tensor(labeler(mat_sight,
+                #           ['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[maf_dic[m]][0]))])) for m in list(maf_dic.keys())]
                 cdir_now = [labeler(mat_sight, ['cross_dir', 'main'])]
                 mat_now = torch.tensor(sightkde)
                 move_now = torch.tensor([netresult])
@@ -416,8 +415,7 @@ class Game:
             #---------- final feature ----------#
             if dist_now[0] != None:
                 fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
-                                                                        *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]],
-                                                                        *locals()[fnlist[6]]
+                                                                        *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]]
                                                                            ))
                                                                 ))
                                            ])

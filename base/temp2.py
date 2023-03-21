@@ -133,7 +133,7 @@ def reinforce(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_d
         times = time.time()
         ale = False
         for t in range(epochs):
-            if t % alert == 0:
+            if t % alert == alert-1:
                 print(f"Epoch {t+1}\n")
                 ale = True
             losses = train_loop(trd, mod, loss_fn, optim)
@@ -241,7 +241,8 @@ if __name__ == '__main__':
                  'maf_0leastElite', 'maf_1leastElite', 'maf_2leastElite', 'maf_3leastElite',
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
-
+    
+    datakinds = ['crossed_directions']
     for i in datakinds:
         globals()['models_'+i] = NeuralNetwork([1])
         globals()['models_'+i].base_set(i)
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     for i in range(len(model_dist.feature_label)):
         li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([model_dist.feature_label[i-j][1]]) for j in range(3)],
                                                                    *[torch.tensor([model_dir.feature_label[i-j][1]]) for j in range(3)],
-                                                                   *[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(3)],
+                                                                   *[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
                                                                    *[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
                                                                    *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)],
                                                                    *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]
@@ -261,7 +262,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 20, 150, 6])
+    model_fin = NeuralNetwork([len(li68[0][0][0]), 40, 40, 6])
     model_fin.base_set(li68, call = False)
     model_fin.roll(100, 30)
 
