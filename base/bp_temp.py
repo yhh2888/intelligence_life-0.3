@@ -581,7 +581,7 @@ if __name__ == '__main__':
     #all_neurons(data)
     t = time.time()
     n = NeuralNetwork(layer=[11**2, 15, 15, 15, 5], iterations=1)
-    #n.load('test')
+    n.load('test')
     # 학습 실행
     n.train(data, True)
     print(time.time()-t)

@@ -5,13 +5,17 @@ import random, time
 import numpy as np
 import torch, json
 
+from torch import nn
+from torch.optim.lr_scheduler import ExponentialLR
+from torch.utils.data import DataLoader
+
 from pygame.locals import *
 from Characters import *
 from geometry.calculation import *
 from geometry.default_functions import *
 from base.kde_temp import *
 from base.bp_temp import *
-from base.temp2 import NeuralNetwork
+from base.temp2 import NeuralNetwork, structure_set
 from base.feature_analysis import labeler, distances, directions, get_matrix, cross_dir
 
 import matplotlib.pyplot as plt
@@ -23,9 +27,9 @@ with open(os.getcwd()+r'\base\featured_matrix\featurematrixes.json') as f:
 class Game:
     def __init__(self, start_x, start_y):
         pygame.init()
-        self.display_width = [800, 800]
+        self.display_width = [1000, 1000]
         self.surface = pygame.display.set_mode((self.display_width[0], self.display_width[1]))
-        self.size = 8
+        self.size = self.display_width[0]/100
         self.snake = Snake(self.surface, self.size)
         self.snake.draw()
         self.mobspawn = 0
@@ -35,6 +39,13 @@ class Game:
         self.start_y = start_y
         self.kills = 0
 
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        self.mapsize = [self.display_width[0]/self.size, self.display_width[1]/self.size]
+        self.maptiles = [([3, 5, 10, 11, 15]*2+[random.randint(0, 15)]*16)[random.randint(0, 24)] for i in range(int(self.mapsize[0]*self.mapsize[1]))]
+        
+        self.term_data = []
+        self.quit = False
+
     def hit(self):
         score = 0
         for i in self.mobs.moblist:
@@ -42,10 +53,12 @@ class Game:
                 if i[2] > 1:
                     self.mobs.moblist[self.mobs.moblist.index(i)][2] -= 1
                     score += 50*(2**self.kills)
+                    self.snake.lifes += 1
                 else:
                     self.mobs.moblist.remove(i)
                     score += 200*(3**self.kills)
                     self.kills += 1
+                    self.snake.lifes += 2
         return score
                 
     def regame(self):
@@ -67,7 +80,6 @@ class Game:
             max_value = max(self.nn.update(view))
             if 0<=max_dir<=3 and max_value>0.13:
                 return ['right', 'down', 'left', 'up'][max_dir]'''
-                
                     
     def run(self):
         self.snake.x = self.start_x
@@ -84,7 +96,6 @@ class Game:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
-                    pygame.quit()
                     sys.exit()
                 if event.type == KEYUP:
                     if abs(self.snake.move_score_x) == 1:
@@ -179,7 +190,6 @@ class Game:
             #print(time_per1-time.time())       
 
     def run_by_AI(self, view_lock = False, net=None):
-        
         sew = 0
         wait = 0
         
@@ -194,6 +204,8 @@ class Game:
         self.snake.view_lock = view_lock
         Exceptor = None
         supervise = []
+        
+        self.snake.lifes = 10
 
         #----initial----
         sightrange = 11
@@ -222,10 +234,27 @@ class Game:
         
         '''maf_now,'''
         
-        netmodel = net
+        self.netmodel = net
+        self.netmodel.optim = torch.optim.Adam(self.netmodel.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                             amsgrad=False)
+        self.netmodel.sched = ExponentialLR(self.netmodel.optim, gamma=0.9)
+        loss_fn = nn.CrossEntropyLoss()
+    
         netresult = torch.tensor([0])
+        oscillater = 0
         
+        tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
+        
+        for i in range(len(self.maptiles)):
+            self.surface.blit(self.ground, ((i%self.mapsize[0])*self.size, (i//self.mapsize[1])*self.size),
+                              pygame.Rect(*tile_loc[self.maptiles[i]], self.size, self.size))
+    
         while running:
+            for event in pygame.event.get(): 
+                if event.type == pygame.QUIT: 
+                    running = False
+                    self.quit = True
+                    
             time_per1 = time.time()
             self.eventer_time += 1
             '''vision = np.zeros((11, 11))
@@ -264,9 +293,9 @@ class Game:
 
             
             movedir = [0,0,0,0]
+            virtual_movedir = [0,0,0,0]
             if avoidloc == None:
-                pass
-                #avoidloc = avoider(self.mobs.moblist, 20, 10, [self.snake.x, self.snake.y])
+                avoidloc = avoider(self.mobs.moblist, 20, 10, [self.snake.x, self.snake.y])
             elif avoidloc != None:
                 nearest = distance_response(distance(mobxys, [self.snake.x, self.snake.y])).nearest_response(mobxys)[0]
                 avoidaim = [self.snake.x+avoidloc[0], self.snake.y+avoidloc[1]]
@@ -287,9 +316,30 @@ class Game:
                 else :
                     ydir = 0
                     
-                pluslist = [[xdir, 0], [0, ydir]][random.randint(0, 1)]
+                pluslist = [[xdir, 0], [0, ydir]][oscillater]
                 avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
-                
+
+                if random.random()>0.5:
+                    if oscillater == 0:
+                        oscillater = 1
+                    elif oscillater == 1:
+                        oscillater = 0
+
+                if pluslist == [1, 0]:
+                    #self.snake.move_code('right')
+                    virtual_movedir = [1, 0, 0, 0]
+                elif pluslist == [-1, 0]:
+                    #self.snake.move_code('left')
+                    virtual_movedir = [0, 0, 1, 0]
+                elif pluslist == [0, 1]:
+                    #self.snake.move_code('down')
+                    virtual_movedir = [0, 1, 0, 0]
+                elif pluslist == [0, -1]:
+                    #self.snake.move_code('up')
+                    virtual_movedir = [0, 0, 0, 1]
+                if avoidloc == []:
+                    avoidloc = None
+                    
                 if netresult == 0:
                     self.snake.move_code('right')
                     movedir = [1, 0, 0, 0]
@@ -302,8 +352,6 @@ class Game:
                 elif netresult == 3:
                     self.snake.move_code('up')
                     movedir = [0, 0, 0, 1]
-                if avoidloc == [0, 0]:
-                    avoidloc = None
             '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
                 if feed != None:
@@ -340,7 +388,7 @@ class Game:
                 if avoidloc != None:
                     supervise.append([[self.snake.x, self.snake.y], mobxys, avoidloc])
                 self.mobspawn += 1
-                if self.mobspawn > random.randint(8, 15):
+                if self.mobspawn > random.randint(30, 40):
                     randnum = random.randint(0, 3)
                     if randnum == 0:
                         self.mobs.mobappend(random.randint(0, self.display_width[0]/self.snake.size), 0)
@@ -366,10 +414,12 @@ class Game:
                 if self.eventer_time > 8 and self.turns%2 == 0:
                     self.mobs.distance_cal()
                     self.eventer_time = 0
-                    #plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
-                    #plt.show()
                     
-                    '''wait += 1
+                    '''
+                    plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
+                    plt.show()
+                    
+                    wait += 1
                     
                     if sew > 10 and wait > 30:
                         print(mobxys)
@@ -393,7 +443,7 @@ class Game:
                 sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
             except Exception:
                 sigthkde = [0 for i in range(121)]
-            data = [[sightkde, [movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
+            data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
             #---------- feature setting page ----------#
             mat_sight = torch.tensor(sightkde).reshape(11, 11)
             
@@ -420,21 +470,41 @@ class Game:
                                                                 ))
                                            ])
 
-                netresult = torch.argmax(netmodel(fin_feature))
+                netresult = torch.argmax(self.netmodel(fin_feature))
                     
             self.snake.x, self.snake.y = self.snake.y, 99-self.snake.x
+            if dist_now[0] != None:
+                self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
+
+            if (not 6<=self.snake.x<=self.display_width[0]/self.size-6):
+                self.snake.pre_location = [self.snake.x, self.snake.y]
+                self.snake.x = (abs(self.snake.x-(self.display_width[0]/self.size))*14+50)//15
+                if self.snake.view_lock == False:
+                    self.snake.draw()
+            elif (not 6<=self.snake.y<=self.display_width[1]/self.size-6):
+                self.snake.pre_location = [self.snake.x, self.snake.y]
+                self.snake.y = (abs(self.snake.y-self.display_width[1]/self.size)*14+50)//15
+                if self.snake.view_lock == False:
+                    self.snake.draw()
             
-            
-            
-            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] \
-                or (not 6<=self.snake.x<=self.display_width[0]/self.size-6) \
-                or (not 6<=self.snake.y<=self.display_width[1]/self.size-6):
+            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist]:
+                self.snake.lifes -= 5
+                
+            if self.snake.lifes < 0:
                 running = False
                 
+                self.netmodel.feature_label = self.term_data
+                print(len(self.term_data))
+                self.netmodel.ted = DataLoader(self.netmodel.feature_label[int(len(self.netmodel.feature_label)//1.2):],
+                                               batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
+                self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
+                                               batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
+                self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
                 pygame.init()
                 #print(supervise)
                 print(self.turns, self.killscore)
-                return self.turns+self.killscore
+                self.snake.lifes = 10
+                return self.turns+self.killscore, self.term_data
             
             #print(time_per1-time.time())
             

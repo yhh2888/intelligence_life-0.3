@@ -4,6 +4,9 @@ import time, random
 from Hitting_Frame import *
 from base.temp2 import NeuralNetwork as Nets
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
 class Evolve:
     def __init__(self, amount=20, prev_scoresum = 0, net=None):
         self.nn = net
@@ -15,21 +18,24 @@ class Evolve:
 
         ext = netdata_extract(self.nn)
 
-        self.paramgens = [NeuralNetwork(self.nn.layers) for i in range(amount)]
+        self.paramgens = [self.nn for i in range(amount)]
 
         for i in range(len(self.paramgens)):
             netdata_substitute(self.paramgens[i], ext)
         
     def test(self, next_gen, view_lock = False):
+        global term_data
         self.scorelist = []
         
         '''for i in range(len(self.paramgens[next_gen:])):
             net_mutate(self.paramgens[next_gen+i])'''
             
-        for i in range(len(self.paramgens)):
+        for i in range(self.amounts):
+            print(id(self.paramgens[i]))
             score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i])
-            self.scorelist.append(score)
+            self.scorelist.append(score[0])
             self.circumstances = Game(50, 50)
+            term_data = score[1]
             
         scorelist_sum = 0
         
@@ -72,22 +78,29 @@ def rep_test(rep, view_lock = False):
     for n in range(3):
             ns.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
             ns.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])
+    try:
+        a = Evolve(net=ns)
     
-    a = Evolve(net=ns)
-    
-    for i in [i for i in range(rep)]:
         
-        t = time.time()
-        
-        a.test(5, view_lock = view_lock)
+        for i in [i for i in range(rep)]:
             
-        print(time.time()-t)
+            t = time.time()
+            
+            a.test(5, view_lock = view_lock)
+                
+            print(time.time()-t)
 
-        #with open('field_data.json', 'w') as f:
-        #    json.dump(received_data, f, indent=2)
-        
-        #b = a.next_generation(3)
-        a = Evolve(prev_scoresum = a.scoresum, net=ns)
+            #with open('field_data.json', 'w') as f:
+            #    json.dump(received_data, f, indent=2)
+            
+            #b = a.next_generation(3)
+            
+            a = Evolve(prev_scoresum = a.scoresum, net=ns)
+            
+    except Exception as e:
+        print(e)
+    if a.circumstances.quit == True:
+        pygame.quit()
 
 def net_mutate(net, prob=0.03, width=0.03):
     with torch.no_grad():

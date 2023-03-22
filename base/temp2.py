@@ -1,4 +1,4 @@
-import torch, json
+import torch, json, random
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -78,8 +78,8 @@ class NeuralNetwork(nn.Module):
         except Exception as e:
             pass
 
-    def roll(self, epoch, alert=10):
-        reinforce(epoch, alert, self, self.trd, self.ted, self.optim, self.sched)
+    def roll(self, epoch, alert=10, first=0, last=18000):
+        reinforce(epoch, alert, self, DataLoader(self.trd.dataset[first:last+1], batch_size=(last-first)//100), self.ted, self.optim, self.sched)
 
 connect_number = 128
 model = NeuralNetwork([11*11, connect_number, 128, 128, 8])
@@ -117,8 +117,8 @@ def test_loop(dataloader, model, loss_fn, alert=False):
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
-    test_loss /= num_batches
-    correct /= size
+    test_loss /= max(1, num_batches)
+    correct /= max(1, size)
     if alert == True:
         print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     
@@ -167,7 +167,38 @@ model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
 model_dist02.roll(30, 10)'''
 
-#
+def structure_set(data, reshape=True):
+        
+    for i in range(len(data)):
+        data[i] = [[data[i][0][0]], data[i][0][1]]
+        if reshape==True:
+            data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0]).reshape(11, 11)))])
+        elif reshape == False:
+            data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0])))])
+        else :
+            raise ValueError
+        data[i][1] = torch.tensor(data[i][1])
+        data[i] = list(data[i])
+
+    for i in range(len(data)):
+        if max(data[i][1])!=0:
+            data[i] = (data[i][0], np.argmax(data[i][1]))
+        else:
+            data[i] = (data[i][0], torch.tensor(5))
+
+    setter = 0
+
+    for j in range(len(data)):
+        disc = False
+        j -= setter
+        for i in data[j][0][0].tolist():
+            if len(set(i)) != 1:
+                disc = True
+        if disc == False:
+            del data[j]
+            setter += 1
+                
+    return data
 
 if __name__ == '__main__':
     paths = str(Path(os.getcwd()).parent)
@@ -185,38 +216,6 @@ if __name__ == '__main__':
         
     except Exception:
         pass
-
-    #preprocessing data--------------------------
-
-    def structure_set(data):
-        
-        for i in range(len(data)):
-                data[i] = [[data[i][0][0]], data[i][0][1]]
-                data[i][0] = torch.tensor([torch.Tensor.tolist((torch.tensor(data[i][0]).reshape(11, 11)))])
-                data[i][1] = torch.tensor(data[i][1])
-                data[i] = list(data[i])
-
-        for i in range(len(data)):
-                if max(data[i][1])!=0:
-                        data[i] = (data[i][0], np.argmax(data[i][1]))
-                else:
-                        data[i] = (data[i][0], torch.tensor(5))
-
-        setter = 0
-
-        for j in range(len(data)):
-            disc = False
-            j -= setter
-            for i in data[j][0][0].tolist():
-                if len(set(i)) != 1:
-                       disc = True
-            if disc == False:
-                del data[j]
-                setter += 1
-                
-        return data
-
-    #--------------------------------------------
 
     mdm = structure_set(mdm)
     p = structure_set(p)
@@ -262,7 +261,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 40, 40, 6])
+    model_fin = NeuralNetwork([len(li68[0][0][0]), 50, 30, 6])
     model_fin.base_set(li68, call = False)
     model_fin.roll(100, 30)
 

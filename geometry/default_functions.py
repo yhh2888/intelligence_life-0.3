@@ -153,7 +153,8 @@ def pointoline(linepoint1, linepoint2, point):
         incline = (linepoint2[1]-linepoint1[1])/(linepoint2[0]-linepoint1[0])
         addist = ((linepoint1[0]-point[0])**2+(linepoint1[1]-point[1])**2)**0.5
         bddist = ((linepoint2[0]-point[0])**2+(linepoint2[1]-point[1])**2)**0.5
-        if ((-(point[0]-linepoint1[0]))*(linepoint2[0]-linepoint1[0])+(point[1]-linepoint1[1])*(linepoint2[1]-linepoint1[1]))/(dist*(addist)) < 0:
+        if ((-(point[0]-linepoint1[0]))*(linepoint2[0]-linepoint1[0])+(point[1]-linepoint1[1])*(linepoint2[1]-linepoint1[1]))/ \
+           [(dist*(addist)) if (dist*(addist)) != 0 else 1][0] < 0:
             e = addist
         elif ((point[0]-linepoint1[0])*(linepoint2[0]-linepoint1[0])+(point[1]-linepoint1[1])*(linepoint2[1]-linepoint1[1]))/dist > dist:
             e = bddist

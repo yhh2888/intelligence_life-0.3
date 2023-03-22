@@ -5,14 +5,14 @@ import random, os, sys
 class Snake:
     def __init__(self, surface, size):
         self.parent_screen = surface
-        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\block.jpg').convert()
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\1231231.png')
         self.size = size
-        self.img = pygame.transform.scale(self.img, (self.size, self.size))
+        self.img = pygame.transform.scale(self.img, (self.size*2*12, self.size*2*8))
         self.x = 10
         self.y = 10
         self.direc = 'left'
         self.att = []
-        self.block = self.img
+        self.block = self.clip(self.img, self.size*2*4, self.size*2*0, self.size*2, self.size*2)
         self.attack_real = False
         self.move_score_x = 0
         self.move_score_y = 0
@@ -25,7 +25,7 @@ class Snake:
         if self.move_score_x <= -2:
             self.pre_location = [self.x, self.y]
             self.x -= 1
-            self.block = pygame.transform.rotate(self.img, 0)
+            self.block = self.clip(self.img, self.size*2*4, self.size*2*1, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -37,7 +37,7 @@ class Snake:
         if self.move_score_x >= 2:
             self.pre_location = [self.x, self.y]
             self.x += 1
-            self.block = pygame.transform.rotate(self.img, 180)
+            self.block = self.clip(self.img, self.size*2*4, self.size*2*2, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -49,7 +49,7 @@ class Snake:
         if self.move_score_y <= -2:
             self.pre_location = [self.x, self.y]
             self.y -= 1
-            self.block = pygame.transform.rotate(self.img, 270)
+            self.block = self.clip(self.img, self.size*2*4, self.size*2*3, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0
@@ -60,7 +60,7 @@ class Snake:
         if self.move_score_y >= 2:
             self.pre_location = [self.x, self.y]
             self.y += 1
-            self.block = pygame.transform.rotate(self.img, 90)
+            self.block = self.clip(self.img, self.size*2*4, self.size*2*0, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0
@@ -105,7 +105,7 @@ class Snake:
     def pre_loc_fill(self):
         if len(self.pre_location) == 2:
             pygame.draw.rect(self.parent_screen, (240, 240, 240),
-                             [self.pre_location[0]*self.size, self.pre_location[1]*self.size, self.size, self.size])
+                             [self.pre_location[0]*self.size, self.pre_location[1]*self.size, self.size*2, self.size*2])
             self.pre_location = []
         
     def eff_times(self):
@@ -130,6 +130,13 @@ class Snake:
         if self.view_lock == False:
             self.draw()
         pygame.display.flip()
+
+    def clip(self, surface, x, y, x_size, y_size):
+        handle_surface = surface.copy()
+        clipRect = pygame.Rect(x,y,x_size,y_size)
+        handle_surface.set_clip(clipRect)
+        image = surface.subsurface(handle_surface.get_clip())
+        return image.copy()
 
 class Mob1:
     def __init__(self, surface, follow, size):
