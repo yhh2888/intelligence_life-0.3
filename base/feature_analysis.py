@@ -101,7 +101,10 @@ def cross_dir(position):
     elif position[0]>=0 and position[1]<0:
         return 3
 
-def distances(dist, crit_dist=3):
+def pure_interval(position):
+    return ((position[0])**2+(position[1])**2)**0.5
+
+def distances_(dist, crit_dist=3):
     return [0 if dist >= crit_dist else 1][0]
 
 def get_matrix(dna):
@@ -123,7 +126,7 @@ def matrices_change(data):
         new_data.append(i[0][0]*mold)
     return new_data
 
-def labelchange(function):
+def labelchange(function, min_size=0.003):
     global data
     feature = []
     flist = []
@@ -132,7 +135,7 @@ def labelchange(function):
         if func_speed_test > 0:
             speed_test = True
             func_speed_test -= 1
-        ton = labeler(data[i][0][0], function, min_size=0.01, speed_print=speed_test)
+        ton = labeler(data[i][0][0], function, min_size=min_size, speed_print=speed_test)
         if ton != None:
             flist.append([i, ton])
         speed_test = False
@@ -213,13 +216,27 @@ class matrix_generator:
                     matrix[i][j] = 1
         return matrix
 
+def aligner(standard, aligned, default=0):
+    result = []
+    align_num = 0
+    for i in standard:
+        if aligned[align_num][0] == i[0]:
+            result.append([i[0], aligned[align_num][1]])
+            align_num+=1
+
+        else :
+            result.append([i[0], default])
+
+    print(len(aligned), align_num)
+    return result
+
 def save(flist, name='features'):
     with open(paths+"\\\\"+"base\\preprocessed"+'\\\\'+name+'_data.json', 'w') as f:
         json.dump(flist, f)
 
 
 '''
-labelchange(['distances', 'maindist'])
+labelchange(['distances_', 'maindist'])
 labelchange(['directions', 'main'])
 flist= labelchange(['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[0][0]))])
 

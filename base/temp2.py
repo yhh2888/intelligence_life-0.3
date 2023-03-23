@@ -231,17 +231,16 @@ if __name__ == '__main__':
 
     model_dist = NeuralNetwork([11*11, 32, 32, 2])
     model_dist.base_set('distances')
-    
-    model_dir = NeuralNetwork([11*11, 32, 32, 4])
-    model_dir.base_set('directions')
 
-    datakinds = ['maf_3least', 'maf_1least', 'maf_2least', 'maf_0least',
+    datakinds = ['distances', 'directions', 'distances0.6', 'directions0.6', 'interval0.3', 'interval0.6', 
+                 'maf_3least', 'maf_1least', 'maf_2least', 'maf_0least',
                  'maf_1most', 'maf_3most',
                  'maf_0leastElite', 'maf_1leastElite', 'maf_2leastElite', 'maf_3leastElite',
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
     
-    datakinds = ['crossed_directions']
+    datakinds = ['distances0.6', 'directions0.6', 'interval0.6', 'crossed_directions']
+    
     for i in datakinds:
         globals()['models_'+i] = NeuralNetwork([1])
         globals()['models_'+i].base_set(i)
@@ -249,9 +248,7 @@ if __name__ == '__main__':
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
     for i in range(len(model_dist.feature_label)):
-        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([model_dist.feature_label[i-j][1]]) for j in range(3)],
-                                                                   *[torch.tensor([model_dir.feature_label[i-j][1]]) for j in range(3)],
-                                                                   *[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
+        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
                                                                    *[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
                                                                    *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)],
                                                                    *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]

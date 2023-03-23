@@ -2,22 +2,24 @@ import pygame
 from pygame.locals import *
 import random, os, sys
 
-class Snake:
+class Player:
     def __init__(self, surface, size):
         self.parent_screen = surface
-        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\1231231.png')
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\porygon.png')
         self.size = size
-        self.img = pygame.transform.scale(self.img, (self.size*2*12, self.size*2*8))
+        self.img = pygame.transform.scale(self.img, (self.size*2*4, self.size*2*4))
         self.x = 10
         self.y = 10
         self.direc = 'left'
         self.att = []
-        self.block = self.clip(self.img, self.size*2*4, self.size*2*0, self.size*2, self.size*2)
+        self.block = self.clip(self.img, self.size*2*0, self.size*2*0, self.size*2, self.size*2)
         self.attack_real = False
         self.move_score_x = 0
         self.move_score_y = 0
         self.pre_location = []
         self.view_lock == False
+        self.tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
         
     def move_left(self):
         self.move_score_x -= 1
@@ -25,7 +27,7 @@ class Snake:
         if self.move_score_x <= -2:
             self.pre_location = [self.x, self.y]
             self.x -= 1
-            self.block = self.clip(self.img, self.size*2*4, self.size*2*1, self.size*2, self.size*2)
+            self.block = self.clip(self.img, self.size*2*0, self.size*2*1, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -37,7 +39,7 @@ class Snake:
         if self.move_score_x >= 2:
             self.pre_location = [self.x, self.y]
             self.x += 1
-            self.block = self.clip(self.img, self.size*2*4, self.size*2*2, self.size*2, self.size*2)
+            self.block = self.clip(self.img, self.size*2*0, self.size*2*2, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -49,7 +51,7 @@ class Snake:
         if self.move_score_y <= -2:
             self.pre_location = [self.x, self.y]
             self.y -= 1
-            self.block = self.clip(self.img, self.size*2*4, self.size*2*3, self.size*2, self.size*2)
+            self.block = self.clip(self.img, self.size*2*0, self.size*2*3, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0
@@ -60,7 +62,7 @@ class Snake:
         if self.move_score_y >= 2:
             self.pre_location = [self.x, self.y]
             self.y += 1
-            self.block = self.clip(self.img, self.size*2*4, self.size*2*0, self.size*2, self.size*2)
+            self.block = self.clip(self.img, self.size*2*0, self.size*2*0, self.size*2, self.size*2)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0
@@ -95,8 +97,8 @@ class Snake:
                                 [co_ord[0]*self.size, co_ord[1]*self.size, self.size, self.size])
         else :
             for co_ord in self.att[0:-1]:
-                pygame.draw.rect(self.parent_screen, (240, 240, 240),
-                                [co_ord[0]*self.size, co_ord[1]*self.size, self.size, self.size])
+                self.parent_screen.blit(self.ground, ((co_ord[0])*self.size, (co_ord[1])*self.size),
+                                        pygame.Rect(*self.tile_loc[[3, 5, 10, 11, 15][random.randint(0, 4)]], self.size, self.size))
             self.attack_real = False
         self.pre_loc_fill()
         self.parent_screen.blit(self.block, (self.x*self.size, self.y*self.size))
@@ -104,8 +106,10 @@ class Snake:
 
     def pre_loc_fill(self):
         if len(self.pre_location) == 2:
-            pygame.draw.rect(self.parent_screen, (240, 240, 240),
-                             [self.pre_location[0]*self.size, self.pre_location[1]*self.size, self.size*2, self.size*2])
+            for i in range(2):
+                for j in range(2):
+                    self.parent_screen.blit(self.ground, ((self.pre_location[0]+i)*self.size, (self.pre_location[1]+j)*self.size),
+                                            pygame.Rect(*self.tile_loc[[3, 5, 10, 11, 15][random.randint(0, 4)]], self.size, self.size))
             self.pre_location = []
         
     def eff_times(self):
@@ -148,6 +152,9 @@ class Mob1:
         self.moblist = []
         self.block = self.img
         self.color = (50, 200, 100)
+        self.tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        
     def mobappend(self, x, y):
         self.moblist.append([x, y, 3])
     
@@ -192,8 +199,8 @@ class Mob1:
             if self.moblist[amob][2] == 1:
                 self.color = (10, 60, 20)
             if self.pre_location != [] and len(self.pre_location) >= amob+1:
-                pygame.draw.rect(self.parent_screen, (240, 240, 240),
-                                [self.pre_location[amob][0]*self.size, self.pre_location[amob][1]*self.size, self.size, self.size])
+                self.parent_screen.blit(self.ground, (self.pre_location[amob][0]*self.size, self.pre_location[amob][1]*self.size),
+                                              pygame.Rect(*self.tile_loc[[3, 5, 10, 11, 15][random.randint(0, 4)]], self.size, self.size))
             pygame.draw.rect(self.parent_screen, self.color,
                                 [self.moblist[amob][0]*self.size, self.moblist[amob][1]*self.size, self.size, self.size])      
         pygame.display.flip()

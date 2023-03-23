@@ -1,5 +1,5 @@
 import numpy as np
-import time, random
+import time, random, traceback
 
 from Hitting_Frame import *
 from base.temp2 import NeuralNetwork as Nets
@@ -98,7 +98,7 @@ def rep_test(rep, view_lock = False):
             a = Evolve(prev_scoresum = a.scoresum, net=ns)
             
     except Exception as e:
-        print(e)
+        print(e, traceback.format_exc())
     if a.circumstances.quit == True:
         pygame.quit()
 

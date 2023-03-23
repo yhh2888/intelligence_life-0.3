@@ -116,11 +116,17 @@ def avoider(moblist, crit, figure, me_loc, directions = 8):
     #moblist: self.mobs.moblist, crit: 5~20 figure: 1.7~3, ~5, me_loc: [self.snake.x, self.snake.y]
     default_dir = ['rightup', 'rightdown', 'downright', 'downleft',
                            'leftdown','leftup', 'upleft', 'upright']
+    
     mobparsed = [[] for i in range(directions)]
+    
     distance_ = distance(moblist, me_loc)
+    
     for i in range(len(moblist)):
+        
         mobparsed[default_dir.index(dir_cal_8(distance_[i])[0])].append(distance_[i])
+        
     distindir = []
+    
     for i in range(len(mobparsed)):
         if mobparsed[i] != []:
             themob = distance_response(mobparsed[i]).nearest_response(mobparsed[i])[0]

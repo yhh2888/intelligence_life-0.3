@@ -30,10 +30,10 @@ class Game:
         self.display_width = [1000, 1000]
         self.surface = pygame.display.set_mode((self.display_width[0], self.display_width[1]))
         self.size = self.display_width[0]/100
-        self.snake = Snake(self.surface, self.size)
-        self.snake.draw()
+        self.player = Player(self.surface, self.size)
+        self.player.draw()
         self.mobspawn = 0
-        self.mobs = Mob1(self.surface, self.snake, self.size)
+        self.mobs = Mob1(self.surface, self.player, self.size)
         self.turns = 0
         self.start_x = start_x
         self.start_y = start_y
@@ -49,16 +49,16 @@ class Game:
     def hit(self):
         score = 0
         for i in self.mobs.moblist:
-            if i[0:2] in self.snake.att and self.snake.attack_real == True:
+            if i[0:2] in self.player.att and self.player.attack_real == True:
                 if i[2] > 1:
                     self.mobs.moblist[self.mobs.moblist.index(i)][2] -= 1
                     score += 50*(2**self.kills)
-                    self.snake.lifes += 1
+                    self.player.lifes += 1
                 else:
                     self.mobs.moblist.remove(i)
                     score += 200*(3**self.kills)
                     self.kills += 1
-                    self.snake.lifes += 2
+                    self.player.lifes += 2
         return score
                 
     def regame(self):
@@ -82,8 +82,8 @@ class Game:
                 return ['right', 'down', 'left', 'up'][max_dir]'''
                     
     def run(self):
-        self.snake.x = self.start_x
-        self.snake.y = self.start_y
+        self.player.x = self.start_x
+        self.player.y = self.start_y
         self.surface.fill((240, 240, 240))
         running = True
         self.eventer_time = 0
@@ -98,52 +98,52 @@ class Game:
                     running = False
                     sys.exit()
                 if event.type == KEYUP:
-                    if abs(self.snake.move_score_x) == 1:
-                        self.snake.pre_location = [self.snake.x, self.snake.y]
-                        self.snake.x += self.snake.move_score_x
-                        self.snake.move_score_x = 0
-                        self.snake.pre_loc_fill()
-                    if abs(self.snake.move_score_y) == 1:
-                        self.snake.pre_location = [self.snake.x, self.snake.y]
-                        self.snake.y += self.snake.move_score_y
-                        self.snake.move_score_y = 0
-                        self.snake.pre_loc_fill()
+                    if abs(self.player.move_score_x) == 1:
+                        self.player.pre_location = [self.player.x, self.player.y]
+                        self.player.x += self.player.move_score_x
+                        self.player.move_score_x = 0
+                        self.player.pre_loc_fill()
+                    if abs(self.player.move_score_y) == 1:
+                        self.player.pre_location = [self.player.x, self.player.y]
+                        self.player.y += self.player.move_score_y
+                        self.player.move_score_y = 0
+                        self.player.pre_loc_fill()
                         
             keys = pygame.key.get_pressed()
             buttoned = False
             
             if (keys[pygame.K_LEFT]):
-                self.snake.move_left()
+                self.player.move_left()
                 buttoned = True
-                self.snake.pre_loc_fill()
+                self.player.pre_loc_fill()
                 self.movedata.append('left')
                 
             if (keys[pygame.K_RIGHT]):
-                self.snake.move_right()
+                self.player.move_right()
                 buttoned = True
-                self.snake.pre_loc_fill()
+                self.player.pre_loc_fill()
                 self.movedata.append('right')
                 
             if (keys[pygame.K_UP]):
-                self.snake.move_up()
+                self.player.move_up()
                 buttoned = True
-                self.snake.pre_loc_fill()
+                self.player.pre_loc_fill()
                 self.movedata.append('up')
 
             if (keys[pygame.K_DOWN]):
-                self.snake.move_down()
+                self.player.move_down()
                 buttoned = True
-                self.snake.pre_loc_fill()
+                self.player.pre_loc_fill()
                 self.movedata.append('down')
                             
             if (keys[pygame.K_SPACE]):
-                if self.snake.att == []:
-                    self.snake.attack()
+                if self.player.att == []:
+                    self.player.attack()
                     self.killscore += self.hit()
                     self.movedata.append('space')
                                 
             if (keys[pygame.K_s]):
-                self.snake.stopping()
+                self.player.stopping()
                 self.movedata.append('stop')
 
             if (keys[pygame.K_ESCAPE]):
@@ -153,19 +153,19 @@ class Game:
                 self.mobspawn += 1
                 if self.mobspawn > 10:
                     if random.randint(0, 3) == 0:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.snake.size), 0)
+                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size), 0)
                     elif random.randint(0, 3) == 1:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.snake.size),
-                                            self.display_width[1]/self.snake.size)
+                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size),
+                                            self.display_width[1]/self.player.size)
                     elif random.randint(0, 3) == 2:
-                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.snake.size))
+                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.player.size))
                     elif random.randint(0, 3) == 3:
-                        self.mobs.mobappend(self.display_width[0]/self.snake.size,
-                                            random.randint(0,self.display_width[0]/self.snake.size))
+                        self.mobs.mobappend(self.display_width[0]/self.player.size,
+                                            random.randint(0,self.display_width[0]/self.player.size))
                     self.mobspawn = 0
                 self.turns += 1
                 
-                for j in range(6-int(self.display_width[1]/self.size-self.snake.y)):
+                for j in range(6-int(self.display_width[1]/self.size-self.player.y)):
                     vision[10-j][i] = 1
                 vision_print_on = True
             if vision_print_on and buttoned:
@@ -175,13 +175,13 @@ class Game:
             #time_per1 = time.time()
             
             if self.mobs != None:
-                self.snake.draw()
+                self.player.draw()
                 self.mobs.draw()
-                self.snake.eff_times()
+                self.player.eff_times()
                 if self.eventer_time > 8 and self.turns%2 == 0:
                     self.mobs.distance_cal()
                     self.eventer_time = 0
-            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist] or (not 0<=self.snake.x<=self.display_width[0]/self.size) or (not 0<=self.snake.y<=self.display_width[1]/self.size):
+            if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist] or (not 0<=self.player.x<=self.display_width[0]/self.size) or (not 0<=self.player.y<=self.display_width[1]/self.size):
                 running = False
                 pygame.quit()
                 return self.movedata
@@ -193,19 +193,19 @@ class Game:
         sew = 0
         wait = 0
         
-        self.snake.x = self.start_x
-        self.snake.y = self.start_y
+        self.player.x = self.start_x
+        self.player.y = self.start_y
         self.surface.fill((240, 240, 240))
         running = True
         self.eventer_time = 0
         self.key_value = ['space', 'up', 'down', 'right', 'left', 'stop']
         vision = np.zeros((11, 11))
         self.killscore = 0
-        self.snake.view_lock = view_lock
+        self.player.view_lock = view_lock
         Exceptor = None
         supervise = []
         
-        self.snake.lifes = 10
+        self.player.lifes = 10
 
         #----initial----
         sightrange = 11
@@ -215,7 +215,7 @@ class Game:
         mapkde.Xmg, mapkde.Ymg = np.mgrid[0:100:100j, 0:100:100j]
         kdeval = mapkde.kde_set(mapkde.test_data)
         mapkde.Z = mapkde.kde_distribution(*kdeval, 0.15, 1) + mapkde.kde_distribution(*kdeval, 0.15, 0.8)
-        sightkde = [mapkde.Z[self.snake.x-sighthalf+i][self.snake.y-sighthalf+j]
+        sightkde = [mapkde.Z[self.player.x-sighthalf+i][self.player.y-sighthalf+j]
                         for i in range(-sighthalf, sighthalf+1) for j in range(-sighthalf, sighthalf+1)]
 
         maf_dic = {}
@@ -263,25 +263,25 @@ class Game:
             # vision page --------------------------------------------------------------------------------------
             
             '''for i in self.mobs.moblist:
-                if abs(self.snake.x-i[0]) <= 5 and abs(self.snake.y-i[1]) <= 5:
-                    vision[5-(int(self.snake.y)-int(i[1]))][5-(int(self.snake.x)-int(i[0]))] += i[2]
+                if abs(self.player.x-i[0]) <= 5 and abs(self.player.y-i[1]) <= 5:
+                    vision[5-(int(self.player.y)-int(i[1]))][5-(int(self.player.x)-int(i[0]))] += i[2]
                     self.killscore += 1
                     realmob.append(i[0:2])
-                if self.snake.x-6 < 0:
+                if self.player.x-6 < 0:
                     for i in range(11):
-                        for j in range(6-int(self.snake.x)-1):
+                        for j in range(6-int(self.player.x)-1):
                             vision[i][j] = 1
-                if self.snake.x+6 > self.display_width[0]/self.size:
+                if self.player.x+6 > self.display_width[0]/self.size:
                     for i in range(11):
-                        for j in range(6-int(self.display_width[0]/self.size-self.snake.x)):
+                        for j in range(6-int(self.display_width[0]/self.size-self.player.x)):
                             vision[i][10-j] = 1
-                if self.snake.y-6 < 0:
+                if self.player.y-6 < 0:
                     for i in range(11):
-                        for j in range(6-int(self.snake.y)-1):
+                        for j in range(6-int(self.player.y)-1):
                             vision[j][i] = 1
-                if self.snake.y+6 > self.display_width[1]/self.size:
+                if self.player.y+6 > self.display_width[1]/self.size:
                     for i in range(11):
-                        for j in range(6-int(self.display_width[1]/self.size-self.snake.y)):
+                        for j in range(6-int(self.display_width[1]/self.size-self.player.y)):
                             vision[10-j][i] = 1'''
 
             # moverule page --------------------------------------------------------------------------------------
@@ -289,16 +289,16 @@ class Game:
             values = []
             mobxys = [i[0:2] for i in self.mobs.moblist]
             contemp = None
-            avoidloc = movepoint([self.snake.x, self.snake.y], mobxys, self.display_width[0]/self.size, 3)
+            avoidloc = movepoint([self.player.x, self.player.y], mobxys, self.display_width[0]/self.size, 3)
 
             
             movedir = [0,0,0,0]
             virtual_movedir = [0,0,0,0]
             if avoidloc == None:
-                avoidloc = avoider(self.mobs.moblist, 20, 10, [self.snake.x, self.snake.y])
+                avoidloc = avoider(self.mobs.moblist, 20, 10, [self.player.x, self.player.y])
             elif avoidloc != None:
-                nearest = distance_response(distance(mobxys, [self.snake.x, self.snake.y])).nearest_response(mobxys)[0]
-                avoidaim = [self.snake.x+avoidloc[0], self.snake.y+avoidloc[1]]
+                nearest = distance_response(distance(mobxys, [self.player.x, self.player.y])).nearest_response(mobxys)[0]
+                avoidaim = [self.player.x+avoidloc[0], self.player.y+avoidloc[1]]
                 if abs(avoidaim[0]-nearest[0]) == 2 and abs(avoidaim[1]-nearest[1]) == 2:
                     randomxy = random.randint(0, 1)
                     avoidloc[randomxy] += nearest[randomxy]-avoidaim[randomxy]
@@ -326,80 +326,81 @@ class Game:
                         oscillater = 0
 
                 if pluslist == [1, 0]:
-                    #self.snake.move_code('right')
+                    self.player.move_code('right')
                     virtual_movedir = [1, 0, 0, 0]
                 elif pluslist == [-1, 0]:
-                    #self.snake.move_code('left')
+                    self.player.move_code('left')
                     virtual_movedir = [0, 0, 1, 0]
                 elif pluslist == [0, 1]:
-                    #self.snake.move_code('down')
+                    self.player.move_code('down')
                     virtual_movedir = [0, 1, 0, 0]
                 elif pluslist == [0, -1]:
-                    #self.snake.move_code('up')
+                    self.player.move_code('up')
                     virtual_movedir = [0, 0, 0, 1]
                 if avoidloc == []:
                     avoidloc = None
                     
                 if netresult == 0:
-                    self.snake.move_code('right')
+                    #self.player.move_code('right')
                     movedir = [1, 0, 0, 0]
                 elif netresult == 2:
-                    self.snake.move_code('left')
+                    #self.player.move_code('left')
                     movedir = [0, 0, 1, 0]
                 elif netresult == 1:
-                    self.snake.move_code('down')
+                    #self.player.move_code('down')
                     movedir = [0, 1, 0, 0]
                 elif netresult == 3:
-                    self.snake.move_code('up')
+                    #self.player.move_code('up')
                     movedir = [0, 0, 0, 1]
             '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
                 if feed != None:
-                    self.snake.move_code(feed)'''
+                    self.player.move_code(feed)'''
             
 
             # attack page --------------------------------------------------------------------------------------
             
-            if self.snake.direc == 'left':
-                sides = [[(self.snake.x-2+j), (self.snake.y-1+i)] for i in range(3) for j in range(2)]
-            if self.snake.direc == 'right':
-                sides = [[(self.snake.x+1+j), (self.snake.y-1+i)] for i in range(3) for j in range(2)]
-            if self.snake.direc == 'up':
-                sides = [[(self.snake.x-1+j), (self.snake.y-2+i)] for i in range(2) for j in range(3)]
-            if self.snake.direc == 'down':
-                sides = [[(self.snake.x-1+j), (self.snake.y+1+i)] for i in range(2) for j in range(3)]
+            if self.player.direc == 'left':
+                sides = [[(self.player.x-2+j), (self.player.y-1+i)] for i in range(3) for j in range(2)]
+            if self.player.direc == 'right':
+                sides = [[(self.player.x+1+j), (self.player.y-1+i)] for i in range(3) for j in range(2)]
+            if self.player.direc == 'up':
+                sides = [[(self.player.x-1+j), (self.player.y-2+i)] for i in range(2) for j in range(3)]
+            if self.player.direc == 'down':
+                sides = [[(self.player.x-1+j), (self.player.y+1+i)] for i in range(2) for j in range(3)]
             for i in self.mobs.moblist:
-                if i[0:2] in sides and self.snake.att == []:
-                    self.snake.attack()
+                if i[0:2] in sides and self.player.att == []:
+                    self.player.attack()
                     self.killscore += self.hit()
                     break
             
             if contemp in self.key_value[1:6]:
-                self.snake.move_code(contemp)
+                self.player.move_code(contemp)
                 
             if contemp == 'space':
-                if self.snake.att == []:
-                    self.snake.attack()
+                if self.player.att == []:
+                    self.player.attack()
                     self.killscore += self.hit()
                     
-            # time page --------------------------------------------------------------------------------------
+            # mob page --------------------------------------------------------------------------------------
             
+            decision_num = random.randint(0, 100)
             if self.eventer_time > 8:
                 if avoidloc != None:
-                    supervise.append([[self.snake.x, self.snake.y], mobxys, avoidloc])
+                    supervise.append([[self.player.x, self.player.y], mobxys, avoidloc])
                 self.mobspawn += 1
-                if self.mobspawn > random.randint(30, 40):
+                if self.mobspawn > random.randint(10+decision_num, 20+decision_num):
                     randnum = random.randint(0, 3)
                     if randnum == 0:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.snake.size), 0)
+                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size), 0)
                     elif randnum == 1:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.snake.size),
-                                            self.display_width[1]/self.snake.size)
+                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size),
+                                            self.display_width[1]/self.player.size)
                     elif randnum == 2:
-                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.snake.size))
+                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.player.size))
                     elif randnum == 3:
-                        self.mobs.mobappend(self.display_width[0]/self.snake.size,
-                                            random.randint(0,self.display_width[0]/self.snake.size))
+                        self.mobs.mobappend(self.display_width[0]/self.player.size,
+                                            random.randint(0,self.display_width[0]/self.player.size))
                     self.mobspawn = 0
                 self.turns += 3
 
@@ -407,15 +408,15 @@ class Game:
                         
             #time_per1 = time.time()
             if self.mobs != None:
-                self.snake.eff_times()
-                if self.snake.view_lock == False:
-                    self.snake.draw()
+                self.player.eff_times()
+                if self.player.view_lock == False:
+                    self.player.draw()
                     self.mobs.draw()
                 if self.eventer_time > 8 and self.turns%2 == 0:
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     
-                    '''
+                    
                     plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
                     plt.show()
                     
@@ -423,24 +424,24 @@ class Game:
                     
                     if sew > 10 and wait > 30:
                         print(mobxys)
-                        plt.imshow(np.array(sightkde).reshape(11, 11)[::-1], cmap=plt.cm.gist_earth_r, extent=[self.snake.x-5, self.snake.x+6, self.snake.y-5, self.snake.y+6])
+                        plt.imshow(np.array(sightkde).reshape(11, 11)[::-1], cmap=plt.cm.gist_earth_r, extent=[self.player.x-5, self.player.x+6, self.player.y-5, self.player.y+6])
                         plt.show()                        
                         plt.imshow(np.array([round(mapkde.Z[i][j], 4) for i in range(len(mapkde.Z)) for j in range(len(mapkde.Z[0]))]).reshape(len(mapkde.Z), len(mapkde.Z[0])),
                                    cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
-                        plt.scatter(self.snake.x, self.snake.y, marker='o')
+                        plt.scatter(self.player.x, self.player.y, marker='o')
                         plt.show()
                         
                         
                         sew = 0
-                    sew += 1'''
+                    sew += 1
             
             mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
             
             kdeval = mapkde.kde_set(mapkde.test_data)
             mapkde.Z = mapkde.kde_distribution(*kdeval, 0.03, 30) + mapkde.kde_distribution(*kdeval, 0.1, 0.5)
-            self.snake.x, self.snake.y = 99-self.snake.y, self.snake.x
+            self.player.x, self.player.y = 99-self.player.y, self.player.x
             try:
-                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.snake.x-sighthalf, self.snake.x+sighthalf+1) for j in range(self.snake.y-sighthalf, self.snake.y+sighthalf+1)]
+                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.player.x-sighthalf, self.player.x+sighthalf+1) for j in range(self.player.y-sighthalf, self.player.y+sighthalf+1)]
             except Exception:
                 sigthkde = [0 for i in range(121)]
             data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
@@ -472,25 +473,27 @@ class Game:
 
                 netresult = torch.argmax(self.netmodel(fin_feature))
                     
-            self.snake.x, self.snake.y = self.snake.y, 99-self.snake.x
+            self.player.x, self.player.y = self.player.y, 99-self.player.x
             if dist_now[0] != None:
                 self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
 
-            if (not 6<=self.snake.x<=self.display_width[0]/self.size-6):
-                self.snake.pre_location = [self.snake.x, self.snake.y]
-                self.snake.x = (abs(self.snake.x-(self.display_width[0]/self.size))*14+50)//15
-                if self.snake.view_lock == False:
-                    self.snake.draw()
-            elif (not 6<=self.snake.y<=self.display_width[1]/self.size-6):
-                self.snake.pre_location = [self.snake.x, self.snake.y]
-                self.snake.y = (abs(self.snake.y-self.display_width[1]/self.size)*14+50)//15
-                if self.snake.view_lock == False:
-                    self.snake.draw()
+            if (not 6<=self.player.x<=self.display_width[0]/self.size-6):
+                self.player.pre_location = [self.player.x, self.player.y]
+                self.player.x = (abs(self.player.x-(self.display_width[0]/self.size))*14+50)//15
+                self.player.lifes -= 5
+                if self.player.view_lock == False:
+                    self.player.draw()
+            elif (not 6<=self.player.y<=self.display_width[1]/self.size-6):
+                self.player.pre_location = [self.player.x, self.player.y]
+                self.player.y = (abs(self.player.y-self.display_width[1]/self.size)*14+50)//15
+                self.player.lifes -= 5
+                if self.player.view_lock == False:
+                    self.player.draw()
             
-            if [self.snake.x, self.snake.y] in [i[0:2] for i in self.mobs.moblist]:
-                self.snake.lifes -= 5
+            if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist]:
+                self.player.lifes -= 5
                 
-            if self.snake.lifes < 0:
+            if self.player.lifes < 0:
                 running = False
                 
                 self.netmodel.feature_label = self.term_data
@@ -499,11 +502,12 @@ class Game:
                                                batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
                 self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
                                                batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
-                self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
+
+                #self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
                 pygame.init()
                 #print(supervise)
                 print(self.turns, self.killscore)
-                self.snake.lifes = 10
+                self.player.lifes = 10
                 return self.turns+self.killscore, self.term_data
             
             #print(time_per1-time.time())
