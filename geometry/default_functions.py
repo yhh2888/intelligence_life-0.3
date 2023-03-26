@@ -1,6 +1,8 @@
-import random, time
+import random, time, sys
 import numpy as np
 from collections import deque
+
+sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
 from geometry.calculation import *
 
 def dir4_response(directions, method = []):

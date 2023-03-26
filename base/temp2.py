@@ -239,35 +239,41 @@ if __name__ == '__main__':
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
     
-    datakinds = ['interval0.45', 'crossed_directions0.45',
-                 'interval0.15', 'crossed_directions0.15',
-                 'maf_1leastRequire', 'maf_3leastRequire']
+    datakinds = ['distances', 'directions', 'distances0.15', 'directions0.15', 'interval0.15', 'crossed_directions',
+                 'boundary01,05', 'boundary01,15', 'boundary03,15', 'movepoint_dir']
+
+    longkinds = ['movepoint']
     
     for i in datakinds:
         globals()['models_'+i] = NeuralNetwork([1])
         globals()['models_'+i].base_set(i)
 
+    for i in longkinds:
+        globals()['models_'+i] = NeuralNetwork([1])
+        globals()['models_'+i].base_set(i)
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
     for i in range(len(model_dist.feature_label)):
-        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
+        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(2)],
                                                                    *[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
-                                                                   *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)],
-                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]
+                                                                   *[globals()['models_'+j].feature_label[i-k][1] if type(torch.Tensor.tolist(globals()['models_'+j].feature_label[i-k][1])) == list \
+                                                                   else torch.tensor([0, 0]) for j in longkinds for k in range(3)],
+                                                                   *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(2)],
+                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(2)]
                                                                    ))
                                                         ))
                                    ]),
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 50, 30, 6])
+    model_fin = NeuralNetwork([len(li68[0][0][0]), 70, 50, 6])
     model_fin.base_set(li68, call = False)
-    model_fin.roll(100, 30)
+    model_fin.roll(150, 30)
 
     code = {1:0, 2:2, 3:3, 4:1, 5:2, 6:0, 7:1, 8:3}
 
-    set1 = [[model_fin.feature_label[i*11+j][1].item() for j in range(11)] for i in range(0, 1000)]
-    set2 = [[torch.argmax(model_fin(li68[i*11+j][0])).item() for j in range(11)] for i in range(0, 1000)]
+    set1 = [[model_fin.feature_label[i*11+j][1].item() for j in range(11)] for i in range(-1000, -2)]
+    set2 = [[torch.argmax(model_fin(li68[i*11+j][0])).item() for j in range(11)] for i in range(-1000, -2)]
 
     trues = 0
     for i in (np.array(set1)==np.array(set2)).flatten():

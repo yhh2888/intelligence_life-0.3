@@ -1,8 +1,12 @@
-import torch, json, os
+import torch, json, os, sys
 import numpy as np
 from pathlib import Path
 from time import perf_counter
 from scipy.stats import norm
+
+sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
+from default_functions import movepoint
+
 if __name__ == '__main__':
     paths = str(Path(os.getcwd()).parent)
 
@@ -47,14 +51,14 @@ if __name__ == '__main__':
             del data[j]
             setter += 1
 
-def labeler(tensor, function, min_size=0.003, min_dist=3, middle=[5, 5], speed_print=False):
+def labeler(tensor, function, min_size=0.003, max_size=1.0, min_dist=3, middle=[5, 5], speed_print=False):
     if speed_print == True:
         timp = perf_counter()
         
     listA, listB, listC = [], [], []
     for i in range(len(tensor)):
         for j in range(len(tensor[i])):
-            if tensor[i][j] > min_size:
+            if max_size > tensor[i][j] > min_size:
                 listA.append([j, i])
     for i in listA:
         listB.append([i[0]-middle[0], i[1]-middle[1]])
@@ -66,7 +70,7 @@ def labeler(tensor, function, min_size=0.003, min_dist=3, middle=[5, 5], speed_p
         
         func_params = []
         for i in function:
-            if type(i) == list or type(i) == torch.Tensor:
+            if type(i) == list or type(i) == torch.Tensor or type(i) == int:
                 func_params.append(i)
             elif i in locals():
                 func_params.append(locals()[i])
@@ -126,7 +130,7 @@ def matrices_change(data):
         new_data.append(i[0][0]*mold)
     return new_data
 
-def labelchange(function, min_size=0.003):
+def labelchange(function, min_size=0.003, max_size=1.0, middle=[5, 5]):
     global data
     feature = []
     flist = []
@@ -135,7 +139,7 @@ def labelchange(function, min_size=0.003):
         if func_speed_test > 0:
             speed_test = True
             func_speed_test -= 1
-        ton = labeler(data[i][0][0], function, min_size=min_size, speed_print=speed_test)
+        ton = labeler(data[i][0][0], function, min_size=min_size, max_size=max_size, speed_print=speed_test, middle=middle)
         if ton != None:
             flist.append([i, ton])
         speed_test = False
