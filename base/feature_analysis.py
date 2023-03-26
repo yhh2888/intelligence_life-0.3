@@ -104,7 +104,7 @@ def cross_dir(position):
 def pure_interval(position):
     return ((position[0])**2+(position[1])**2)**0.5
 
-def distances_(dist, crit_dist=3):
+def distances(dist, crit_dist=3):
     return [0 if dist >= crit_dist else 1][0]
 
 def get_matrix(dna):
@@ -227,7 +227,7 @@ def aligner(standard, aligned, default=0):
         else :
             result.append([i[0], default])
 
-    print(len(aligned), align_num)
+    print(len(standard), len(aligned), align_num)
     return result
 
 def save(flist, name='features'):
@@ -236,7 +236,7 @@ def save(flist, name='features'):
 
 
 '''
-labelchange(['distances_', 'maindist'])
+labelchange(['distances', 'maindist'])
 labelchange(['directions', 'main'])
 flist= labelchange(['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[0][0]))])
 

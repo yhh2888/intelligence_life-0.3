@@ -326,31 +326,31 @@ class Game:
                         oscillater = 0
 
                 if pluslist == [1, 0]:
-                    self.player.move_code('right')
+                    #self.player.move_code('right')
                     virtual_movedir = [1, 0, 0, 0]
                 elif pluslist == [-1, 0]:
-                    self.player.move_code('left')
+                    #self.player.move_code('left')
                     virtual_movedir = [0, 0, 1, 0]
                 elif pluslist == [0, 1]:
-                    self.player.move_code('down')
+                    #self.player.move_code('down')
                     virtual_movedir = [0, 1, 0, 0]
                 elif pluslist == [0, -1]:
-                    self.player.move_code('up')
+                    #self.player.move_code('up')
                     virtual_movedir = [0, 0, 0, 1]
                 if avoidloc == []:
                     avoidloc = None
                     
                 if netresult == 0:
-                    #self.player.move_code('right')
+                    self.player.move_code('right')
                     movedir = [1, 0, 0, 0]
                 elif netresult == 2:
-                    #self.player.move_code('left')
+                    self.player.move_code('left')
                     movedir = [0, 0, 1, 0]
                 elif netresult == 1:
-                    #self.player.move_code('down')
+                    self.player.move_code('down')
                     movedir = [0, 1, 0, 0]
                 elif netresult == 3:
-                    #self.player.move_code('up')
+                    self.player.move_code('up')
                     movedir = [0, 0, 0, 1]
             '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
@@ -416,7 +416,7 @@ class Game:
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     
-                    
+                    '''
                     plt.imshow(mapkde.Z, cmap=plt.cm.gist_earth_r, extent=[0, 100, 0, 100])
                     plt.show()
                     
@@ -434,7 +434,7 @@ class Game:
                         
                         sew = 0
                     sew += 1
-            
+            '''
             mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
             
             kdeval = mapkde.kde_set(mapkde.test_data)

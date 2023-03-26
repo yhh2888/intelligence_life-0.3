@@ -145,15 +145,16 @@ class Player:
 class Mob1:
     def __init__(self, surface, follow, size):
         self.parent_screen = surface
-        self.img = pygame.image.load("resources/mobs.jpg").convert()
-        self.img = pygame.transform.scale(self.img, (20, 20))
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\zilpuck.png')
         self.size = size
+        self.img = pygame.transform.scale(self.img, (self.size*4, self.size*4))
         self.follow = follow
         self.moblist = []
         self.block = self.img
         self.color = (50, 200, 100)
         self.tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
         self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        self.block = self.clip(self.img, self.size*2*0, self.size*2*0, self.size*2, self.size*2)
         
     def mobappend(self, x, y):
         self.moblist.append([x, y, 3])
@@ -170,18 +171,24 @@ class Mob1:
                 if self.amob_distance[0] > 0:
                     if [nowmob[0]+1, nowmob[1]] not in moblist:
                         self.moblist[i][0] += 1
+                        self.block = self.clip(self.img, self.size*0, self.size*2, self.size, self.size)
+                        
                 elif self.amob_distance[0] < 0:
                     if [nowmob[0]-1, nowmob[1]] not in moblist:
                         self.moblist[i][0] -= 1
+                        self.block = self.clip(self.img, self.size*0, self.size*1, self.size, self.size)
 
             elif abs(self.amob_distance[1]) > abs(self.amob_distance[0]):
                 nowmob = self.moblist[i]
                 if self.amob_distance[1] > 0:
                     if [nowmob[0], nowmob[1]+1] not in moblist:
                         self.moblist[i][1] += 1
+                        self.block = self.clip(self.img, self.size*0, self.size*0, self.size, self.size)
                 elif self.amob_distance[1] < 0:
                     if [nowmob[0], nowmob[1]-1] not in moblist:
                         self.moblist[i][1] -= 1
+                        self.block = self.clip(self.img, self.size*0, self.size*3, self.size, self.size)
+                        
                 
             else:
                 rand = random.randint(0, 1)
@@ -201,6 +208,12 @@ class Mob1:
             if self.pre_location != [] and len(self.pre_location) >= amob+1:
                 self.parent_screen.blit(self.ground, (self.pre_location[amob][0]*self.size, self.pre_location[amob][1]*self.size),
                                               pygame.Rect(*self.tile_loc[[3, 5, 10, 11, 15][random.randint(0, 4)]], self.size, self.size))
-            pygame.draw.rect(self.parent_screen, self.color,
-                                [self.moblist[amob][0]*self.size, self.moblist[amob][1]*self.size, self.size, self.size])      
+            self.parent_screen.blit(self.block, (self.moblist[amob][0]*self.size, self.moblist[amob][1]*self.size))
         pygame.display.flip()
+
+    def clip(self, surface, x, y, x_size, y_size):
+        handle_surface = surface.copy()
+        clipRect = pygame.Rect(x,y,x_size,y_size)
+        handle_surface.set_clip(clipRect)
+        image = surface.subsurface(handle_surface.get_clip())
+        return image.copy()

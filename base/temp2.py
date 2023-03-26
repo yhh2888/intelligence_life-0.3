@@ -239,7 +239,9 @@ if __name__ == '__main__':
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
     
-    datakinds = ['distances0.6', 'directions0.6', 'interval0.6', 'crossed_directions']
+    datakinds = ['interval0.45', 'crossed_directions0.45',
+                 'interval0.15', 'crossed_directions0.15',
+                 'maf_1leastRequire', 'maf_3leastRequire']
     
     for i in datakinds:
         globals()['models_'+i] = NeuralNetwork([1])
