@@ -23,7 +23,7 @@ class Evolve:
         for i in range(len(self.paramgens)):
             netdata_substitute(self.paramgens[i], ext)
         
-    def test(self, next_gen, view_lock = False):
+    def test(self, next_gen, view_lock = False, time_=False):
         global term_data
         self.scorelist = []
         
@@ -32,7 +32,7 @@ class Evolve:
             
         for i in range(self.amounts):
             print(id(self.paramgens[i]))
-            score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i])
+            score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i], time_=time_)
             self.scorelist.append(score[0])
             self.circumstances = Game(50, 50)
             term_data = score[1]
@@ -59,7 +59,7 @@ class Evolve:
             self.amountsleft -= 1
         self.amountsleft = self.amounts
 
-def rep_test(rep, view_lock = False):
+def rep_test(rep, view_lock = False, time_=False):
     
     try:
         with open('field_data.json') as f:
@@ -86,7 +86,7 @@ def rep_test(rep, view_lock = False):
             
             t = time.time()
             
-            a.test(5, view_lock = view_lock)
+            a.test(5, view_lock = view_lock, time_=time_)
                 
             print(time.time()-t)
 

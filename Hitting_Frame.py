@@ -3,11 +3,12 @@
 import pygame, sys, os
 import random, time
 import numpy as np
-import torch, json
+import torch, json, traceback
 
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
+from time import perf_counter
 
 from pygame.locals import *
 from Characters import *
@@ -80,7 +81,14 @@ class Game:
             max_value = max(self.nn.update(view))
             if 0<=max_dir<=3 and max_value>0.13:
                 return ['right', 'down', 'left', 'up'][max_dir]'''
-                    
+    
+    def clip(self, surface, x, y, x_size, y_size):
+        handle_surface = surface.copy()
+        clipRect = pygame.Rect(x,y,x_size,y_size)
+        handle_surface.set_clip(clipRect)
+        image = surface.subsurface(handle_surface.get_clip())
+        return image.copy()
+    
     def run(self):
         self.player.x = self.start_x
         self.player.y = self.start_y
@@ -189,7 +197,7 @@ class Game:
                                 
             #print(time_per1-time.time())       
 
-    def run_by_AI(self, view_lock = False, net=None):
+    def run_by_AI(self, view_lock = False, net=None, time_=False):
         sew = 0
         wait = 0
         
@@ -248,14 +256,20 @@ class Game:
         for i in range(len(self.maptiles)):
             self.surface.blit(self.ground, ((i%self.mapsize[0])*self.size, (i//self.mapsize[1])*self.size),
                               pygame.Rect(*tile_loc[self.maptiles[i]], self.size, self.size))
-    
+
+        netresult_time = 0
+
+        self.healthbarimg = pygame.image.load(os.getcwd()+'\\'+'resources\\healthbar.png')
+        self.healthbarimg = pygame.transform.scale(self.healthbarimg, (988/8, 3392/8))
+        
         while running:
+            if time_==True:
+                t = perf_counter()
             for event in pygame.event.get(): 
                 if event.type == pygame.QUIT: 
                     running = False
                     self.quit = True
                     
-            time_per1 = time.time()
             self.eventer_time += 1
             '''vision = np.zeros((11, 11))
             realmob = []'''
@@ -285,7 +299,10 @@ class Game:
                             vision[10-j][i] = 1'''
 
             # moverule page --------------------------------------------------------------------------------------
-        
+
+            if time_==True:
+                t = perf_counter()
+            
             values = []
             mobxys = [i[0:2] for i in self.mobs.moblist]
             contemp = None
@@ -340,25 +357,30 @@ class Game:
                 if avoidloc == []:
                     avoidloc = None
                     
-                if netresult == 0:
-                    self.player.move_code('right')
-                    movedir = [1, 0, 0, 0]
-                elif netresult == 2:
-                    self.player.move_code('left')
-                    movedir = [0, 0, 1, 0]
-                elif netresult == 1:
-                    self.player.move_code('down')
-                    movedir = [0, 1, 0, 0]
-                elif netresult == 3:
-                    self.player.move_code('up')
-                    movedir = [0, 0, 0, 1]
+            if netresult == 0:
+                self.player.move_code('right')
+                movedir = [1, 0, 0, 0]
+            elif netresult == 2:
+                self.player.move_code('left')
+                movedir = [0, 0, 1, 0]
+            elif netresult == 1:
+                self.player.move_code('down')
+                movedir = [0, 1, 0, 0]
+            elif netresult == 3:
+                self.player.move_code('up')
+                movedir = [0, 0, 0, 1]
             '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
                 if feed != None:
                     self.player.move_code(feed)'''
             
-
+            if time_==True:
+                print('moverule page :', perf_counter()-t)
+            
             # attack page --------------------------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
             
             if self.player.direc == 'left':
                 sides = [[(self.player.x-2+j), (self.player.y-1+i)] for i in range(3) for j in range(2)]
@@ -381,10 +403,16 @@ class Game:
                 if self.player.att == []:
                     self.player.attack()
                     self.killscore += self.hit()
+
+            if time_==True:
+                print('attack page :', perf_counter()-t)
                     
             # mob page --------------------------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
             
-            decision_num = random.randint(0, 100)
+            decision_num = random.randint(25, 100)
             if self.eventer_time > 8:
                 if avoidloc != None:
                     supervise.append([[self.player.x, self.player.y], mobxys, avoidloc])
@@ -404,15 +432,138 @@ class Game:
                     self.mobspawn = 0
                 self.turns += 3
 
-            # last page --------------------------------------------------------------------------------------
-                        
-            #time_per1 = time.time()
+            if time_==True:
+                print('mob page :', perf_counter()-t)
+
+            # kde generating page ---------------------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
+            
+            mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
+            
+            kdeval = mapkde.kde_set(mapkde.test_data)
+            mapkde.Z = mapkde.kde_distribution(*kdeval, 0.03, 30) + mapkde.kde_distribution(*kdeval, 0.1, 0.5)
+            self.player.x, self.player.y = 99-self.player.y, self.player.x
+            try:
+                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.player.x-sighthalf, self.player.x+sighthalf+1) for j in range(self.player.y-sighthalf, self.player.y+sighthalf+1)]
+            except Exception as e:
+                print(e, traceback.format_exc())
+                sigthkde = [0 for i in range(121)]
+            data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
+
+            if time_==True:
+                print('kde generating page :', perf_counter()-t)
+
+            self.player.x, self.player.y = self.player.y, 99-self.player.x
+            
+            #---------- feature setting page ----------#
+
+            if time_==True:
+                t = perf_counter()
+            
+            mat_sight = torch.tensor(sightkde).reshape(11, 11)
+            
+            dist_now = [labeler(mat_sight, ['distances', 'maindist'])]
+            dir_now = [labeler(mat_sight, ['directions', 'main'])]
+            if dist_now[0] != None:
+                ismoving_now = [1 if netresult == 5 else 0]
+                #maf_now = [torch.tensor(labeler(mat_sight,
+                #           ['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[maf_dic[m]][0]))])) for m in list(maf_dic.keys())]
+                cdir_now = [labeler(mat_sight, ['cross_dir', 'main'])]
+                mat_now = torch.tensor(sightkde)
+                move_now = torch.tensor([netresult])
+
+            #---------- feature memory page ----------#
+
+            if dist_now[0] != None:
+                for n in fnlist:
+                    del locals()[n][0]
+                    locals()[n].append(torch.tensor(locals()[n[0:n.index('_')+1]+'now']))
+                    
+            #---------- final feature ----------#
+            if dist_now[0] != None:
+                fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
+                                                                        *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]]
+                                                                           ))
+                                                                ))
+                                           ])
+
+                netresult = torch.argmax(self.netmodel(fin_feature))
+                netresult_time = 30
+
+            netresult_time -= 1
+            if netresult_time <= 0:
+                netresult = 5
+            
+            if dist_now[0] != None:
+                self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
+
+            if time_==True:
+                print('features page :', perf_counter()-t)
+
+            # map boundary deal page ---------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
+
+            if (not 7<=self.player.x<=self.display_width[0]/self.size-7):
+                self.player.pre_location = [self.player.x, self.player.y]
+                self.player.x = int((abs(self.player.x-(self.display_width[0]/self.size))*14+50)//15)
+                if self.player.view_lock == False:
+                    self.player.draw()
+            elif (not 7<=self.player.y<=self.display_width[1]/self.size-7):
+                self.player.pre_location = [self.player.x, self.player.y]
+                self.player.y = int((abs(self.player.y-self.display_width[1]/self.size)*14+50)//15)
+                if self.player.view_lock == False:
+                    self.player.draw()
+
+            if time_==True:
+                print('map boundary deal page :', perf_counter()-t)
+                    
+            # lifes page ---------------------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
+            
+            if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist]:
+                self.player.lifes -= 3
+                
+            if self.player.lifes < 0:
+                running = False
+                
+                self.netmodel.feature_label = self.term_data
+                print(len(self.term_data))
+                self.netmodel.ted = DataLoader(self.netmodel.feature_label[int(len(self.netmodel.feature_label)//1.2):],
+                                               batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
+                self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
+                                               batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
+
+                #self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
+                pygame.init()
+                print(self.turns, self.killscore)
+                return self.turns+self.killscore, self.term_data
+            elif self.player.lifes > 10:
+                self.player.lifes = 10
+
+            if time_==True:
+                print('lifes page :', perf_counter()-t)
+
+            # draw page ----------------------------------------------------------------------------------
+
+            if time_==True:
+                t = perf_counter()
+
             if self.mobs != None:
                 self.player.eff_times()
                 if self.player.view_lock == False:
                     self.player.draw()
-                    self.mobs.draw()
+                    self.mobs.draw(grassorigin=self.maptiles)
+                    self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
+                    self.surface.blit(self.healthbar, (2*self.size, 2*self.size))
                 if self.eventer_time > 8 and self.turns%2 == 0:
+                    self.player.draw(grass=True)
+                    self.mobs.draw(grass=True, grassorigin=self.maptiles)
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     
@@ -435,82 +586,8 @@ class Game:
                         sew = 0
                     sew += 1
             '''
-            mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
-            
-            kdeval = mapkde.kde_set(mapkde.test_data)
-            mapkde.Z = mapkde.kde_distribution(*kdeval, 0.03, 30) + mapkde.kde_distribution(*kdeval, 0.1, 0.5)
-            self.player.x, self.player.y = 99-self.player.y, self.player.x
-            try:
-                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.player.x-sighthalf, self.player.x+sighthalf+1) for j in range(self.player.y-sighthalf, self.player.y+sighthalf+1)]
-            except Exception:
-                sigthkde = [0 for i in range(121)]
-            data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
-            #---------- feature setting page ----------#
-            mat_sight = torch.tensor(sightkde).reshape(11, 11)
-            
-            dist_now = [labeler(mat_sight, ['distances', 'maindist'])]
-            dir_now = [labeler(mat_sight, ['directions', 'main'])]
-            if dist_now[0] != None:
-                ismoving_now = [1 if netresult == 5 else 0]
-                #maf_now = [torch.tensor(labeler(mat_sight,
-                #           ['matrix_feature_', 'tensor', torch.tensor(get_matrix(fm[maf_dic[m]][0]))])) for m in list(maf_dic.keys())]
-                cdir_now = [labeler(mat_sight, ['cross_dir', 'main'])]
-                mat_now = torch.tensor(sightkde)
-                move_now = torch.tensor([netresult])
-            #---------- feature memory page ----------#
-
-            if dist_now[0] != None:
-                for n in fnlist:
-                    del locals()[n][0]
-                    locals()[n].append(torch.tensor(locals()[n[0:n.index('_')+1]+'now']))
-            #---------- final feature ----------#
-            if dist_now[0] != None:
-                fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
-                                                                        *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]]
-                                                                           ))
-                                                                ))
-                                           ])
-
-                netresult = torch.argmax(self.netmodel(fin_feature))
-                    
-            self.player.x, self.player.y = self.player.y, 99-self.player.x
-            if dist_now[0] != None:
-                self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
-
-            if (not 6<=self.player.x<=self.display_width[0]/self.size-6):
-                self.player.pre_location = [self.player.x, self.player.y]
-                self.player.x = (abs(self.player.x-(self.display_width[0]/self.size))*14+50)//15
-                self.player.lifes -= 5
-                if self.player.view_lock == False:
-                    self.player.draw()
-            elif (not 6<=self.player.y<=self.display_width[1]/self.size-6):
-                self.player.pre_location = [self.player.x, self.player.y]
-                self.player.y = (abs(self.player.y-self.display_width[1]/self.size)*14+50)//15
-                self.player.lifes -= 5
-                if self.player.view_lock == False:
-                    self.player.draw()
-            
-            if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist]:
-                self.player.lifes -= 5
-                
-            if self.player.lifes < 0:
-                running = False
-                
-                self.netmodel.feature_label = self.term_data
-                print(len(self.term_data))
-                self.netmodel.ted = DataLoader(self.netmodel.feature_label[int(len(self.netmodel.feature_label)//1.2):],
-                                               batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
-                self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
-                                               batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
-
-                #self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
-                pygame.init()
-                #print(supervise)
-                print(self.turns, self.killscore)
-                self.player.lifes = 10
-                return self.turns+self.killscore, self.term_data
-            
-            #print(time_per1-time.time())
+            if time_==True:
+                print('draw page :', perf_counter()-t)
             
             
 if __name__ == '__main__':
