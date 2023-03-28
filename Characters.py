@@ -207,7 +207,6 @@ class Mob1:
             if self.moblist[amob][2] == 1:
                 self.color = (10, 60, 20)
             if self.pre_location != [] and len(self.pre_location) >= amob+1 and (3<=self.pre_location[amob][0]<=97 and 3<=self.pre_location[amob][1]<=97):
-                print(self.pre_location[amob][1], self.pre_location[amob][0])
                 if grassorigin != None and grass == False:
                     grasscombiner = [grassorigin[int((self.pre_location[amob][1]+i)*100+self.pre_location[amob][0]+j)] for j in range(-1, 3) for i in range(-1, 3)]
                 elif grassorigin != None and grass == True :

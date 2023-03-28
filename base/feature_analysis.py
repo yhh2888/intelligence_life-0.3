@@ -5,6 +5,7 @@ from time import perf_counter
 from scipy.stats import norm
 
 sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
+sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\geometry')
 from default_functions import movepoint
 
 if __name__ == '__main__':
