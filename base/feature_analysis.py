@@ -55,20 +55,17 @@ if __name__ == '__main__':
 def labeler(tensor, function, min_size=0.003, max_size=1.0, min_dist=3, middle=[5, 5], speed_print=False):
     if speed_print == True:
         timp = perf_counter()
-        
+
+    tensor_listed = torch.Tensor.tolist(tensor.reshape(1, 121)[0])
     listA, listB, listC = [], [], []
-    for i in range(len(tensor)):
-        for j in range(len(tensor[i])):
-            if max_size > tensor[i][j] > min_size:
-                listA.append([j, i])
-    for i in listA:
-        listB.append([i[0]-middle[0], i[1]-middle[1]])
-    for i in listB:
-        listC.append((i[0]**2+i[1]**2)**0.5)
-    if len(listB) != 0:
+    listA = [[j, i] for i in range(len(tensor)) for j in range(len(tensor[i])) if max_size > tensor_listed[i*11+j] > min_size]
+    if len(listA) != 0:
+        listB = (np.array(listA)-np.array([5, 5])).tolist()
+        for i in listB:
+            listC.append((i[0]**2+i[1]**2)**0.5)
         main = listB[np.argmin(listC)]
         maindist = min(listC)
-        
+
         func_params = []
         for i in function:
             if type(i) == list or type(i) == torch.Tensor or type(i) == int:
@@ -77,14 +74,16 @@ def labeler(tensor, function, min_size=0.003, max_size=1.0, min_dist=3, middle=[
                 func_params.append(locals()[i])
             elif i in globals():
                 func_params.append(globals()[i])
-            
+
             else:
                 raise ValueError
-            
-        return func_params[0](*func_params[1:])
+        result = func_params[0](*func_params[1:])
 
-    if speed_print == True:
-        print(perf_counter()-timp)
+        if speed_print == True:
+            print(perf_counter()-timp)
+
+        return result
+
 
 def directions(position):
     if abs(position[0])<=abs(position[1]) and position[1]>=0:

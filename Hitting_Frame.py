@@ -40,7 +40,7 @@ class Game:
         self.start_y = start_y
         self.kills = 0
 
-        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png').convert()
         self.mapsize = [self.display_width[0]/self.size, self.display_width[1]/self.size]
         self.maptiles = [([3, 5, 10, 11, 15]*2+[random.randint(0, 15)]*16)[random.randint(0, 24)] for i in range(int(self.mapsize[0]*self.mapsize[1]))]
         
@@ -53,11 +53,10 @@ class Game:
             if i[0:2] in self.player.att and self.player.attack_real == True:
                 if i[2] > 1:
                     self.mobs.moblist[self.mobs.moblist.index(i)][2] -= 1
-                    score += 50*(2**self.kills)
                     self.player.lifes += 1
                 else:
                     self.mobs.moblist.remove(i)
-                    score += 200*(3**self.kills)
+                    score += 100
                     self.kills += 1
                     self.player.lifes += 2
         return score
@@ -74,13 +73,6 @@ class Game:
                 regame = False
             if (keys[pygame.K_ESCAPE]):
                 regame = False
-
-    '''def networkfeed(self, view):
-        if 'nn' in dir(self):
-            max_dir = np.argmax(self.nn.update(view))
-            max_value = max(self.nn.update(view))
-            if 0<=max_dir<=3 and max_value>0.13:
-                return ['right', 'down', 'left', 'up'][max_dir]'''
     
     def clip(self, surface, x, y, x_size, y_size):
         handle_surface = surface.copy()
@@ -259,11 +251,11 @@ class Game:
 
         netresult_time = 0
 
-        self.healthbarimg = pygame.image.load(os.getcwd()+'\\'+'resources\\healthbar.png')
+        self.healthbarimg = pygame.image.load(os.getcwd()+'\\'+'resources\\healthbar.png').convert()
         self.healthbarimg = pygame.transform.scale(self.healthbarimg, (988/8, 3392/8))
         
         while running:
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             for event in pygame.event.get(): 
                 if event.type == pygame.QUIT: 
@@ -300,7 +292,7 @@ class Game:
 
             # moverule page --------------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             values = []
@@ -374,12 +366,12 @@ class Game:
                 if feed != None:
                     self.player.move_code(feed)'''
             
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('moverule page :', perf_counter()-t)
             
             # attack page --------------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             if self.player.direc == 'left':
@@ -404,12 +396,12 @@ class Game:
                     self.player.attack()
                     self.killscore += self.hit()
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('attack page :', perf_counter()-t)
                     
             # mob page --------------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             decision_num = random.randint(25, 100)
@@ -432,12 +424,12 @@ class Game:
                     self.mobspawn = 0
                 self.turns += 3
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('mob page :', perf_counter()-t)
 
             # kde generating page ---------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             mapkde.test_data = mobxys+[[100, 0], [0, 100], [0, 0], [100, 100]]
@@ -446,24 +438,24 @@ class Game:
             mapkde.Z = mapkde.kde_distribution(*kdeval, 0.03, 30) + mapkde.kde_distribution(*kdeval, 0.1, 0.5)
             self.player.x, self.player.y = 99-self.player.y, self.player.x
             try:
-                sightkde = [round(mapkde.Z[i][j], 4) for i in range(self.player.x-sighthalf, self.player.x+sighthalf+1) for j in range(self.player.y-sighthalf, self.player.y+sighthalf+1)]
+                sightkde = np.round(mapkde.Z[self.player.x-sighthalf:self.player.x+sighthalf+1,
+                                            self.player.y-sighthalf:self.player.y+sighthalf+1], 4).reshape(1, sightrange**2)[0].tolist()
             except Exception as e:
                 print(e, traceback.format_exc())
-                sigthkde = [0 for i in range(121)]
+                sigthkde = [0]*(sightrange**2)
             data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
 
-            if time_==True:
-                print('kde generating page :', perf_counter()-t)
-
             self.player.x, self.player.y = self.player.y, 99-self.player.x
+
+            if time_==True and dist_now[0] != None:
+                print('kde generating page :', perf_counter()-t)
             
             #---------- feature setting page ----------#
-
-            if time_==True:
+            t = None
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             mat_sight = torch.tensor(sightkde).reshape(11, 11)
-            
             dist_now = [labeler(mat_sight, ['distances', 'maindist'])]
             dir_now = [labeler(mat_sight, ['directions', 'main'])]
             if dist_now[0] != None:
@@ -482,6 +474,7 @@ class Game:
                     locals()[n].append(torch.tensor(locals()[n[0:n.index('_')+1]+'now']))
                     
             #---------- final feature ----------#
+                
             if dist_now[0] != None:
                 fin_feature = torch.tensor([torch.Tensor.tolist((torch.cat((*locals()[fnlist[0]], *locals()[fnlist[1]], *locals()[fnlist[2]],
                                                                         *locals()[fnlist[3]], *locals()[fnlist[4]], *locals()[fnlist[5]]
@@ -499,12 +492,12 @@ class Game:
             if dist_now[0] != None:
                 self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
 
-            if time_==True:
+            if time_==True and dist_now[0] != None and t != None:
                 print('features page :', perf_counter()-t)
 
             # map boundary deal page ---------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
 
             if (not 7<=self.player.x<=self.display_width[0]/self.size-7):
@@ -518,12 +511,12 @@ class Game:
                 if self.player.view_lock == False:
                     self.player.draw()
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('map boundary deal page :', perf_counter()-t)
                     
             # lifes page ---------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
             if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist]:
@@ -546,24 +539,27 @@ class Game:
             elif self.player.lifes > 10:
                 self.player.lifes = 10
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('lifes page :', perf_counter()-t)
 
             # draw page ----------------------------------------------------------------------------------
 
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 t = perf_counter()
 
             if self.mobs != None:
                 self.player.eff_times()
-                if self.player.view_lock == False:
+                if self.player.view_lock == False and not (self.eventer_time > 8 and self.turns%2 == 0):
                     self.player.draw()
                     self.mobs.draw(grassorigin=self.maptiles)
                     self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
                     self.surface.blit(self.healthbar, (2*self.size, 2*self.size))
                 if self.eventer_time > 8 and self.turns%2 == 0:
-                    self.player.draw(grass=True)
-                    self.mobs.draw(grass=True, grassorigin=self.maptiles)
+                    if self.player.view_lock == False:
+                        self.player.draw(grass=True)
+                        self.mobs.draw(grass=True, grassorigin=self.maptiles)
+                        self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
+                        self.surface.blit(self.healthbar, (2*self.size, 2*self.size))
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     
@@ -586,7 +582,7 @@ class Game:
                         sew = 0
                     sew += 1
             '''
-            if time_==True:
+            if time_==True and dist_now[0] != None:
                 print('draw page :', perf_counter()-t)
             
             

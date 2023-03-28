@@ -5,7 +5,7 @@ import random, os, sys
 class Player:
     def __init__(self, surface, size):
         self.parent_screen = surface
-        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\squirtle.png')
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\squirtle.png').convert()
         self.size = size
         self.img = pygame.transform.scale(self.img, (self.size*3*4, self.size*3*4))
         self.x = 10
@@ -19,7 +19,7 @@ class Player:
         self.pre_location = []
         self.view_lock == False
         self.tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
-        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png').convert()
         
     def move_left(self):
         self.move_score_x -= 1
@@ -145,7 +145,7 @@ class Player:
 class Mob1:
     def __init__(self, surface, follow, size):
         self.parent_screen = surface
-        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\zilpuck.png')
+        self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\zilpuck.png').convert()
         self.size = size
         self.img = pygame.transform.scale(self.img, (self.size*2*4, self.size*2*4))
         self.follow = follow
@@ -153,7 +153,7 @@ class Mob1:
         self.block = self.img
         self.color = (50, 200, 100)
         self.tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
-        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png')
+        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png').convert()
         self.block = self.clip(self.img, self.size*0, self.size*0, self.size*2, self.size*2)
         
     def mobappend(self, x, y):

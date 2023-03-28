@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import random, time
 import numpy as np
 
+from time import perf_counter
 from scipy.stats import gaussian_kde
 from collections import deque
 from more_itertools import distinct_permutations
@@ -169,7 +170,7 @@ class spreader:
         values = np.vstack([m1, m2])
         return values, positions
 
-    def kde_distribution(self, values, positions, adjust=0.15, strength=1):
+    def kde_distribution(self, values, positions, adjust=0.15, strength=1, speed=False):
         self.kernel = gaussian_kde(values)
         self.kernel.set_bandwidth(self.kernel.factor * adjust)
         Z = np.reshape(self.kernel(positions).T, self.Xmg.shape)
