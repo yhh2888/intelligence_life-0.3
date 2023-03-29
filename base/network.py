@@ -252,7 +252,9 @@ if __name__ == '__main__':
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
     
-    datakinds = []
+    datakinds = ['distances0.15', 'directions0.15', 'interval0.15', 'crossed_directions',
+                 'boundary01,05', 'boundary01,15', 'boundary03,15', 
+                 'maf_3least', 'maf_1least', 'maf_1most', 'maf_3most', 'maf_1leastRequire', 'maf_3leastRequire']
 
     longkinds = []
     
