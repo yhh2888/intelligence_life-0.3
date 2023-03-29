@@ -18,7 +18,7 @@ test_dataloader = []
 
 ##
 class NeuralNetwork(nn.Module):
-    def __init__(self, layer, drop_prob = 0.1):
+    def __init__(self, layer, drop_prob = 0.00, rnn=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
@@ -29,19 +29,32 @@ class NeuralNetwork(nn.Module):
         self.feature_label = []
         self.remain_labels = []
         self.f_on = False
+        self.rnntrue = [1 if rnn==True else 0][0]
         
-        for i in range(len(self.layers)-1):
-            networks.append(nn.Linear(layer[i], layer[i+1]))
-            if i != len(layer)-1:
+        if len(layer) > 1:
+            if rnn == True:
+                self.rnn = nn.RNN(layer[0], layer[1])
                 networks.append(nn.ReLU())
                 networks.append(nn.Dropout(p=drop_prob))
-        
-        self.stack = nn.Sequential(*networks)
 
-    def forward(self, x):
-        x = self.flatten(x)
-        logits = self.stack(x)
-        return logits
+            for i in range(self.rnntrue, len(layer)-1):
+                networks.append(nn.Linear(layer[i], layer[i+1]))
+                if i != len(layer)-1:
+                    networks.append(nn.ReLU())
+                    networks.append(nn.Dropout(p=drop_prob))
+
+            self.stack = nn.Sequential(*networks)
+            
+    def forward(self, X):
+
+        if self.rnntrue == 1:
+            rnn_out, hidden = self.rnn(X)
+            X = torch.squeeze(rnn_out, dim=1)
+        else :
+            X = self.flatten(X)
+            
+        processed = self.stack(X)
+        return processed
 
     def featurecall(self, name):
         with open(os.getcwd()+'\\preprocessed\\'+name+'_data.json') as f:
@@ -239,10 +252,9 @@ if __name__ == '__main__':
                  'maf_0leastRequire', 'maf_1leastRequire', 'maf_2leastRequire', 'maf_3leastRequire',
                  'crossed_directions']
     
-    datakinds = ['distances', 'directions', 'distances0.15', 'directions0.15', 'interval0.15', 'crossed_directions',
-                 'boundary01,05', 'boundary01,15', 'boundary03,15', 'movepoint_dir']
+    datakinds = []
 
-    longkinds = ['movepoint']
+    longkinds = []
     
     for i in datakinds:
         globals()['models_'+i] = NeuralNetwork([1])
@@ -254,19 +266,19 @@ if __name__ == '__main__':
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
     for i in range(len(model_dist.feature_label)):
-        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(2)],
+        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(3)],
                                                                    *[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
                                                                    *[globals()['models_'+j].feature_label[i-k][1] if type(torch.Tensor.tolist(globals()['models_'+j].feature_label[i-k][1])) == list \
                                                                    else torch.tensor([0, 0]) for j in longkinds for k in range(3)],
-                                                                   *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(2)],
-                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(2)]
+                                                                   *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)],
+                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]
                                                                    ))
                                                         ))
                                    ]),
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 70, 50, 6])
+    model_fin = NeuralNetwork([len(li68[0][0][0]), 70, 50, 6], rnn=True)
     model_fin.base_set(li68, call = False)
     model_fin.roll(150, 30)
 
