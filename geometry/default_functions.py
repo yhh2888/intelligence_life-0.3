@@ -3,7 +3,7 @@ import numpy as np
 from collections import deque
 
 sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
-sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
+sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\geometry')
 from calculation import *
 
 def dir4_response(directions, method = []):

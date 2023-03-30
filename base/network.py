@@ -32,7 +32,7 @@ class NeuralNetwork(nn.Module):
         self.rnntrue = [1 if rnn==True else 0][0]
         
         if len(layer) > 1:
-            if rnn == True:
+            '''if rnn == True:
                 self.rnn = nn.RNN(layer[0], layer[1])
                 networks.append(nn.ReLU())
                 networks.append(nn.Dropout(p=drop_prob))
@@ -41,19 +41,35 @@ class NeuralNetwork(nn.Module):
                 networks.append(nn.Linear(layer[i], layer[i+1]))
                 if i != len(layer)-1:
                     networks.append(nn.ReLU())
-                    networks.append(nn.Dropout(p=drop_prob))
+                    networks.append(nn.Dropout(p=drop_prob))'''
 
+            for i in range(len(layer)-1-self.rnntrue):
+                networks.append(nn.Linear(layer[i], layer[i+1]))
+                if i != len(layer)-1:
+                    networks.append(nn.ReLU())
+                    networks.append(nn.Dropout(p=drop_prob))
+            if rnn == True:
+                self.rnn = nn.RNN(layer[-2], layer[-1])
+                
             self.stack = nn.Sequential(*networks)
             
     def forward(self, X):
 
-        if self.rnntrue == 1:
+        '''if self.rnntrue == 1:
             rnn_out, hidden = self.rnn(X)
             X = torch.squeeze(rnn_out, dim=1)
         else :
             X = self.flatten(X)
             
+        processed = self.stack(X)'''
+
+        X = self.flatten(X)
+            
         processed = self.stack(X)
+        if self.rnntrue == 1:
+            rnn_out, hidden = self.rnn(processed.unsqueeze(1))
+            processed = torch.squeeze(rnn_out, dim=1)
+        
         return processed
 
     def featurecall(self, name):
@@ -175,7 +191,6 @@ new.roll(15)
 '''model_dist01 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist01.base_set('distances01')
 model_dist01.roll(30, 10)
-
 model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
 model_dist02.roll(30, 10)'''
@@ -282,12 +297,12 @@ if __name__ == '__main__':
         
     model_fin = NeuralNetwork([len(li68[0][0][0]), 70, 50, 6], rnn=True)
     model_fin.base_set(li68, call = False)
-    model_fin.roll(150, 30)
+    model_fin.roll(50, 10)
 
     code = {1:0, 2:2, 3:3, 4:1, 5:2, 6:0, 7:1, 8:3}
 
     set1 = [[model_fin.feature_label[i*11+j][1].item() for j in range(11)] for i in range(-1000, -2)]
-    set2 = [[torch.argmax(model_fin(li68[i*11+j][0])).item() for j in range(11)] for i in range(-1000, -2)]
+    set2 = [[torch.argmax(model_fin(torch.tensor([torch.Tensor.tolist(li68[i*11+j][0])]))).item() for j in range(11)] for i in range(-1000, -2)]
 
     trues = 0
     for i in (np.array(set1)==np.array(set2)).flatten():
@@ -297,16 +312,12 @@ if __name__ == '__main__':
     print('real_test:', trues/(1000*11))
 
 '''
-
 params = []
-
 for i in model_fin.parameters():
     params.append(i)
-
 for i in range(len(params)):
     params[i]=torch.Tensor.tolist(params[i][0:])
              
 with open('modelparam_data.json', 'w') as f:
     json.dump(params, f)
-
 '''

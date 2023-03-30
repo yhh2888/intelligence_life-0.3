@@ -7,8 +7,13 @@ from scipy.stats import gaussian_kde
 from collections import deque
 from more_itertools import distinct_permutations
 from itertools import combinations as comb
+from numba.experimental import jitclass
+from numba import int32, float32
 
-
+spec = [
+    ('value', int32),               # a simple scalar field
+    ('array', float32[:]),          # an array field
+]
 
 #같은 것이 있는 순열 - 중복 제외한 것(중복 판단 자체를 하지 않아 빠름)
 def unique_perms(series):
@@ -41,7 +46,7 @@ def direction(point, direct):
 
 
 
-
+#@jitclass(spec)
 class spreader:
     def __init__(self, typ=0, moves=5, quant_coeff=10, mrec_disp=True, unable_disp=False):
         

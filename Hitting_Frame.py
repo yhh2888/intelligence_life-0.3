@@ -4,6 +4,7 @@ import pygame, sys, os
 import random, time
 import numpy as np
 import torch, json, traceback
+from numba import jit
 
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
