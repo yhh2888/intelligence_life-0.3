@@ -7,12 +7,12 @@ class Player:
         self.parent_screen = surface
         self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\squirtle.png').convert()
         self.size = size
-        self.img = pygame.transform.scale(self.img, (self.size*3*4, self.size*3*4))
+        self.img = pygame.transform.scale(self.img, (self.size*4, self.size*4))
         self.x = 10
         self.y = 10
         self.direc = 'left'
         self.att = []
-        self.block = self.clip(self.img, self.size*3*0, self.size*3*0, self.size*3, self.size*3)
+        self.block = self.clip(self.img, self.size*0, self.size*0, self.size, self.size)
         self.attack_real = False
         self.move_score_x = 0
         self.move_score_y = 0
@@ -27,7 +27,7 @@ class Player:
         if self.move_score_x <= -2:
             self.pre_location = [self.x, self.y]
             self.x -= 1
-            self.block = self.clip(self.img, self.size*3*0, self.size*3*1, self.size*3, self.size*3)
+            self.block = self.clip(self.img, self.size*0, self.size*1, self.size, self.size)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -39,7 +39,7 @@ class Player:
         if self.move_score_x >= 2:
             self.pre_location = [self.x, self.y]
             self.x += 1
-            self.block = self.clip(self.img, self.size*3*0, self.size*3*2, self.size*3, self.size*3)
+            self.block = self.clip(self.img, self.size*0, self.size*2, self.size, self.size)
             if self.view_lock == False:
                 self.draw()
             self.move_score_x = 0
@@ -51,7 +51,7 @@ class Player:
         if self.move_score_y <= -2:
             self.pre_location = [self.x, self.y]
             self.y -= 1
-            self.block = self.clip(self.img, self.size*3*0, self.size*3*3, self.size*3, self.size*3)
+            self.block = self.clip(self.img, self.size*0, self.size*3, self.size, self.size)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0
@@ -62,7 +62,7 @@ class Player:
         if self.move_score_y >= 2:
             self.pre_location = [self.x, self.y]
             self.y += 1
-            self.block = self.clip(self.img, self.size*3*0, self.size*3*0, self.size*3, self.size*3)
+            self.block = self.clip(self.img, self.size*0, self.size*0, self.size, self.size)
             if self.view_lock == False:
                 self.draw()
             self.move_score_y = 0

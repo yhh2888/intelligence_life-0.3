@@ -18,7 +18,7 @@ test_dataloader = []
 
 ##
 class NeuralNetwork(nn.Module):
-    def __init__(self, layer, drop_prob = 0.00, rnn=False):
+    def __init__(self, layer, drop_prob = 0.01, rnn=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
