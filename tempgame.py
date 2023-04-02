@@ -35,40 +35,50 @@ class Board:
         pygame.init()
         pygame.display.set_caption("Monster game")
         
-    def run(self):
+    def run(self, movetype = 'keyboard', framedelay=0.03, automiddle = True):
         game_over = False
-        paused = False
+        self.paused = False
         middle = [25, 25]
         self.player = Characters.Player(A.screen, 30)
+        self.player.x, self.player.y = 40, 40
         key_cooltime = 0
+        space_clicked = 0
+        self.movetype = movetype
         
         while not game_over:
-            if paused == False:
-                time.sleep(0.03)
+            if self.paused == False:
+                time.sleep(framedelay)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         game_over = True
+                    elif event.type == pygame.KEYUP:
+                        if event.key == pygame.K_SPACE:
+                            space_clicked = 0
+                    elif event.type == MOUSEWHEEL:
                         
                 # 캐릭터 이동
-                key_cooltime = max(0, key_cooltime-1)
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_LEFT]:
-                    self.player.move_left()
-                    key_cooltime = 10
-                if keys[pygame.K_RIGHT]:
-                    self.player.move_right()
-                    key_cooltime = 10
-                if keys[pygame.K_UP]:
-                    self.player.move_up()
-                    key_cooltime = 10
-                if keys[pygame.K_DOWN]:
-                    self.player.move_down()
-                    key_cooltime = 10
-                if keys[pygame.K_SPACE]:
-                    paused = True
+                if self.movetype == 'keyboard':
+                    key_cooltime = max(0, key_cooltime-1)
+                    keys = pygame.key.get_pressed()
+                    if keys[pygame.K_LEFT]:
+                        self.player.move_left()
+                        key_cooltime = 10
+                    if keys[pygame.K_RIGHT]:
+                        self.player.move_right()
+                        key_cooltime = 10
+                    if keys[pygame.K_UP]:
+                        self.player.move_up()
+                        key_cooltime = 10
+                    if keys[pygame.K_DOWN]:
+                        self.player.move_down()
+                        key_cooltime = 10
+                    if keys[pygame.K_SPACE]:
+                        if space_clicked == 0:
+                            self.paused = True
+                            space_clicked = 1
                     #카메라 캐릭터로 이동
-                if keys[pygame.K_m]:
-                    middle = [self.player.x, self.player.y]
+                    if keys[pygame.K_m] or automiddle:
+                        middle = [self.player.x, self.player.y]
 
                 #화면/맵 위치           
                 mousepos = pygame.mouse.get_pos()
@@ -97,19 +107,20 @@ class Board:
                     i.rect.y += (random.randint(-1, 0)+random.randint(0, 1)) * self.tilesize
                     
                     change_grass = int(i.rect.x/self.tilesize)*100+int(i.rect.y/self.tilesize)
-                    grass_code[change_grass] = [random.randint(0, 2), random.randint(0, 2)]
-                    grass_group.sprites()[int(i.rect.x/self.tilesize)*100+int(i.rect.y/self.tilesize)] = \
-                    Entity("grasses_refined.png", int(i.rect.x/self.tilesize), int(i.rect.y/self.tilesize), pos=[*grass_code[change_grass], 3, 3])
+                    if 0 <= change_grass <= 10000:
+                        grass_code[change_grass] = [random.randint(0, 2), random.randint(0, 2)]
+                        grass_group.sprites()[int(i.rect.x/self.tilesize)*100+int(i.rect.y/self.tilesize)] = \
+                        Entity("grasses_refined.png", int(i.rect.x/self.tilesize), int(i.rect.y/self.tilesize), pos=[*grass_code[change_grass], 3, 3])
 
                 self.draw(middle)
+                
             else :
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         game_over = True
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_SPACE:
-                            paused = False
-            
+                            self.paused = False
         pygame.quit()
     
     def draw(self, middle=[25, 25]):
@@ -162,4 +173,3 @@ monster_group = pygame.sprite.Group()
 
 for i in range(45):
     monster_group.add(Entity("zilpuck.png", 50, 50))
-A.run()

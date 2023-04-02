@@ -19,6 +19,7 @@ from base.kde_temp import *
 from base.bp_temp import *
 from base.temp2 import NeuralNetwork, structure_set
 from base.feature_analysis import labeler, distances, directions, get_matrix, cross_dir
+from tempgame import *
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
