@@ -8,12 +8,14 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, image_path, x, y, size=30, pos=[0, 0, 4, 4], from_path=True):
         super().__init__()
         self.size=size
+        self.pos = pos
         if from_path:
             self.image = pygame.image.load(os.getcwd()+'\\'+'resources\\'+image_path).convert_alpha()
             self.image = pygame.transform.scale(self.image, (self.size*pos[2], self.size*pos[3]))
             self.block = self.clip(self.image, self.size*pos[0], self.size*pos[1], self.size, self.size).convert_alpha()
         else:
-            self.block = image_path.convert_alpha()
+            self.image = image_path.convert_alpha()
+            self.block = self.image
         
         self.rect = self.block.get_rect()
         self.rect.x = x*self.size
@@ -44,7 +46,7 @@ class Board:
         key_cooltime = 0
         space_clicked = 0
         self.movetype = movetype
-        
+        zoom_ratio = 1
         while not game_over:
             if self.paused == False:
                 time.sleep(framedelay)
@@ -54,8 +56,12 @@ class Board:
                     elif event.type == pygame.KEYUP:
                         if event.key == pygame.K_SPACE:
                             space_clicked = 0
-                    elif event.type == MOUSEWHEEL:
-                        
+                    elif event.type == pygame.MOUSEWHEEL:
+                        if event.y >= 0:
+                            zoom_ratio *=1.1
+                        elif event.y < 0:
+                            zoom_ratio *=0.9
+                        print(event.flipped)
                 # 캐릭터 이동
                 if self.movetype == 'keyboard':
                     key_cooltime = max(0, key_cooltime-1)
@@ -112,7 +118,7 @@ class Board:
                         grass_group.sprites()[int(i.rect.x/self.tilesize)*100+int(i.rect.y/self.tilesize)] = \
                         Entity("grasses_refined.png", int(i.rect.x/self.tilesize), int(i.rect.y/self.tilesize), pos=[*grass_code[change_grass], 3, 3])
 
-                self.draw(middle)
+                self.draw(middle, zoom_ratio)
                 
             else :
                 for event in pygame.event.get():
@@ -123,20 +129,26 @@ class Board:
                             self.paused = False
         pygame.quit()
     
-    def draw(self, middle=[25, 25]):
+    def draw(self, middle=[25, 25], zoom_ratio = 1):
         # 스프라이트 그리기
         self.screen.fill((255, 255, 255))
         for i in grass_group:
-            self.screen.blit(i.block, (i.rect.x-(middle[0]-self.boardsize[0]/2)*self.tilesize,
-                                       i.rect.y-(middle[1]-self.boardsize[1]/2)*self.tilesize))
+            size = i.size * zoom_ratio
+            i.block = i.clip(i.image, size*i.pos[0], size*i.pos[1], size, size).convert_alpha()
+            self.screen.blit(i.block, (i.rect.x*zoom_ratio-(middle[0]-self.boardsize[0]/zoom_ratio/2)*self.tilesize*zoom_ratio,
+                                       i.rect.y*zoom_ratio-(middle[1]-self.boardsize[1]/zoom_ratio/2)*self.tilesize*zoom_ratio))
         for i in nature_group:
-            self.screen.blit(i.block, (i.rect.x-(middle[0]-self.boardsize[0]/2)*self.tilesize,
-                                       i.rect.y-(middle[1]-self.boardsize[1]/2)*self.tilesize))
-        A.screen.blit(self.player.block, ((self.player.x-(middle[0]-self.boardsize[0]/2))*self.tilesize,
-                                          (self.player.y-(middle[1]-self.boardsize[1]/2))*self.tilesize))
+            size = i.size * zoom_ratio
+            i.block = i.clip(i.image, size*i.pos[0], size*i.pos[1], size, size).convert_alpha()
+            self.screen.blit(i.block, (i.rect.x*zoom_ratio-(middle[0]-self.boardsize[0]/zoom_ratio/2)*self.tilesize*zoom_ratio,
+                                       i.rect.y*zoom_ratio-(middle[1]-self.boardsize[1]/zoom_ratio/2)*self.tilesize*zoom_ratio))
+        A.screen.blit(self.player.block, ((self.player.x-(middle[0]-self.boardsize[0]/zoom_ratio/2))*self.tilesize*zoom_ratio,
+                                          (self.player.y-(middle[1]-self.boardsize[1]/zoom_ratio/2))*self.tilesize*zoom_ratio))
         for i in monster_group:
-            self.screen.blit(i.block, (i.rect.x-(middle[0]-self.boardsize[0]/2)*self.tilesize,
-                                       i.rect.y-(middle[1]-self.boardsize[1]/2)*self.tilesize))
+            size = i.size * zoom_ratio
+            i.block = i.clip(i.image, size*i.pos[0], size*i.pos[1], size, size).convert_alpha()
+            self.screen.blit(i.block, (i.rect.x*zoom_ratio-(middle[0]-self.boardsize[0]/zoom_ratio/2)*self.tilesize*zoom_ratio,
+                                       i.rect.y*zoom_ratio-(middle[1]-self.boardsize[1]/zoom_ratio/2)*self.tilesize*zoom_ratio))
         pygame.display.update()
 
 A = Board()
