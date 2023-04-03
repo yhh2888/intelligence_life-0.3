@@ -1,6 +1,7 @@
-import pygame
+import pygame, random, os, sys
 from pygame.locals import *
-import random, os, sys
+from Entity import Entity
+
 
 class Player:
     def __init__(self, surface, size):
@@ -142,8 +143,9 @@ class Player:
         image = surface.subsurface(handle_surface.get_clip())
         return image.copy()
 
-class Mob1:
+class Mob1(pygame.sprite.Group):
     def __init__(self, surface, follow, size):
+        super().__init__()
         self.parent_screen = surface
         self.img = pygame.image.load(os.getcwd()+'\\'+'resources\\zilpuck.png').convert()
         self.size = size
@@ -160,6 +162,8 @@ class Mob1:
         self.moblist.append([x, y, 3, 0])
     
     def distance_cal(self):
+        self.remove(self.sprites()[0:])
+        
         moblist = [a[0:2] for a in self.moblist]
         self.pre_location = []
         for i in range(len(moblist)):
@@ -190,7 +194,6 @@ class Mob1:
                         self.moblist[i][1] -= 1
                         self.moblist[i][3] = 3
                         
-                
             else:
                 rand = random.randint(0, 1)
                 if self.amob_distance[rand] > 0:
@@ -198,6 +201,11 @@ class Mob1:
                 elif self.amob_distance[rand] < 0:
                     self.moblist[i][rand] -= 1
 
+        for i in self.moblist:
+            mob = Entity("zilpuck.png", 50, 50)
+            mob.rect.x, mob.rect.y, mob.heart, mob.dir = i
+            self.add(mob)
+        
     def draw(self, grass=False, grassorigin=None):
         for amob in range(len(self.moblist)):
             if self.moblist[amob][2] == 3:

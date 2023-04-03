@@ -17,9 +17,9 @@ from geometry.calculation import *
 from geometry.default_functions import *
 from base.kde_temp import *
 from base.bp_temp import *
-from base.temp2 import NeuralNetwork, structure_set
+from base.network import NeuralNetwork, structure_set
 from base.feature_analysis import labeler, distances, directions, get_matrix, cross_dir
-from tempgame import *
+from tempgame import Entity, Board
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -30,21 +30,17 @@ with open(os.getcwd()+r'\base\featured_matrix\featurematrixes.json') as f:
 class Game:
     def __init__(self, start_x, start_y):
         pygame.init()
-        self.display_width = [1000, 1000]
-        self.surface = pygame.display.set_mode((self.display_width[0], self.display_width[1]))
-        self.size = self.display_width[0]/100
-        self.player = Player(self.surface, self.size)
-        self.player.draw()
-        self.mobspawn = 0
-        self.mobs = Mob1(self.surface, self.player, self.size)
-        self.turns = 0
+        self.mapwidth = [30, 30]
+        self.size = 30
         self.start_x = start_x
         self.start_y = start_y
+        self.display_width = [self.mapwidth[0]*self.size, self.mapwidth[1]*self.size]
+        self.board = Board(self.mapwidth, self.size, [self.start_x, self.start_y])
+        self.player = self.board.player
+        self.mobspawn = 0
+        self.mobs = Mob1(self.board.screen, self.player, self.size)
+        self.turns = 0
         self.kills = 0
-
-        self.ground = pygame.image.load(os.getcwd()+'\\'+'resources\\grass.png').convert()
-        self.mapsize = [self.display_width[0]/self.size, self.display_width[1]/self.size]
-        self.maptiles = [([3, 5, 10, 11, 15]*2+[random.randint(0, 15)]*16)[random.randint(0, 24)] for i in range(int(self.mapsize[0]*self.mapsize[1]))]
         
         self.term_data = []
         self.quit = False
@@ -66,7 +62,7 @@ class Game:
     def regame(self):
         regame = True
         while regame:
-            self.surface.fill((240, 240, 240))
+            self.board.screen.fill((240, 240, 240))
             time.sleep(0.1)
                     
             keys = pygame.key.get_pressed()
@@ -81,129 +77,17 @@ class Game:
         clipRect = pygame.Rect(x,y,x_size,y_size)
         handle_surface.set_clip(clipRect)
         image = surface.subsurface(handle_surface.get_clip())
-        return image.copy()
-    
-    def run(self):
-        self.player.x = self.start_x
-        self.player.y = self.start_y
-        self.surface.fill((240, 240, 240))
-        running = True
-        self.eventer_time = 0
-        self.killscore = 0
-        self.movedata = []
-        while running:
-            #time_per1 = time.time()
-            self.eventer_time += 1
-            time.sleep(0.04)
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    running = False
-                    sys.exit()
-                if event.type == KEYUP:
-                    if abs(self.player.move_score_x) == 1:
-                        self.player.pre_location = [self.player.x, self.player.y]
-                        self.player.x += self.player.move_score_x
-                        self.player.move_score_x = 0
-                        self.player.pre_loc_fill()
-                    if abs(self.player.move_score_y) == 1:
-                        self.player.pre_location = [self.player.x, self.player.y]
-                        self.player.y += self.player.move_score_y
-                        self.player.move_score_y = 0
-                        self.player.pre_loc_fill()
-                        
-            keys = pygame.key.get_pressed()
-            buttoned = False
-            
-            if (keys[pygame.K_LEFT]):
-                self.player.move_left()
-                buttoned = True
-                self.player.pre_loc_fill()
-                self.movedata.append('left')
-                
-            if (keys[pygame.K_RIGHT]):
-                self.player.move_right()
-                buttoned = True
-                self.player.pre_loc_fill()
-                self.movedata.append('right')
-                
-            if (keys[pygame.K_UP]):
-                self.player.move_up()
-                buttoned = True
-                self.player.pre_loc_fill()
-                self.movedata.append('up')
-
-            if (keys[pygame.K_DOWN]):
-                self.player.move_down()
-                buttoned = True
-                self.player.pre_loc_fill()
-                self.movedata.append('down')
-                            
-            if (keys[pygame.K_SPACE]):
-                if self.player.att == []:
-                    self.player.attack()
-                    self.killscore += self.hit()
-                    self.movedata.append('space')
-                                
-            if (keys[pygame.K_s]):
-                self.player.stopping()
-                self.movedata.append('stop')
-
-            if (keys[pygame.K_ESCAPE]):
-                running = False
-                
-            if self.eventer_time > 8:
-                self.mobspawn += 1
-                if self.mobspawn > 10:
-                    if random.randint(0, 3) == 0:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size), 0)
-                    elif random.randint(0, 3) == 1:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size),
-                                            self.display_width[1]/self.player.size)
-                    elif random.randint(0, 3) == 2:
-                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.player.size))
-                    elif random.randint(0, 3) == 3:
-                        self.mobs.mobappend(self.display_width[0]/self.player.size,
-                                            random.randint(0,self.display_width[0]/self.player.size))
-                    self.mobspawn = 0
-                self.turns += 1
-                
-                for j in range(6-int(self.display_width[1]/self.size-self.player.y)):
-                    vision[10-j][i] = 1
-                vision_print_on = True
-            if vision_print_on and buttoned:
-                '''print(vision)'''
-                vision_print_on = False
-                
-            #time_per1 = time.time()
-            
-            if self.mobs != None:
-                self.player.draw()
-                self.mobs.draw()
-                self.player.eff_times()
-                if self.eventer_time > 8 and self.turns%2 == 0:
-                    self.mobs.distance_cal()
-                    self.eventer_time = 0
-            if [self.player.x, self.player.y] in [i[0:2] for i in self.mobs.moblist] or (not 0<=self.player.x<=self.display_width[0]/self.size) or (not 0<=self.player.y<=self.display_width[1]/self.size):
-                running = False
-                pygame.quit()
-                return self.movedata
-                    
-                                
-            #print(time_per1-time.time())       
+        return image.copy()   
 
     def run_by_AI(self, view_lock = False, net=None, time_=False):
         sew = 0
         wait = 0
-        
-        self.player.x = self.start_x
-        self.player.y = self.start_y
-        self.surface.fill((240, 240, 240))
+        self.board.screen.fill((240, 240, 240))
         running = True
         self.eventer_time = 0
         self.key_value = ['space', 'up', 'down', 'right', 'left', 'stop']
         vision = np.zeros((11, 11))
         self.killscore = 0
-        self.player.view_lock = view_lock
         Exceptor = None
         supervise = []
         
@@ -247,14 +131,40 @@ class Game:
         
         tile_loc = [(i*7, j*7) for j in range(4) for i in range(4)]
         
-        for i in range(len(self.maptiles)):
-            self.surface.blit(self.ground, ((i%self.mapsize[0])*self.size, (i//self.mapsize[1])*self.size),
-                              pygame.Rect(*tile_loc[self.maptiles[i]], self.size, self.size))
-
         netresult_time = 0
 
         self.healthbarimg = pygame.image.load(os.getcwd()+'\\'+'resources\\healthbar.png').convert()
         self.healthbarimg = pygame.transform.scale(self.healthbarimg, (988/8, 3392/8))
+
+        grass_group = pygame.sprite.Group()
+        grass_code = [[random.randint(0, 2), random.randint(0, 2)] for i in range(10000)]
+        for i in range(100):
+            for j in range(100):
+                grass_group.add(Entity("grasses_refined.png", i, j, pos=[*grass_code[i*100+j], 3, 3]))
+
+        player_sprite = Entity("squirtle.png", 25, 25)
+        size_out = 30
+        
+        nature_group = pygame.sprite.Group()
+        stone = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'stone.png'), (size_out, size_out))
+        stone = player_sprite.clip(stone, size_out*0, size_out*0, size_out, size_out)
+
+        stump = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'stump.png'), (size_out, size_out))
+        stump = player_sprite.clip(stump, size_out*0, size_out*0, size_out, size_out)
+
+        grass_2 = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'grass_2.png'), (size_out, size_out))
+        grass_2 = player_sprite.clip(grass_2, size_out*0, size_out*0, size_out, size_out)
+
+        grass_3 = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'grass_3.png'), (size_out, size_out))
+        grass_3 = player_sprite.clip(grass_2, size_out*0, size_out*0, size_out, size_out)
+        
+        monster_group = self.mobs
+        
+        self.board.settings(grass_group, nature_group, monster_group)
+
+        self.chunks = [[i, j] for i in range(-10, 10) for j in range(-10, 10)]
+        
+            
         
         while running:
             if time_==True and dist_now[0] != None:
@@ -269,7 +179,16 @@ class Game:
             realmob = []'''
 
             # vision page --------------------------------------------------------------------------------------
+            ablechunks = []
             
+            for i in self.chunks:
+                if ((self.board.middle[0]-self.board.boardsize[0] <= i[0]*16 <= self.board.middle[0]+self.board.boardsize[0]) or \
+                (self.board.middle[0]-self.board.boardsize[0] <= (i[0]+1)*16 <= self.board.middle[0]+self.board.boardsize[0])) and \
+                ((self.board.middle[1]-self.board.boardsize[1] <= i[1]*16 <= self.board.middle[1]+self.board.boardsize[1]) or \
+                (self.board.middle[1]-self.board.boardsize[1] <= (i[1]+1)*16 <= self.board.middle[1]+self.board.boardsize[1])):
+                    ablechunks.append(i)
+                print(ablechunks)
+                    
             '''for i in self.mobs.moblist:
                 if abs(self.player.x-i[0]) <= 5 and abs(self.player.y-i[1]) <= 5:
                     vision[5-(int(self.player.y)-int(i[1]))][5-(int(self.player.x)-int(i[0]))] += i[2]
@@ -499,7 +418,7 @@ class Game:
 
             # map boundary deal page ---------------------------------------------------------------------
 
-            if time_==True and dist_now[0] != None:
+            '''if time_==True and dist_now[0] != None:
                 t = perf_counter()
 
             if (not 7<=self.player.x<=self.display_width[0]/self.size-7):
@@ -514,7 +433,7 @@ class Game:
                     self.player.draw()
 
             if time_==True and dist_now[0] != None:
-                print('map boundary deal page :', perf_counter()-t)
+                print('map boundary deal page :', perf_counter()-t)'''
                     
             # lifes page ---------------------------------------------------------------------------------
 
@@ -547,21 +466,21 @@ class Game:
             # draw page ----------------------------------------------------------------------------------
 
             if time_==True and dist_now[0] != None:
-                t = perf_counter()
-
+                t = perf_counter(automiddle = False)
+            self.board.run()
             if self.mobs != None:
                 self.player.eff_times()
                 if self.player.view_lock == False and not (self.eventer_time > 8 and self.turns%2 == 0):
                     self.player.draw()
                     self.mobs.draw(grassorigin=self.maptiles)
                     self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
-                    self.surface.blit(self.healthbar, (2*self.size, 2*self.size))
+                    self.board.screen.blit(self.healthbar, (2*self.size, 2*self.size))
                 if self.eventer_time > 8 and self.turns%2 == 0:
                     if self.player.view_lock == False:
                         self.player.draw(grass=True)
                         self.mobs.draw(grass=True, grassorigin=self.maptiles)
                         self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
-                        self.surface.blit(self.healthbar, (2*self.size, 2*self.size))
+                        self.board.screen.blit(self.healthbar, (2*self.size, 2*self.size))
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     

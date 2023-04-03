@@ -1,8 +1,8 @@
 import numpy as np
 import time, random, traceback
 
-from Hitting_Frame import *
-from base.temp2 import NeuralNetwork as Nets
+from turnset import *
+from base.network import NeuralNetwork as Nets
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)

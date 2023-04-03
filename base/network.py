@@ -18,7 +18,7 @@ test_dataloader = []
 
 ##
 class NeuralNetwork(nn.Module):
-    def __init__(self, layer, drop_prob = 0.01, rnn=False):
+    def __init__(self, layer, drop_prob = 0.1, rnn=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
@@ -48,10 +48,12 @@ class NeuralNetwork(nn.Module):
                 if i != len(layer)-1:
                     networks.append(nn.ReLU())
                     networks.append(nn.Dropout(p=drop_prob))
+            self.stack = nn.Sequential(*networks)
+            
             if rnn == True:
                 self.rnn = nn.RNN(layer[-2], layer[-1])
                 
-            self.stack = nn.Sequential(*networks)
+            
             
     def forward(self, X):
 
