@@ -146,7 +146,7 @@ class Game:
         size_out = 30
         
         nature_group = pygame.sprite.Group()
-        stone = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'stone.png'), (size_out, size_out))
+        '''stone = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'stone.png'), (size_out, size_out))
         stone = player_sprite.clip(stone, size_out*0, size_out*0, size_out, size_out)
 
         stump = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'stump.png'), (size_out, size_out))
@@ -156,21 +156,19 @@ class Game:
         grass_2 = player_sprite.clip(grass_2, size_out*0, size_out*0, size_out, size_out)
 
         grass_3 = pygame.transform.scale(pygame.image.load(os.getcwd()+'\\'+'resources\\'+'grass_3.png'), (size_out, size_out))
-        grass_3 = player_sprite.clip(grass_2, size_out*0, size_out*0, size_out, size_out)
+        grass_3 = player_sprite.clip(grass_2, size_out*0, size_out*0, size_out, size_out)'''
         
         monster_group = self.mobs
         
         self.board.settings(grass_group, nature_group, monster_group)
 
-        self.chunks = [[i, j] for i in range(-10, 10) for j in range(-10, 10)]
-        
-            
+        self.chunks = {}
         
         while running:
             if time_==True and dist_now[0] != None:
                 t = perf_counter()
             for event in pygame.event.get(): 
-                if event.type == pygame.QUIT: 
+                if event.type == pygame.QUIT:
                     running = False
                     self.quit = True
                     
@@ -179,15 +177,29 @@ class Game:
             realmob = []'''
 
             # vision page --------------------------------------------------------------------------------------
-            ablechunks = []
+
+            x_lbound, x_lchunk = int(self.board.middle[0]-self.board.boardsize[0]/2), int(self.board.middle[0]-self.board.boardsize[0]/2)//16
+            y_ubound, y_uchunk = int(self.board.middle[1]-self.board.boardsize[1]/2), int(self.board.middle[1]-self.board.boardsize[1]/2)//16
+            x_rbound, x_rchunk = int(self.board.middle[0]+self.board.boardsize[0]/2), int(self.board.middle[0]+self.board.boardsize[0]/2)//16
+            y_dbound, y_dchunk = int(self.board.middle[1]+self.board.boardsize[1]/2), int(self.board.middle[1]+self.board.boardsize[1]/2)//16
+            print(x_lbound, x_lchunk, y_ubound, y_uchunk, x_rbound, x_rchunk, y_dbound, y_dchunk)
+
+            chunk_now = [[i, j] for i in range(x_lchunk, x_rchunk+1) for j in range(y_uchunk, y_dchunk+1)]
+            tiles_now = {}
             
-            for i in self.chunks:
-                if ((self.board.middle[0]-self.board.boardsize[0] <= i[0]*16 <= self.board.middle[0]+self.board.boardsize[0]) or \
-                (self.board.middle[0]-self.board.boardsize[0] <= (i[0]+1)*16 <= self.board.middle[0]+self.board.boardsize[0])) and \
-                ((self.board.middle[1]-self.board.boardsize[1] <= i[1]*16 <= self.board.middle[1]+self.board.boardsize[1]) or \
-                (self.board.middle[1]-self.board.boardsize[1] <= (i[1]+1)*16 <= self.board.middle[1]+self.board.boardsize[1])):
-                    ablechunks.append(i)
-                print(ablechunks)
+            for i in chunk_now:
+                if str(i) in self.chunks.keys():
+                    tiles_now[str(i)] = self.chunks[str(i)]
+                else :
+                    self.chunks[str(i)] = np.array([[[random.randint(0, 2), random.randint(0, 2)] for i in range(16)] for j in range(16)])
+
+            
+            complete_tile = np.concatenate(([np.concatenate(([self.chunks[str([i, j])] for j in range(y_uchunk, y_dchunk+1)]), axis=0) for i in range(x_lchunk, x_rchunk+1)]), axis=1)
+
+            self.board.grass_group = pygame.sprite.Group()
+            for i in range(len(complete_tile)):
+                for j in range(len(complete_tile[i])):
+                    self.board.grass_group.add(Entity("grasses_refined.png", x_lchunk*16+j, y_uchunk*16+i, pos=[*complete_tile[i][j], 3, 3]))
                     
             '''for i in self.mobs.moblist:
                 if abs(self.player.x-i[0]) <= 5 and abs(self.player.y-i[1]) <= 5:
