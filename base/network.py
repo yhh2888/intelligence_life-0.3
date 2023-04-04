@@ -7,6 +7,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 import numpy as np
 import time, os, sys
 from pathlib import Path
+from randtree import randtree
 
 sys.path.append(r'C:\Users\KDCA\Desktop\IL\base')
 sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\base')
@@ -18,20 +19,27 @@ test_dataloader = []
 
 ##
 class NeuralNetwork(nn.Module):
-    def __init__(self, layer, drop_prob = 0.1, rnn=False):
+    def __init__(self, input_len, gencode = [], cellout=5, node_num=5, neural_line_prob=0.2, drop_prob =0.1, rnn=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
 
         networks = []
-        self.layers = layer
         self.flist = []
         self.feature_label = []
         self.remain_labels = []
         self.f_on = False
         self.rnntrue = [1 if rnn==True else 0][0]
+        if gencode == []:
+            self.gencode = randtree(node_num).generate_random_tree(prob = neural_line_prob)
+        else :
+            self.gencode = gencode
+
+        self.cellout = cellout
+
         
-        if len(layer) > 1:
+        if input_len > 1:
+
             '''if rnn == True:
                 self.rnn = nn.RNN(layer[0], layer[1])
                 networks.append(nn.ReLU())
@@ -42,17 +50,25 @@ class NeuralNetwork(nn.Module):
                 if i != len(layer)-1:
                     networks.append(nn.ReLU())
                     networks.append(nn.Dropout(p=drop_prob))'''
+            self.start = nn.Linear(input_len, cellout*node_num)
+            
+            for i in self.gencode:
+                networks.append(nn.Linear(cellout*len(i[:-1]), cellout))
+            
+            self.stack = nn.ModuleList(networks)
 
-            for i in range(len(layer)-1-self.rnntrue):
-                networks.append(nn.Linear(layer[i], layer[i+1]))
-                if i != len(layer)-1:
-                    networks.append(nn.ReLU())
-                    networks.append(nn.Dropout(p=drop_prob))
-            self.stack = nn.Sequential(*networks)
+            '''self.halfed1 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
+            self.halfed1_1 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
+            self.halfed1_2 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
+            self.halfed1_3 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
+
+            self.halfed2 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
+
+            self.cated = nn.Linear(layer[-2], layer[-1])'''
             
             if rnn == True:
                 self.rnn = nn.RNN(layer[-2], layer[-1])
-                
+
             
             
     def forward(self, X):
@@ -66,11 +82,30 @@ class NeuralNetwork(nn.Module):
         processed = self.stack(X)'''
 
         X = self.flatten(X)
-            
-        processed = self.stack(X)
+        
+        processed = self.start(X)
+
+        self.celldata = list(torch.split(processed, self.cellout, dim=-1))
+        
+        for i in range(len(self.gencode)):
+            toinput = torch.cat(([self.celldata[j] for j in self.gencode[i][:-1]]), dim=-1)
+            processed = self.stack[i](toinput)
+            self.celldata.append(self.stack[i](toinput))
+        
         if self.rnntrue == 1:
             rnn_out, hidden = self.rnn(processed.unsqueeze(1))
             processed = torch.squeeze(rnn_out, dim=1)
+
+        '''halfed1, halfed2 = torch.split(processed, int(processed.shape[1]/2), dim=-1)
+        halfed1 = self.halfed1(halfed1)
+        halfed1 = self.halfed1_1(halfed1)
+        halfed1 = self.halfed1_2(halfed1)
+        halfed1 = self.halfed1_3(halfed1)
+        halfed2 = self.halfed2(halfed2)
+
+        cated = torch.cat((halfed1, halfed2), dim=-1)
+        cated = self.cated(cated)'''
+        
         
         return processed
 
@@ -112,8 +147,7 @@ class NeuralNetwork(nn.Module):
     def roll(self, epoch, alert=10, first=0, last=18000):
         reinforce(epoch, alert, self, DataLoader(self.trd.dataset[first:last+1], batch_size=(last-first)//100), self.ted, self.optim, self.sched)
 
-connect_number = 128
-model = NeuralNetwork([11*11, connect_number, 128, 128, 8])
+model = NeuralNetwork(11*11)
 
 learning_rate = 0.001
 batch_size = 64
@@ -259,7 +293,7 @@ if __name__ == '__main__':
     train_dataloader = p_
     test_dataloader = DataLoader(p[int(len(p)//1.2):], batch_size=100)
 
-    model_dist = NeuralNetwork([11*11, 32, 32, 2])
+    model_dist = NeuralNetwork(121)
     model_dist.base_set('distances')
 
     datakinds = ['distances', 'directions', 'distances0.6', 'directions0.6', 'interval0.3', 'interval0.6', 
@@ -276,11 +310,11 @@ if __name__ == '__main__':
     longkinds = []
     
     for i in datakinds:
-        globals()['models_'+i] = NeuralNetwork([1])
+        globals()['models_'+i] = NeuralNetwork(1)
         globals()['models_'+i].base_set(i)
 
     for i in longkinds:
-        globals()['models_'+i] = NeuralNetwork([1])
+        globals()['models_'+i] = NeuralNetwork(1)
         globals()['models_'+i].base_set(i)
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
@@ -297,7 +331,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork([len(li68[0][0][0]), 70, 50, 6], rnn=True)
+    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5)
     model_fin.base_set(li68, call = False)
     model_fin.roll(50, 10)
 

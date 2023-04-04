@@ -8,7 +8,7 @@ class randtree:
         self.steps = []
         
         
-    def generate_random_tree(self, code = None):
+    def generate_random_tree(self, code = None, prob=0.3):
         self.nodes = [i for i in range(self.startnum)]
         self.steps = []
         self.ables = [i for i in self.nodes]
@@ -25,6 +25,9 @@ class randtree:
                 self.steps.append([self.nodes.index(chosen[0]),
                                    self.nodes.index(chosen[1]),
                                    new_nodes])
+                for i in self.nodes[:-1]:
+                    if prob > random.random() and i not in self.steps[-1]:
+                        self.steps[-1] = self.steps[-1][:-1] + [i] + [self.steps[-1][-1]]
         
         if code != None:
             self.nodes = [1, 2, 3]
