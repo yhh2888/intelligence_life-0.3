@@ -92,6 +92,7 @@ class Game:
         supervise = []
         
         self.player.lifes = 10
+        self.player.view_lock = view_lock
 
         #----initial----
         sightrange = 11
@@ -163,6 +164,8 @@ class Game:
         self.board.settings(grass_group, nature_group, monster_group)
 
         self.chunks = {}
+
+        self.netmodel.received_data = []
         
         while running:
             if time_==True and dist_now[0] != None:
@@ -178,28 +181,29 @@ class Game:
 
             # vision page --------------------------------------------------------------------------------------
 
-            x_lbound, x_lchunk = int(self.board.middle[0]-self.board.boardsize[0]/2), int(self.board.middle[0]-self.board.boardsize[0]/2)//16
-            y_ubound, y_uchunk = int(self.board.middle[1]-self.board.boardsize[1]/2), int(self.board.middle[1]-self.board.boardsize[1]/2)//16
-            x_rbound, x_rchunk = int(self.board.middle[0]+self.board.boardsize[0]/2), int(self.board.middle[0]+self.board.boardsize[0]/2)//16
-            y_dbound, y_dchunk = int(self.board.middle[1]+self.board.boardsize[1]/2), int(self.board.middle[1]+self.board.boardsize[1]/2)//16
-            print(x_lbound, x_lchunk, y_ubound, y_uchunk, x_rbound, x_rchunk, y_dbound, y_dchunk)
+            if self.player.view_lock == False:
+                x_lbound, x_lchunk = int(self.board.middle[0]-self.board.boardsize[0]/2), int(self.board.middle[0]-self.board.boardsize[0]/2)//16
+                y_ubound, y_uchunk = int(self.board.middle[1]-self.board.boardsize[1]/2), int(self.board.middle[1]-self.board.boardsize[1]/2)//16
+                x_rbound, x_rchunk = int(self.board.middle[0]+self.board.boardsize[0]/2), int(self.board.middle[0]+self.board.boardsize[0]/2)//16
+                y_dbound, y_dchunk = int(self.board.middle[1]+self.board.boardsize[1]/2), int(self.board.middle[1]+self.board.boardsize[1]/2)//16
+                print(x_lbound, x_lchunk, y_ubound, y_uchunk, x_rbound, x_rchunk, y_dbound, y_dchunk)
 
-            chunk_now = [[i, j] for i in range(x_lchunk, x_rchunk+1) for j in range(y_uchunk, y_dchunk+1)]
-            tiles_now = {}
-            
-            for i in chunk_now:
-                if str(i) in self.chunks.keys():
-                    tiles_now[str(i)] = self.chunks[str(i)]
-                else :
-                    self.chunks[str(i)] = np.array([[[random.randint(0, 2), random.randint(0, 2)] for i in range(16)] for j in range(16)])
+                chunk_now = [[i, j] for i in range(x_lchunk, x_rchunk+1) for j in range(y_uchunk, y_dchunk+1)]
+                tiles_now = {}
+                
+                for i in chunk_now:
+                    if str(i) in self.chunks.keys():
+                        tiles_now[str(i)] = self.chunks[str(i)]
+                    else :
+                        self.chunks[str(i)] = np.array([[[random.randint(0, 2), random.randint(0, 2)] for i in range(16)] for j in range(16)])
 
-            
-            complete_tile = np.concatenate(([np.concatenate(([self.chunks[str([i, j])] for j in range(y_uchunk, y_dchunk+1)]), axis=0) for i in range(x_lchunk, x_rchunk+1)]), axis=1)
+                
+                complete_tile = np.concatenate(([np.concatenate(([self.chunks[str([i, j])] for j in range(y_uchunk, y_dchunk+1)]), axis=0) for i in range(x_lchunk, x_rchunk+1)]), axis=1)
 
-            self.board.grass_group = pygame.sprite.Group()
-            for i in range(len(complete_tile)):
-                for j in range(len(complete_tile[i])):
-                    self.board.grass_group.add(Entity("grasses_refined.png", x_lchunk*16+j, y_uchunk*16+i, pos=[*complete_tile[i][j], 3, 3]))
+                self.board.grass_group = pygame.sprite.Group()
+                for i in range(len(complete_tile)):
+                    for j in range(len(complete_tile[i])):
+                        self.board.grass_group.add(Entity("grasses_refined.png", x_lchunk*16+j, y_uchunk*16+i, pos=[*complete_tile[i][j], 3, 3]))
                     
             '''for i in self.mobs.moblist:
                 if abs(self.player.x-i[0]) <= 5 and abs(self.player.y-i[1]) <= 5:
@@ -268,31 +272,31 @@ class Game:
                         oscillater = 0
 
                 if pluslist == [1, 0]:
-                    #self.player.move_code('right')
+                    self.player.move_code('right')
                     virtual_movedir = [1, 0, 0, 0]
                 elif pluslist == [-1, 0]:
-                    #self.player.move_code('left')
+                    self.player.move_code('left')
                     virtual_movedir = [0, 0, 1, 0]
                 elif pluslist == [0, 1]:
-                    #self.player.move_code('down')
+                    self.player.move_code('down')
                     virtual_movedir = [0, 1, 0, 0]
                 elif pluslist == [0, -1]:
-                    #self.player.move_code('up')
+                    self.player.move_code('up')
                     virtual_movedir = [0, 0, 0, 1]
                 if avoidloc == []:
                     avoidloc = None
                     
             if netresult == 0:
-                self.player.move_code('right')
+                #self.player.move_code('right')
                 movedir = [1, 0, 0, 0]
             elif netresult == 2:
-                self.player.move_code('left')
+                #self.player.move_code('left')
                 movedir = [0, 0, 1, 0]
             elif netresult == 1:
-                self.player.move_code('down')
+                #self.player.move_code('down')
                 movedir = [0, 1, 0, 0]
             elif netresult == 3:
-                self.player.move_code('up')
+                #self.player.move_code('up')
                 movedir = [0, 0, 0, 1]
             '''if 'data' in locals():
                 feed = self.networkfeed(data[0][0])
@@ -378,13 +382,15 @@ class Game:
                 sigthkde = [0]*(sightrange**2)
             data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
 
+            data = [i[0:2] for i in self.mobs.moblist]
             self.player.x, self.player.y = self.player.y, 99-self.player.x
+            data = data+[[self.player.x, self.player.y]]
 
             if time_==True and dist_now[0] != None:
                 print('kde generating page :', perf_counter()-t)
             
             #---------- feature setting page ----------#
-            t = None
+            '''t = None
             if time_==True and dist_now[0] != None:
                 t = perf_counter()
             
@@ -426,7 +432,7 @@ class Game:
                 self.term_data.append((fin_feature, torch.tensor(torch.argmax(torch.tensor(data[0][1])))))
 
             if time_==True and dist_now[0] != None and t != None:
-                print('features page :', perf_counter()-t)
+                print('features page :', perf_counter()-t)'''
 
             # map boundary deal page ---------------------------------------------------------------------
 
@@ -479,7 +485,7 @@ class Game:
 
             if time_==True and dist_now[0] != None:
                 t = perf_counter(automiddle = False)
-            self.board.run()
+            self.board.run(view_lock = self.player.view_lock)
             if self.mobs != None:
                 self.player.eff_times()
                 if self.player.view_lock == False and not (self.eventer_time > 8 and self.turns%2 == 0):
@@ -493,6 +499,9 @@ class Game:
                         self.mobs.draw(grass=True, grassorigin=self.maptiles)
                         self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
                         self.board.screen.blit(self.healthbar, (2*self.size, 2*self.size))
+                    
+                    if data != []:
+                        self.netmodel.received_data.append(data)
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     

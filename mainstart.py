@@ -15,13 +15,14 @@ class Evolve:
         self.circumstances = Game(50, 50)
         self.amountsleft = amount
         self.amounts = amount
-
-        ext = netdata_extract(self.nn)
+        self.received_data = []
+        
+        '''ext = netdata_extract(self.nn)'''
 
         self.paramgens = [self.nn for i in range(amount)]
 
-        for i in range(len(self.paramgens)):
-            netdata_substitute(self.paramgens[i], ext)
+        '''for i in range(len(self.paramgens)):
+            netdata_substitute(self.paramgens[i], ext)'''
         
     def test(self, next_gen, view_lock = False, time_=False):
         global term_data
@@ -33,6 +34,8 @@ class Evolve:
         for i in range(self.amounts):
             print(id(self.paramgens[i]))
             score = self.circumstances.run_by_AI(view_lock = view_lock, net=self.paramgens[i], time_=time_)
+            for i in self.paramgens[i].received_data:
+                self.received_data.append(i)
             self.scorelist.append(score[0])
             self.circumstances = Game(50, 50)
             term_data = score[1]
@@ -62,22 +65,29 @@ class Evolve:
 def rep_test(rep, view_lock = False, time_=False):
     
     try:
-        with open('field_data.json') as f:
+        with open('mobs_data.json') as f:
             received_data = json.load(f)
-        with open(os.getcwd()+r'\base\modelparam_data.json') as f:
-            mp = json.load(f)
     except Exception as e:
+        print(e)
         received_data = []
 
-    ns = Nets([380, 50, 30, 6])
+    try:
+        with open(os.getcwd()+r'\base\modelparam_data.json') as f:
+            mp = json.load(f)
+            
+    except Exception as e:
+        print(e)
+
+    ns = Nets(380)
     netparams = []
         
     for n in range(len(mp)):
         netparams.append(torch.tensor(mp[n]))
         
-    for n in range(3):
+    '''for n in range(3):
             ns.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
-            ns.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])
+            ns.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])'''
+    
     try:
         a = Evolve(net=ns)
     
@@ -87,14 +97,13 @@ def rep_test(rep, view_lock = False, time_=False):
             t = time.time()
             
             a.test(5, view_lock = view_lock, time_=time_)
-                
+            
             print(time.time()-t)
-
-            #with open('field_data.json', 'w') as f:
-            #    json.dump(received_data, f, indent=2)
+            received_data = received_data + a.received_data
+            with open('mobs_data.json', 'w') as f:
+                json.dump(received_data, f)
             
             #b = a.next_generation(3)
-            
             a = Evolve(prev_scoresum = a.scoresum, net=ns)
             
     except Exception as e:

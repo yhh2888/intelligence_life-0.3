@@ -7,11 +7,11 @@ from torch.optim.lr_scheduler import ExponentialLR
 import numpy as np
 import time, os, sys
 from pathlib import Path
-from randtree import randtree
 
 sys.path.append(r'C:\Users\KDCA\Desktop\IL\base')
 sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\base')
 
+from randtree import randtree
 from feature_analysis import *
 
 train_dataloader = []
@@ -94,7 +94,8 @@ class NeuralNetwork(nn.Module):
         processed = self.stack(X)'''
 
         X = self.flatten(X)
-        
+        if len(X.shape) >= 2:
+            X = X.squeeze()
         processed = self.start(X)
 
         self.celldata = list(torch.split(processed, self.cellout, dim=-1))
@@ -346,7 +347,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=10, cuda=False)
+    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=5, cuda=False, rnn=[7])
     model_fin.base_set(li68, call = False)
 
     print("Successful Network Application, Test start")

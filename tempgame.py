@@ -32,7 +32,7 @@ class Board:
         self.movetype = movetype
         self.zoom_add = 0
 
-    def run(self, automiddle = True, framedelay=0.03):
+    def run(self, automiddle = True, framedelay=0.03, view_lock = False):
         if not self.game_over:
             t = perf_counter()
             if self.paused == False:
@@ -121,7 +121,7 @@ class Board:
                         grass_group.sprites()[int(i.rect.x)*100+int(i.rect.y)] \
                         = Entity("grasses_refined.png", int(i.rect.x), int(i.rect.y), pos=[*grass_code[change_grass], 3, 3])'''
                     
-                self.draw()
+                self.draw(view_lock)
                 
             else :
                 for event in pygame.event.get():
@@ -131,25 +131,26 @@ class Board:
                         if event.key == pygame.K_SPACE:
                             self.paused = False
     
-    def draw(self):
+    def draw(self, view_lock = False):
         # 스프라이트 그리기
-        self.screen.fill((255, 255, 255))
-        
-        for i in self.grass_group:
-            self.middle_to_hero = [i.rect.x-self.middle[0], i.rect.y-self.middle[1]]
-            self.screen.blit(i.block, ((self.middle_to_hero[0]+self.boardsize[0]/2)*(self.tilesize)+(self.middle_to_hero[0])*self.zoom_add,
-                                       (self.middle_to_hero[1]+self.boardsize[1]/2)*(self.tilesize)+(self.middle_to_hero[1])*self.zoom_add))
-                
-        for i in self.nature_group:
-            self.screen.blit(i.block, ((i.rect.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize)+(i.rect.x-self.middle[0])*self.zoom_add,
-                                       (i.rect.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)+(i.rect.y-self.middle[1])*self.zoom_add))
+        if view_lock == False:
+            self.screen.fill((255, 255, 255))
             
-        self.screen.blit(self.player.block, ((self.player.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize),
-                                          (self.player.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)))
-        for i in self.monster_group:
-            self.screen.blit(i.block, ((i.rect.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize)+(i.rect.x-self.middle[0])*self.zoom_add,
-                                       (i.rect.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)+(i.rect.y-self.middle[1])*self.zoom_add))
-        pygame.display.update()
+            for i in self.grass_group:
+                self.middle_to_hero = [i.rect.x-self.middle[0], i.rect.y-self.middle[1]]
+                self.screen.blit(i.block, ((self.middle_to_hero[0]+self.boardsize[0]/2)*(self.tilesize)+(self.middle_to_hero[0])*self.zoom_add,
+                                           (self.middle_to_hero[1]+self.boardsize[1]/2)*(self.tilesize)+(self.middle_to_hero[1])*self.zoom_add))
+                    
+            for i in self.nature_group:
+                self.screen.blit(i.block, ((i.rect.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize)+(i.rect.x-self.middle[0])*self.zoom_add,
+                                           (i.rect.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)+(i.rect.y-self.middle[1])*self.zoom_add))
+                
+            self.screen.blit(self.player.block, ((self.player.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize),
+                                              (self.player.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)))
+            for i in self.monster_group:
+                self.screen.blit(i.block, ((i.rect.x-self.middle[0]+self.boardsize[0]/2)*(self.tilesize)+(i.rect.x-self.middle[0])*self.zoom_add,
+                                           (i.rect.y-self.middle[1]+self.boardsize[1]/2)*(self.tilesize)+(i.rect.y-self.middle[1])*self.zoom_add))
+            pygame.display.update()
 
 if __name__ == '__main__':
     A = Board()
