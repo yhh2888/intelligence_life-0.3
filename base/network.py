@@ -19,7 +19,7 @@ test_dataloader = []
 
 ##
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_len, gencode = [], cellout=5, node_num=5, neural_line_prob=0.2, drop_prob =0.1, rnn=False):
+    def __init__(self, input_len, gencode = [], cellout=6, node_num=5, last=6, neural_line_prob=0.2, drop_prob =0.1, rnn=True, cuda=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
@@ -29,14 +29,22 @@ class NeuralNetwork(nn.Module):
         self.feature_label = []
         self.remain_labels = []
         self.f_on = False
-        self.rnntrue = [1 if rnn==True else 0][0]
+        self.rnntrue = 0
+        self.node_num = node_num
+        self.cuda = cuda
+        
         if gencode == []:
             self.gencode = randtree(node_num).generate_random_tree(prob = neural_line_prob)
         else :
             self.gencode = gencode
 
         self.cellout = cellout
+        self.rnncode = rnn
 
+        if self.rnncode == True:
+            self.rnncode = [i+node_num for i in range(node_num-2) if 0.4 > random.random()]
+        elif self.rnncode == False:
+            pass
         
         if input_len > 1:
 
@@ -52,10 +60,17 @@ class NeuralNetwork(nn.Module):
                     networks.append(nn.Dropout(p=drop_prob))'''
             self.start = nn.Linear(input_len, cellout*node_num)
             
-            for i in self.gencode:
-                networks.append(nn.Linear(cellout*len(i[:-1]), cellout))
-            
+            for i in range(len(self.gencode[:-1])):
+                if i+node_num in self.rnncode:
+                    networks.append(nn.RNN(cellout*len(self.gencode[i][:-1]), cellout))
+                else :
+                    networks.append(nn.Linear(cellout*len(self.gencode[i][:-1]), cellout))
+                if self.cuda==True:
+                    networks[-1] = networks[-1].cuda()
+                
             self.stack = nn.ModuleList(networks)
+
+            self.last = nn.Linear(cellout*len(self.gencode[-1][:-1]), last)
 
             '''self.halfed1 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
             self.halfed1_1 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
@@ -65,10 +80,7 @@ class NeuralNetwork(nn.Module):
             self.halfed2 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
 
             self.cated = nn.Linear(layer[-2], layer[-1])'''
-            
-            if rnn == True:
-                self.rnn = nn.RNN(layer[-2], layer[-1])
-
+        
             
             
     def forward(self, X):
@@ -87,14 +99,15 @@ class NeuralNetwork(nn.Module):
 
         self.celldata = list(torch.split(processed, self.cellout, dim=-1))
         
-        for i in range(len(self.gencode)):
+        for i in range(len(self.gencode[:-1])):
             toinput = torch.cat(([self.celldata[j] for j in self.gencode[i][:-1]]), dim=-1)
-            processed = self.stack[i](toinput)
-            self.celldata.append(self.stack[i](toinput))
-        
-        if self.rnntrue == 1:
-            rnn_out, hidden = self.rnn(processed.unsqueeze(1))
-            processed = torch.squeeze(rnn_out, dim=1)
+            if i+self.node_num in self.rnncode:
+                rnn_out, hidden = self.stack[i](toinput.unsqueeze(1))
+                processed = torch.squeeze(rnn_out, dim=1).T
+                self.celldata.append(torch.squeeze(self.stack[i](toinput.unsqueeze(1))[0], dim=1))
+            else :
+                processed = self.stack[i](toinput)
+                self.celldata.append(self.stack[i](toinput))
 
         '''halfed1, halfed2 = torch.split(processed, int(processed.shape[1]/2), dim=-1)
         halfed1 = self.halfed1(halfed1)
@@ -106,7 +119,8 @@ class NeuralNetwork(nn.Module):
         cated = torch.cat((halfed1, halfed2), dim=-1)
         cated = self.cated(cated)'''
         
-        
+        processed = self.last(torch.cat(([self.celldata[j] for j in self.gencode[-1][:-1]]), dim=-1))
+                
         return processed
 
     def featurecall(self, name):
@@ -211,8 +225,7 @@ def reinforce(epochs, alert=1, mod = model, trd = train_dataloader, ted = test_d
             ale = False
 
         print(time.time()-times)
-            
-print("Done!")
+
 
 '''
 #other data uses
@@ -263,6 +276,8 @@ def structure_set(data, reshape=True):
             setter += 1
                 
     return data
+
+print("Network System stabilized")
 
 if __name__ == '__main__':
     paths = str(Path(os.getcwd()).parent)
@@ -331,9 +346,12 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5)
+    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=10, cuda=False)
     model_fin.base_set(li68, call = False)
-    model_fin.roll(50, 10)
+
+    print("Successful Network Application, Test start")
+    
+    model_fin.roll(150, 10)
 
     code = {1:0, 2:2, 3:3, 4:1, 5:2, 6:0, 7:1, 8:3}
 
