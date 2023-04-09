@@ -350,15 +350,15 @@ class Game:
                 if self.mobspawn > random.randint(10+decision_num, 20+decision_num):
                     randnum = random.randint(0, 3)
                     if randnum == 0:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size), 0)
+                        self.mobs.mobappend(random.randint(0, self.player.x*2), 0)
                     elif randnum == 1:
-                        self.mobs.mobappend(random.randint(0, self.display_width[0]/self.player.size),
-                                            self.display_width[1]/self.player.size)
+                        self.mobs.mobappend(random.randint(0, self.player.x*2),
+                                            self.player.y*2)
                     elif randnum == 2:
-                        self.mobs.mobappend(0, random.randint(0, self.display_width[1]/self.player.size))
+                        self.mobs.mobappend(0, random.randint(0, self.player.y*2))
                     elif randnum == 3:
-                        self.mobs.mobappend(self.display_width[0]/self.player.size,
-                                            random.randint(0,self.display_width[0]/self.player.size))
+                        self.mobs.mobappend(self.player.x*2,
+                                            random.randint(0, self.player.y*2))
                     self.mobspawn = 0
                 self.turns += 3
 
