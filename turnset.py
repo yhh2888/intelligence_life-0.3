@@ -182,7 +182,7 @@ class Game:
             # vision page --------------------------------------------------------------------------------------
 
             if self.player.view_lock == False:
-                x_lbound, x_lchunk = int(self.board.middle[0]-self.board.boardsize[0]/2), int(self.board.middle[0]-self.board.boardsize[0]/2)//16
+                '''x_lbound, x_lchunk = int(self.board.middle[0]-self.board.boardsize[0]/2), int(self.board.middle[0]-self.board.boardsize[0]/2)//16
                 y_ubound, y_uchunk = int(self.board.middle[1]-self.board.boardsize[1]/2), int(self.board.middle[1]-self.board.boardsize[1]/2)//16
                 x_rbound, x_rchunk = int(self.board.middle[0]+self.board.boardsize[0]/2), int(self.board.middle[0]+self.board.boardsize[0]/2)//16
                 y_dbound, y_dchunk = int(self.board.middle[1]+self.board.boardsize[1]/2), int(self.board.middle[1]+self.board.boardsize[1]/2)//16
@@ -203,7 +203,8 @@ class Game:
                 self.board.grass_group = pygame.sprite.Group()
                 for i in range(len(complete_tile)):
                     for j in range(len(complete_tile[i])):
-                        self.board.grass_group.add(Entity("grasses_refined.png", x_lchunk*16+j, y_uchunk*16+i, pos=[*complete_tile[i][j], 3, 3]))
+                        self.board.grass_group.add(Entity("grasses_refined.png", x_lchunk*16+j, y_uchunk*16+i, pos=[*complete_tile[i][j], 3, 3]))'''
+                pass
                     
             '''for i in self.mobs.moblist:
                 if abs(self.player.x-i[0]) <= 5 and abs(self.player.y-i[1]) <= 5:
@@ -489,16 +490,10 @@ class Game:
             if self.mobs != None:
                 self.player.eff_times()
                 if self.player.view_lock == False and not (self.eventer_time > 8 and self.turns%2 == 0):
-                    self.player.draw()
-                    self.mobs.draw(grassorigin=self.maptiles)
-                    self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
-                    self.board.screen.blit(self.healthbar, (2*self.size, 2*self.size))
+                    pass
                 if self.eventer_time > 8 and self.turns%2 == 0:
                     if self.player.view_lock == False:
-                        self.player.draw(grass=True)
-                        self.mobs.draw(grass=True, grassorigin=self.maptiles)
-                        self.healthbar = self.clip(self.healthbarimg, 0, (228+288*abs(min(10, max(0, self.player.lifes))-10))/8, 988/8, 269/8)
-                        self.board.screen.blit(self.healthbar, (2*self.size, 2*self.size))
+                        pass
                     
                     if data != []:
                         self.netmodel.received_data.append(data)

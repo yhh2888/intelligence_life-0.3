@@ -94,8 +94,6 @@ class NeuralNetwork(nn.Module):
         processed = self.stack(X)'''
 
         X = self.flatten(X)
-        if len(X.shape) >= 2:
-            X = X.squeeze()
         processed = self.start(X)
 
         self.celldata = list(torch.split(processed, self.cellout, dim=-1))
