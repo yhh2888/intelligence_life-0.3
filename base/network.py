@@ -18,8 +18,21 @@ train_dataloader = []
 test_dataloader = []
 
 ##
+class seqRNN(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(nn.RNN, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+    def forward(self, x):
+        hO = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        out, _ = self.rnn(x, hO)
+        out = self.fc(out[:, -1, :])
+        return out
+
 class NeuralNetwork(nn.Module):
-    def __init__(self, input_len, gencode = [], cellout=6, node_num=5, last=6, neural_line_prob=0.2, drop_prob =0.1, rnn=True, cuda=False):
+    def __init__(self, input_len, gencode = [], cellout=6, node_num=5, last=6, neural_line_prob=0.2, drop_prob =0.1, rnn=True, sequence=False, cuda=False):
 
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
@@ -58,8 +71,12 @@ class NeuralNetwork(nn.Module):
                 if i != len(layer)-1:
                     networks.append(nn.ReLU())
                     networks.append(nn.Dropout(p=drop_prob))'''
-            self.start = nn.Linear(input_len, cellout*node_num)
-            
+            if sequence == False:
+                self.start = nn.Linear(input_len, cellout*node_num)
+            elif sequence == True:
+                self.start = seqRNN(input_len, 20, 2, cellout*node_num)
+
+            else : raise ValueError
             for i in range(len(self.gencode[:-1])):
                 if i+node_num in self.rnncode:
                     networks.append(nn.RNN(cellout*len(self.gencode[i][:-1]), cellout))
