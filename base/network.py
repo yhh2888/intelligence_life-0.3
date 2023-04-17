@@ -20,7 +20,7 @@ test_dataloader = []
 ##
 class seqRNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
-        super(nn.RNN, self).__init__()
+        super(seqRNN, self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.rnn = nn.RNN(input_size, hidden_size, num_layers, batch_first=True)
@@ -44,6 +44,7 @@ class NeuralNetwork(nn.Module):
         self.f_on = False
         self.rnntrue = 0
         self.node_num = node_num
+        self.issequence = sequence
         self.cuda = cuda
         
         if gencode == []:
@@ -71,9 +72,9 @@ class NeuralNetwork(nn.Module):
                 if i != len(layer)-1:
                     networks.append(nn.ReLU())
                     networks.append(nn.Dropout(p=drop_prob))'''
-            if sequence == False:
+            if self.issequence == False:
                 self.start = nn.Linear(input_len, cellout*node_num)
-            elif sequence == True:
+            elif self.issequence == True:
                 self.start = seqRNN(input_len, 20, 2, cellout*node_num)
 
             else : raise ValueError
@@ -109,8 +110,8 @@ class NeuralNetwork(nn.Module):
             X = self.flatten(X)
             
         processed = self.stack(X)'''
-
-        X = self.flatten(X)
+        if self.issequence == False:
+            X = self.flatten(X)
         processed = self.start(X)
 
         self.celldata = list(torch.split(processed, self.cellout, dim=-1))
