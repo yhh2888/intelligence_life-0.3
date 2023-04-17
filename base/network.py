@@ -112,8 +112,18 @@ class NeuralNetwork(nn.Module):
         processed = self.stack(X)'''
         if self.issequence == False:
             X = self.flatten(X)
-        processed = self.start(X)
-
+        elif self.issequence == True:
+            if X.size()[-2] > 1:
+                X = X.squeeze(1)
+            else:
+                X = X.squeeze(2)
+        else:
+            raise ValueError
+        try:
+            processed = self.start(X)
+        except Exception as e:
+            print(e, X)
+            
         self.celldata = list(torch.split(processed, self.cellout, dim=-1))
         
         for i in range(len(self.gencode[:-1])):
@@ -157,7 +167,7 @@ class NeuralNetwork(nn.Module):
                     goer += 1
                     self.remain_labels.append(data[i][1])
 
-    def base_set(self, name, gamma = 0.99, call = True):
+    def base_set(self, name, gamma = 0.99, call = True, batch_size=170):
         try:
             if call == True:
                 self.featurecall(name)
@@ -166,8 +176,8 @@ class NeuralNetwork(nn.Module):
                 self.flist = name
                 self.feature_label = name
                 
-            self.ted = DataLoader(self.feature_label[int(len(self.flist)//1.2):], batch_size=170)
-            self.trd = DataLoader(self.feature_label[0:int(len(self.flist)//1.2)], batch_size=170)
+            self.ted = DataLoader(self.feature_label[int(len(self.flist)//1.2):], batch_size=batch_size)
+            self.trd = DataLoader(self.feature_label[0:int(len(self.flist)//1.2)], batch_size=batch_size)
             self.optim = torch.optim.Adam(self.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
                              amsgrad=False)
             self.sched = ExponentialLR(self.optim, gamma=gamma)
@@ -175,8 +185,8 @@ class NeuralNetwork(nn.Module):
         except Exception as e:
             pass
 
-    def roll(self, epoch, alert=10, first=0, last=18000):
-        reinforce(epoch, alert, self, DataLoader(self.trd.dataset[first:last+1], batch_size=(last-first)//100), self.ted, self.optim, self.sched)
+    def roll(self, epoch, alert=10, first=0, last=18000, batch_size=None):
+        reinforce(epoch, alert, self, DataLoader(self.trd.dataset[first:last+1], batch_size=[(last-first)//100 if batch_size==None else batch_size][0]), self.ted, self.optim, self.sched)
 
 model = NeuralNetwork(11*11)
 
@@ -383,6 +393,8 @@ if __name__ == '__main__':
     print('real_test:', trues/(1000*11))
 
 '''
+#신경망 파라미터 저장하기
+
 params = []
 for i in model_fin.parameters():
     params.append(i)
@@ -391,4 +403,29 @@ for i in range(len(params)):
              
 with open('modelparam_data.json', 'w') as f:
     json.dump(params, f)
+'''
+
+'''
+#순차모델 제작중
+tensors = []
+                          
+with open(paths+'\\\\'+'mobs_data.json') as f:
+    t = json.load(f)
+
+for i in t:
+    if torch.tensor(i[0][0]).size()[0] != 0 and i[0][1] != [0, 0, 0, 0, 0]:
+        tensors.append((torch.tensor(i[0][0], dtype=torch.float32).unsqueeze(0), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
+        
+model = NeuralNetwork(2, sequence=True)                     
+model.base_set(tensors, call=False, batch_size=1)                         
+model.roll(10, 1, batch_size=1)
+
+#or
+
+past_tensors = []   
+for i in range(3, len(tensors)):
+    past_tensors.append((torch.cat(([tensors[i-j][0][0][0:] for j in range(3)])).unsqueeze(0), tensors[i][1]))
+                          
+model.base_set(past_tensors, call=False, batch_size=1)     
+model.roll(1, 1, batch_size=1)
 '''

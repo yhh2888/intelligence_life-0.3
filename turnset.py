@@ -236,8 +236,7 @@ class Game:
             values = []
             mobxys = [i[0:2] for i in self.mobs.moblist]
             contemp = None
-            avoidloc = movepoint([self.player.x, self.player.y], mobxys, self.display_width[0]/self.size, 3)
-
+            avoidloc = movepoint([self.player.x, self.player.y], mobxys, 100, 3)
             
             movedir = [0,0,0,0]
             virtual_movedir = [0,0,0,0]
@@ -271,7 +270,7 @@ class Game:
                         oscillater = 1
                     elif oscillater == 1:
                         oscillater = 0
-
+                        
                 if pluslist == [1, 0]:
                     self.player.move_code('right')
                     virtual_movedir = [1, 0, 0, 0]
@@ -381,6 +380,11 @@ class Game:
             except Exception as e:
                 print(e, traceback.format_exc())
                 sigthkde = [0]*(sightrange**2)
+                running = False
+                pygame.init()
+                return self.turns+self.killscore, self.term_data
+
+                
             data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
 
             data = [[[i[0:2] for i in self.mobs.moblist], data[0][1]]]
@@ -488,6 +492,7 @@ class Game:
             if time_==True and dist_now[0] != None:
                 t = perf_counter(automiddle = False)
             self.board.run(view_lock = self.player.view_lock)
+            
             if self.mobs != None:
                 self.player.eff_times()
                 if self.player.view_lock == False and not (self.eventer_time > 8 and self.turns%2 == 0):
@@ -498,6 +503,7 @@ class Game:
                     
                     if data != []:
                         self.netmodel.received_data.append(data)
+                        
                     self.mobs.distance_cal()
                     self.eventer_time = 0
                     
