@@ -61,21 +61,12 @@ class NeuralNetwork(nn.Module):
             pass
         
         if input_len > 1:
-
-            '''if rnn == True:
-                self.rnn = nn.RNN(layer[0], layer[1])
-                networks.append(nn.ReLU())
-                networks.append(nn.Dropout(p=drop_prob))
-
-            for i in range(self.rnntrue, len(layer)-1):
-                networks.append(nn.Linear(layer[i], layer[i+1]))
-                if i != len(layer)-1:
-                    networks.append(nn.ReLU())
-                    networks.append(nn.Dropout(p=drop_prob))'''
+            
             if self.issequence == False:
                 self.start = nn.Linear(input_len, cellout*node_num)
             elif self.issequence == True:
-                self.start = seqRNN(input_len, 20, 2, cellout*node_num)
+                self.start = seqRNN(10, 20, 2, cellout*node_num)
+                self.embedding = nn.Embedding(num_embeddings = 90000, embedding_dim = 10, padding_idx=1)
 
             else : raise ValueError
             for i in range(len(self.gencode[:-1])):
@@ -90,33 +81,16 @@ class NeuralNetwork(nn.Module):
 
             self.last = nn.Linear(cellout*len(self.gencode[-1][:-1]), last)
 
-            '''self.halfed1 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
-            self.halfed1_1 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
-            self.halfed1_2 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
-            self.halfed1_3 = nn.Linear(int(layer[-2]/2), int(layer[-2]/2))
-
-            self.halfed2 = nn.Linear(int(layer[-3]/2), int(layer[-2]/2))
-
-            self.cated = nn.Linear(layer[-2], layer[-1])'''
-        
-            
             
     def forward(self, X):
 
-        '''if self.rnntrue == 1:
-            rnn_out, hidden = self.rnn(X)
-            X = torch.squeeze(rnn_out, dim=1)
-        else :
-            X = self.flatten(X)
-            
-        processed = self.stack(X)'''
         if self.issequence == False:
             X = self.flatten(X)
         elif self.issequence == True:
-            if X.size()[-2] > 1:
-                X = X.squeeze(1)
-            else:
-                X = X.squeeze(2)
+            tocat = []
+            for i in X.tolist()[0][0]:
+                tocat.append(self.embedding.weight[int((i[0]+150)*300+i[1]+150)].unsqueeze(0))
+            X = torch.cat((tocat)).unsqueeze(0)
         else:
             raise ValueError
         try:
@@ -135,16 +109,6 @@ class NeuralNetwork(nn.Module):
             else :
                 processed = self.stack[i](toinput)
                 self.celldata.append(self.stack[i](toinput))
-
-        '''halfed1, halfed2 = torch.split(processed, int(processed.shape[1]/2), dim=-1)
-        halfed1 = self.halfed1(halfed1)
-        halfed1 = self.halfed1_1(halfed1)
-        halfed1 = self.halfed1_2(halfed1)
-        halfed1 = self.halfed1_3(halfed1)
-        halfed2 = self.halfed2(halfed2)
-
-        cated = torch.cat((halfed1, halfed2), dim=-1)
-        cated = self.cated(cated)'''
         
         processed = self.last(torch.cat(([self.celldata[j] for j in self.gencode[-1][:-1]]), dim=-1))
                 
@@ -361,11 +325,11 @@ if __name__ == '__main__':
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
     for i in range(len(model_dist.feature_label)):
-        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(3)],
-                                                                   *[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
-                                                                   *[globals()['models_'+j].feature_label[i-k][1] if type(torch.Tensor.tolist(globals()['models_'+j].feature_label[i-k][1])) == list \
-                                                                   else torch.tensor([0, 0]) for j in longkinds for k in range(3)],
-                                                                   *[torch.tensor([0]) if i-1-j < 3 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(3)],
+        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
+                                                                   #*[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
+                                                                   #*[globals()['models_'+j].feature_label[i-k][1] if type(torch.Tensor.tolist(globals()['models_'+j].feature_label[i-k][1])) == list \
+                                                                   #else torch.tensor([0, 0]) for j in longkinds for k in range(3)],
+                                                                   *[torch.tensor([0]) if i-1-j < 5 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(5)],
                                                                    *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]
                                                                    ))
                                                         ))
@@ -373,7 +337,7 @@ if __name__ == '__main__':
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=5, cuda=False, rnn=[7])
+    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=2, cuda=False, rnn=[])
     model_fin.base_set(li68, call = False)
 
     print("Successful Network Application, Test start")
@@ -413,10 +377,17 @@ with open(paths+'\\\\'+'mobs_data.json') as f:
     t = json.load(f)
 
 for i in t:
+    out = False
     if torch.tensor(i[0][0]).size()[0] != 0 and i[0][1] != [0, 0, 0, 0, 0]:
+        for j in i[0][0]:
+            for k in j:
+                 if k<-150 or k>149:
+                     out = True
+        if out == True:
+            continue
         tensors.append((torch.tensor(i[0][0], dtype=torch.float32).unsqueeze(0), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
         
-model = NeuralNetwork(2, sequence=True)                     
+model = NeuralNetwork(10, sequence=True)                     
 model.base_set(tensors, call=False, batch_size=1)                         
 model.roll(10, 1, batch_size=1)
 
