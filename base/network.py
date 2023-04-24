@@ -164,7 +164,6 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         # 예측(prediction)과 손실(loss) 계산
         pred = model.forward(X)
         loss = loss_fn(pred, y)
-
         # 역전파
         optimizer.zero_grad()
         loss.backward()
@@ -390,6 +389,15 @@ for i in t:
 model = NeuralNetwork(10, sequence=True)                     
 model.base_set(tensors, call=False, batch_size=1)                         
 model.roll(10, 1, batch_size=1)
+
+#n개씩 동일한 크기로 놓기
+for i in range(len(tensors)//100+1):
+    choose = []
+    for j in tensors[i*n:i*n+n]:
+        choose.append(j[0].size()[1])
+    for j in range(len(tensors[i*n:i*n+n])):
+        for k in range(max(choose)-tensors[i*n+j][0].size()[1]):
+            tensors[i*100+j] = (torch.cat((tensors[i*100+j][0], torch.tensor([[[-150, -150]]])), dim=1), tensors[i*100+j][1])
 
 #or
 
