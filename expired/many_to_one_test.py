@@ -25,9 +25,22 @@ for i in t:
             continue
         tensors.append((torch.tensor(i[0][0], dtype=torch.float32), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
 
-data = []
+past_tensors = []   
+for i in range(3, len(tensors)):
+    past_tensors.append((torch.tensor([torch.cat(([tensors[i-j][0][k][0:] if len(tensors[i-j][0]) >= k+1 else torch.tensor([-150, -150]) for j in range(3)])).tolist() \
+                                       for k in range(max([len(i[0]) for i in tensors[i-2:i+1]]))]), tensors[i][1]))
+
+embedding = nn.Embedding(num_embeddings = 90000, embedding_dim = 2, padding_idx=1)
+em_tensors = []
 for i in range(len(tensors)):
-    data.append(tensors[i][0])
+  tens = []
+  for j in range(len(tensors[i][0])):
+    tens.append(embedding.weight[int((tensors[i][0][j][0].item()+150)*300+tensors[i][0][j][1].item()+150)].tolist())
+  em_tensors.append(torch.tensor(tens).unsqueeze(0))
+
+data = []
+for i in range(len(em_tensors)):
+    data.append(em_tensors[i][0])
     
 data_padded = nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=-150)
 
@@ -50,7 +63,7 @@ class Classifier(nn.Module):
 
 input_size = max_seq_length
 hidden_size = 128
-num_epochs = 1000
+num_epochs = 10000
 batch_size = 10
 learning_rate = 0.001
 

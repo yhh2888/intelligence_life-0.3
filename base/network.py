@@ -234,6 +234,60 @@ model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
 model_dist02.roll(30, 10)'''
 
+#절약 모델 제작중
+def savingmodel(add=False):
+    tensors = []
+                              
+    with open(paths+'\\\\'+'mobs_data.json') as f:
+        t = json.load(f)
+
+    for i in t:
+        out = False
+        if torch.tensor(i[0][0]).size()[0] != 0 and i[0][1] != [0, 0, 0, 0, 0]:
+            for j in i[0][0]:
+                for k in j:
+                     if k<-150 or k>149:
+                         out = True
+            if out == True:
+                continue
+            tensors.append((torch.tensor(i[0][0], dtype=torch.float32).unsqueeze(0), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
+
+    data = []
+    for i in range(len(tensors)):
+        data.append(tensors[i][0].squeeze())
+        
+    data_padded = nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=-150)
+
+    for i in range(len(tensors)):
+        tensors[i] = (data_padded[i].unsqueeze(0), tensors[i][1])
+    if add == False:
+        model = NeuralNetwork(12)                     
+        model.base_set(tensors, call=False)
+    elif add == True:
+
+        pastrange = 5
+        
+        total_tensors = []
+        for i in range(pastrange, len(tensors)):
+            total_tensors.append((torch.cat((
+                                            *[torch.tensor(m) for m in torch.cat(([tensors[i-j][0][k][0:] if len(tensors[i-j][0]) >= k+1 else torch.tensor([-150, -150]) \
+                                            for j in range(pastrange) for k in range(max([len(l[0]) for l in tensors[i-pastrange+1:i+1]]))])).tolist()],
+                                            torch.tensor([[0 if tensors[i-j][1].item() != 5 else 1] for j in range(20)]).squeeze(1),
+                                            torch.tensor([0 if i-1-j < 20 else tensors[i-j][1].item() for j in range(20)])
+                                            )).unsqueeze(0),
+                                  
+                                  tensors[i][1]))
+            
+        model = NeuralNetwork(pastrange*12+20+20)
+        model.base_set(total_tensors, call=False)
+    return model, total_tensors
+
+'''
+model, total_tensors = savingmodel(True)
+
+set2 = [[torch.argmax(model(torch.tensor([torch.Tensor.tolist(total_tensors[i*11+j][0])]))).item() for j in range(11)] for i in range(-290, -2)]
+'''
+
 def structure_set(data, reshape=True):
         
     for i in range(len(data)):
@@ -324,19 +378,19 @@ if __name__ == '__main__':
 
     li68=[] # 전~현 거리, 전~현 방향, 전~현 움직임 여부, 전~현 행렬 특징, 전 움직임, 전 행렬
     for i in range(len(model_dist.feature_label)):
-        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(5)],
+        li68.append((torch.tensor([torch.Tensor.tolist((torch.cat((*[torch.tensor([0 if model_dist.remain_labels[i-j].item() != 5 else 1]) for j in range(20)],
                                                                    #*[torch.tensor([globals()['models_'+j].feature_label[i-k][1]]) for j in datakinds for k in range(3)],
                                                                    #*[globals()['models_'+j].feature_label[i-k][1] if type(torch.Tensor.tolist(globals()['models_'+j].feature_label[i-k][1])) == list \
                                                                    #else torch.tensor([0, 0]) for j in longkinds for k in range(3)],
-                                                                   *[torch.tensor([0]) if i-1-j < 5 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(5)],
-                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(3)]
+                                                                   *[torch.tensor([0]) if i-1-j < 20 else torch.tensor([model_dist.remain_labels[i-1-j]]) for j in range(20)],
+                                                                   *[model_dist.feature_label[i-j][0][0].flatten() for j in range(10)]
                                                                    ))
                                                         ))
                                    ]),
                      model_dist.remain_labels[i]
                      ))
         
-    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, node_num=2, cuda=False, rnn=[])
+    model_fin = NeuralNetwork(len(li68[0][0][0]), neural_line_prob=0.5, cellout=20, node_num=2, cuda=False, rnn=[])
     model_fin.base_set(li68, call = False)
 
     print("Successful Network Application, Test start")
@@ -366,45 +420,4 @@ for i in range(len(params)):
              
 with open('modelparam_data.json', 'w') as f:
     json.dump(params, f)
-'''
-
-'''
-#순차모델 제작중
-tensors = []
-                          
-with open(paths+'\\\\'+'mobs_data.json') as f:
-    t = json.load(f)
-
-for i in t:
-    out = False
-    if torch.tensor(i[0][0]).size()[0] != 0 and i[0][1] != [0, 0, 0, 0, 0]:
-        for j in i[0][0]:
-            for k in j:
-                 if k<-150 or k>149:
-                     out = True
-        if out == True:
-            continue
-        tensors.append((torch.tensor(i[0][0], dtype=torch.float32).unsqueeze(0), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
-        
-model = NeuralNetwork(10, sequence=True)                     
-model.base_set(tensors, call=False, batch_size=1)                         
-model.roll(10, 1, batch_size=1)
-
-#n개씩 동일한 크기로 놓기
-for i in range(len(tensors)//100+1):
-    choose = []
-    for j in tensors[i*n:i*n+n]:
-        choose.append(j[0].size()[1])
-    for j in range(len(tensors[i*n:i*n+n])):
-        for k in range(max(choose)-tensors[i*n+j][0].size()[1]):
-            tensors[i*100+j] = (torch.cat((tensors[i*100+j][0], torch.tensor([[[-150, -150]]])), dim=1), tensors[i*100+j][1])
-
-#or
-
-past_tensors = []   
-for i in range(3, len(tensors)):
-    past_tensors.append((torch.cat(([tensors[i-j][0][0][0:] for j in range(3)])).unsqueeze(0), tensors[i][1]))
-                          
-model.base_set(past_tensors, call=False, batch_size=1)     
-model.roll(1, 1, batch_size=1)
 '''
