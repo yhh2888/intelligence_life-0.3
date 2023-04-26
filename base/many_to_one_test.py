@@ -1,32 +1,39 @@
-import torch, random
+import torch, random, os
 import torch.nn as nn
 import torch.optim as optim
+from pathlib import Path
+import json
 
 num_samples = 1000
-max_seq_length = 50
-num_classes = 5
+max_seq_length = 2
+num_classes = 4
+
+paths = str(Path(os.getcwd()).parent)
+tensors = []
+                          
+with open(paths+'\\\\'+'mobs_data.json') as f:
+    t = json.load(f)
+
+for i in t:
+    out = False
+    if torch.tensor(i[0][0]).size()[0] != 0 and i[0][1] != [0, 0, 0, 0, 0]:
+        for j in i[0][0]:
+            for k in j:
+                 if k<-150 or k>149:
+                     out = True
+        if out == True:
+            continue
+        tensors.append((torch.tensor(i[0][0], dtype=torch.float32), [torch.argmax(torch.tensor(i[0][1])) if max(i[0][1]) != 0 else torch.tensor(5)][0]))
 
 data = []
-for i in range(num_samples):
-    seq_length = torch.randint(1, max_seq_length, size=(1,))
-    seq = torch.randn(seq_length, max_seq_length)
-    data.append(seq)
-
-data_padded = nn.utils.rnn.pad_sequence(data, batch_first=True)
+for i in range(len(tensors)):
+    data.append(tensors[i][0])
     
+data_padded = nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=-150)
+
 labels = []
-lab = []
-c= [0]*4
-for j in range(len(data)):
-    for i in range(len(data[j])):
-        lab.append(sum(data[j][i][0:13]))
-        lab.append(sum(data[j][i][13:25]))
-        lab.append(sum(data[j][i][25:38]))
-        lab.append(sum(data[j][i][38:50]))
-        c[torch.argmax(torch.tensor(lab)).item()] += 1
-        lab = []
-    labels.append(torch.argmax(torch.tensor(c)).item())
-    c = [0]*4
+for i in range(len(tensors)):
+	labels.append(tensors[i][1])
 
 labels = torch.tensor(labels)
 
@@ -43,7 +50,7 @@ class Classifier(nn.Module):
 
 input_size = max_seq_length
 hidden_size = 128
-num_epochs = 100
+num_epochs = 1000
 batch_size = 10
 learning_rate = 0.001
 
