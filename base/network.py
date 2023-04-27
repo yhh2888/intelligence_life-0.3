@@ -235,7 +235,7 @@ model_dist02.base_set('distances02')
 model_dist02.roll(30, 10)'''
 
 #절약 모델 제작중
-def savingmodel(add=False):
+def savingmodel(input_len=None, last=6):
     tensors = []
                               
     with open(paths+'\\\\'+'mobs_data.json') as f:
@@ -260,26 +260,26 @@ def savingmodel(add=False):
 
     for i in range(len(tensors)):
         tensors[i] = (data_padded[i].unsqueeze(0), tensors[i][1])
-    if add == False:
-        model = NeuralNetwork(12)                     
-        model.base_set(tensors, call=False)
-    elif add == True:
-
-        pastrange = 5
+    
+    pastrange = 5
         
-        total_tensors = []
-        for i in range(pastrange, len(tensors)):
-            total_tensors.append((torch.cat((
-                                            *[torch.tensor(m) for m in torch.cat(([tensors[i-j][0][k][0:] if len(tensors[i-j][0]) >= k+1 else torch.tensor([-150, -150]) \
-                                            for j in range(pastrange) for k in range(max([len(l[0]) for l in tensors[i-pastrange+1:i+1]]))])).tolist()],
-                                            torch.tensor([[0 if tensors[i-j][1].item() != 5 else 1] for j in range(20)]).squeeze(1),
-                                            torch.tensor([0 if i-1-j < 20 else tensors[i-j][1].item() for j in range(20)])
-                                            )).unsqueeze(0),
+    total_tensors = []
+    for i in range(pastrange, len(tensors)):
+        total_tensors.append((torch.cat((
+                                        *[torch.tensor(m) for m in torch.cat(([tensors[i-j][0][k][0:] if len(tensors[i-j][0]) >= k+1 else torch.tensor([-150, -150]) \
+                                        for j in range(pastrange) for k in range(max([len(l[0]) for l in tensors[i-pastrange+1:i+1]]))])).tolist()],
+                                        torch.tensor([[0 if tensors[i-j][1].item() != 5 else 1] for j in range(20)]).squeeze(1),
+                                        torch.tensor([0 if i-1-j < 20 else tensors[i-j][1].item() for j in range(20)])
+                                        )).unsqueeze(0),
                                   
-                                  tensors[i][1]))
-            
-        model = NeuralNetwork(pastrange*12+20+20)
-        model.base_set(total_tensors, call=False)
+                            tensors[i][1]))
+    if input_len == None:
+        model = NeuralNetwork(pastrange*12+20+20, last=last)
+    elif type(input_len) == int:
+        model = NeuralNetwork(input_len, last=last)
+    else :
+        raise ValueError
+    model.base_set(total_tensors, call=False)
     return model, total_tensors
 
 '''
@@ -420,4 +420,47 @@ for i in range(len(params)):
              
 with open('modelparam_data.json', 'w') as f:
     json.dump(params, f)
+'''
+
+'''
+model, total_tensors = savingmodel(60, 2)
+def foodscent(mean=0.5, std=0.5, range_=(0, 200)):
+    mixnum = random.randint(3, 10)
+    numlist = []
+    for i in range(mixnum):
+        a = random.randint(range_[0], range_[1])
+        while a in numlist:
+            a = random.randint(range_[0], range_[1])
+        numlist.append([a, torch.normal(torch.tensor(mean, dtype=torch.float32), torch.tensor(std, dtype=torch.float32))])
+    pointsum = sum([abs(i[1]) for i in numlist])
+    scent_vector = torch.zeros(scent.shape[1], scent.shape[2])
+    for i in numlist:
+        scent_vector+=scent[i[0]]*(i[1]/pointsum)
+    return scent_vector
+
+scent = torch.cat((torch.normal(torch.tensor(1), torch.tensor(1), (25, 30, 2)),
+                torch.normal(torch.tensor(0.5), torch.tensor(0.5), (25, 30, 2))))
+                          
+flowers = [foodscent(0.5, 0.5, range_=(25, 49)) for i in range(10000)]
+                          
+
+poisons = [foodscent(0.5, 0.5, range_=(0, 24)) for i in range(10000)]
+                          
+
+data = []
+                          
+for i in range(len(poisons)):
+    data.append((flowers[i], torch.tensor(0)))
+
+                          
+for i in range(len(poisons)):
+    data.append((poisons[i], torch.tensor(1)))
+
+                          
+random.shuffle(data)
+                          
+model.base_set(data, call=False)
+                          
+model.roll(10, 1)
+
 '''
