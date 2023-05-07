@@ -13,7 +13,7 @@ git push <repo> master
 git checkout master
 git branch main master
 git checkout main
-git push <repo> master
+git push <repo> main
 
 수정 후 
 git push <repo> +master(+main?) 도 먹힘..

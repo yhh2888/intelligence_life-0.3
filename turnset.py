@@ -387,7 +387,7 @@ class Game:
                 
             data = [[sightkde, [virtual_movedir if contemp!='space' else [0,0,0,0]][0]+[1 if contemp=='space' else 0]]]
 
-            data = [[[i[0:2] for i in self.mobs.moblist], data[0][1]]]
+            data = [[[(np.array(i[0:2])-np.array([self.player.x, self.player.y])).tolist() for i in self.mobs.moblist], data[0][1]]]
             
             self.player.x, self.player.y = self.player.y, 99-self.player.x
             data = data+[[self.player.x, self.player.y]]

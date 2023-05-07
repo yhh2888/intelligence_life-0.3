@@ -71,7 +71,7 @@ def rep_test(rep, view_lock = False, time_=False):
         print(e)
         received_data = []
 
-    try:
+    '''try:
         with open(os.getcwd()+r'\base\modelparam_data.json') as f:
             mp = json.load(f)
             
@@ -82,14 +82,14 @@ def rep_test(rep, view_lock = False, time_=False):
     netparams = []
         
     for n in range(len(mp)):
-        netparams.append(torch.tensor(mp[n]))
+        netparams.append(torch.tensor(mp[n]))'''
         
     '''for n in range(3):
             ns.stack[n*3].weight = torch.nn.parameter.Parameter(netparams[n*2])
             ns.stack[n*3].bias = torch.nn.parameter.Parameter(netparams[n*2+1])'''
     
     try:
-        a = Evolve(net=ns)
+        a = Evolve(net=Nets(380))
     
         
         for i in [i for i in range(rep)]:
