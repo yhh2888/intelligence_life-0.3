@@ -464,3 +464,29 @@ model.base_set(data, call=False)
 model.roll(10, 1)
 
 '''
+
+'''
+tensors = []
+for i in range(len(total_tensors)-1):
+    tensors.append((total_tensors[i][0], total_tensors[i+1][0].squeeze()))
+
+def test_loop(dataloader, model, loss_fn, alert=False):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    test_loss, correct = 0, 0
+
+    with torch.no_grad():
+        for X, y in dataloader:
+            pred = model(X)
+            test_loss += loss_fn(pred, y).item()
+            correct += (abs(model(tensors[0][0])-tensors[0][1])<1.5).type(torch.float).sum().item()
+
+    test_loss /= max(1, num_batches)
+    correct /= max(1, size)
+    if alert == True:
+        print(f"Test Error: \n Accuracy: {100*(correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+torch.set_printoptions(precision=2, sci_mode=False)
+
+model = NeuralNetwork(100, cellout=300, node_num=5, rnn=[5, 6, 7], last=100)
+model.base_set(tensors, call=False)
