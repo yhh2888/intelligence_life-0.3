@@ -174,7 +174,7 @@ class Organism:
         
         self.move()
         
-        #print(pfc()-t)
+        print(pfc()-t)
 
         #print('turn')
         
@@ -184,9 +184,11 @@ class Organism:
         for lifes in self.lifes:
             lifes[3]-=0.1
             lifes[4]+=1
-            screen.blit(lifes[5], ((lifes[1][0]-5) * BLOCK_SIZE, (lifes[1][1]-5) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
-            self.infield[lifes[1][0]-5:lifes[1][0]+6, lifes[1][1]-5:lifes[1][1]+6] += (lifes[0]!=0)+zeros
-            self.real[lifes[1][0]-5:lifes[1][0]+6, lifes[1][1]-5:lifes[1][1]+6] += lifes[0]
+            effobject_0 = lifes[1][0]
+            effobject_1 = lifes[1][1]
+            screen.blit(lifes[5], ((effobject_0-5) * BLOCK_SIZE, (effobject_1-5) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+            self.infield[effobject_0-5:effobject_0+6, effobject_1-5:effobject_1+6] += (lifes[0]!=0)+zeros
+            self.real[effobject_0-5:effobject_0+6, effobject_1-5:effobject_1+6] += lifes[0]
         #print(pfc()-t)
         #t = pfc()
         for foods in self.foods:
