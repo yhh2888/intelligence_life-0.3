@@ -2,10 +2,10 @@ import torch, random, math
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-multiplier = torch.randint(0, 100, size=(11, 11))/12100
+multiplier = torch.randint(0, 100, size=(11, 11))/1210
 
 def regularize(matrix):
-    return torch.sum((torch.randint(-100, 100, size=(11, 11))/100)*torch.randint(-100, 100, size=(11, 11)))/1210
+    return torch.sum((torch.randint(-100, 100, size=(11, 11))/100)*matrix)/1210
 
 
 # 커스텀 데이터셋 클래스 정의
@@ -27,16 +27,17 @@ class MyDataset(Dataset):
 class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
-        self.fc = nn.Linear(11, 10)
+        self.fc1 = nn.Linear(11, 10)
+        self.fc2 = nn.Linear(11 , 1)
 
     def forward(self, x):
-        x = self.fc(x)
+        x = self.fc1(x).permute(0, 2, 1)
+        x = self.fc2(x).permute(0, 2, 1)
         return x
-
+                            
 # 하이퍼파라미터 설정
 learning_rate = 0.001
 batch_size = 32
-num_epochs = 100
 
 # 데이터셋 및 데이터로더 초기화
 dataset = MyDataset()
@@ -49,24 +50,25 @@ model = MyNetwork()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-# 학습 반복
-for epoch in range(num_epochs):
-    for data, labels in dataloader:
-        # 입력과 라벨을 GPU로 이동 (GPU 사용 시)
-        # data = data.to(device)
-        # labels = labels.to(device)
+def execute(num_epochs=100):
+    # 학습 반복
+    for epoch in range(num_epochs):
+        for data, labels in dataloader:
+            # 입력과 라벨을 GPU로 이동 (GPU 사용 시)
+            # data = data.to(device)
+            # labels = labels.to(device)
 
-        # 순전파
-        outputs = model(data)
+            # 순전파
+            outputs = model(data)
 
-        # 손실 계산
-        loss = criterion(outputs, labels)
+            # 손실 계산
+            loss = criterion(outputs, labels)
+            # 역전파 및 가중치 업데이트
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # 역전파 및 가중치 업데이트
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        # 현재 에폭의 손실 출력
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item()}")
 
-    # 현재 에폭의 손실 출력
-    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item()}")
-
+execute()
