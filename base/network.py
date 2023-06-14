@@ -490,3 +490,4 @@ torch.set_printoptions(precision=2, sci_mode=False)
 
 model = NeuralNetwork(100, cellout=300, node_num=5, rnn=[5, 6, 7], last=100)
 model.base_set(tensors, call=False)
+'''

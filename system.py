@@ -1,6 +1,7 @@
 from newmap import *
 from cells import *
 from multinet import *
+from base.randtree import randtree
 
 model = MyNetwork()
 dataset = MyDataset()
@@ -37,3 +38,26 @@ class Combiner:
                 self.netc.append([Sender_neuron(*i[1]), 4, *i[2:]])
 
         self.from_model = self.gene[-1]
+
+
+def randgene(start=5, middle=10, prob=0.15):
+    start_code = [random.randint(1, 10) for i in range(start)]
+    middle_code = [random.randint(0, 1) for i in range(middle)]
+    branch = randtree(10).generate_random_tree(prob=prob,
+                                               cloud=start+middle+6,
+                                               start_unit=[10+i for i in range(start)],
+                                               end_unit=[10+start+middle+i for i in range(6)],
+                                               )
+    for i in range(len(middle_code)):
+        if middle_code[i] == 0:
+            middle_code[i] = [middle_code[i], random.uniform(-1, 1),
+                              [random.randint(0, 3) for j in range(random.randint(1, 8))],
+                               random.uniform(0, 2)]
+        elif middle_code[i] == 1:
+            middle_code[i] = [middle_code[i], random.randint(0, 4),
+                              [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
+                              random.uniform(0.3, 3),
+                              random.uniform(-1, 1)]
+            
+
+    return (start_code, middle_code, branch)

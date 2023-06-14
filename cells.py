@@ -93,7 +93,7 @@ class Convert_neuron:
     def scoper(self, value):
         return self.coeff*((value*self.degree)%2-1)+self.const
 
-    def execute(self, value, type_=None)):
+    def execute(self, value, type_=None):
         self.func(value)
 
 class Reinf_decide:
