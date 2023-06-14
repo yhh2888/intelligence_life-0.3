@@ -23,22 +23,42 @@ model(dataloader.dataset[0][0].unsqueeze(0))
 
 class Combiner:
     def __init__(self, gene_data):
+        self.received_param = [random.uniform(-1, 1) for i in range(10)]
         self.gene = gene_data
         self.netc = []
-        for i in self.gene[:-1]:
+        for i in self.gene[0]:
+            c=Sender_neuron(i)
+            self.netc.append(c)
+
+        for i in self.gene[1]:
             if i[0] == 0:
-                self.netc.append([Reinf_decide(*i[1]), 0, *i[2:]])
+                    cell_ = Variate_neuron(*i[1:])
             elif i[0] == 1:
-                self.netc.append([Movecell(*i[1]), 1, *i[2:]])
-            elif i[0] == 2:
-                self.netc.append([Convert_neuron(*i[1]), 2, *i[2:]])
-            elif i[0] == 3:
-                self.netc.append([Variate_neuron(*i[1]), 3, *i[2:]])
-            elif i[0] == 4:
-                self.netc.append([Sender_neuron(*i[1]), 4, *i[2:]])
+                    cell_ = Convert_neuron(*i[1:])
+            self.netc.append(cell_)
 
-        self.from_model = self.gene[-1]
+        self.branch = self.gene[2]
+        self.branchpoint = self.gene[3]
+        
+    def execute(self, mapinfo):
+        #밝혀진 변수들과 그 값, 그리고 전체 변수의 수 
+        self.found = [i for i in range(10)]
+        self.all = [i for i in range(len(self.netc)+6)]
+        self.neuron_value = [self.received_param[i] for i in range(10)]
 
+        #Sender Neuron에 공간정도 전달하기
+        for i in range(len(self.gene[0])):
+            self.netc[i].info = mapinfo[sender_typelist.index(dir(self.netc[i])[-1])]
+            self.found.append(i+10)
+            self.neuron_value.append(self.netc[i].execute())
+
+        #밝혀진 변수는 추가하고 연결망 계산하고
+        '''while... '''
+        for i in range(len(self.gene[2])):
+            if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])):
+                self.found.append(i+10+len(self.gene[0]))
+                self.neuron_value.append(self.netc[i].execute())
+            
 
 def randgene(start=5, middle=10, prob=0.15):
     start_code = [random.randint(1, 10) for i in range(start)]
@@ -52,12 +72,22 @@ def randgene(start=5, middle=10, prob=0.15):
         if middle_code[i] == 0:
             middle_code[i] = [middle_code[i], random.uniform(-1, 1),
                               [random.randint(0, 3) for j in range(random.randint(1, 8))],
-                               random.uniform(0, 2)]
+                               (0, 2)]
         elif middle_code[i] == 1:
             middle_code[i] = [middle_code[i], random.randint(0, 4),
                               [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
                               random.uniform(0.3, 3),
                               random.uniform(-1, 1)]
-            
 
-    return (start_code, middle_code, branch)
+    branchpoint = []
+        
+    for i in branch:
+        roads = []
+        for j in i:
+            roads.append(random.uniform(-0.8, 0.8))
+        branchpoint.append(roads)
+            
+    return (start_code, middle_code, branch, branchpoint)
+
+'''b.generate_random_tree(prob=0.1, cloud=14, start_unit=[10, 11, 12, 13, 14],
+                          end_unit=[18,19,20,21,22,23], sequence_mode=True)'''
