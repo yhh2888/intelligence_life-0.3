@@ -43,23 +43,25 @@ class Combiner:
     def execute(self, mapinfo):
         #밝혀진 변수들과 그 값, 그리고 전체 변수의 수 
         self.found = [i for i in range(10)]
-        self.all = [i for i in range(len(self.netc)+6)]
+        self.all = [i for i in range(len(self.netc)+16)]
         self.neuron_value = [self.received_param[i] for i in range(10)]
 
-        #Sender Neuron에 공간정도 전달하기
+        #Sender Neuron에 공간정보 전달하기
         for i in range(len(self.gene[0])):
             self.netc[i].info = mapinfo[sender_typelist.index(dir(self.netc[i])[-1])]
             self.found.append(i+10)
             self.neuron_value.append(self.netc[i].execute())
 
         #밝혀진 변수는 추가하고 연결망 계산하고
-        '''while... '''
-        for i in range(len(self.gene[2])):
-            if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])):
-                self.found.append(i+10+len(self.gene[0]))
-                self.neuron_value.append(self.netc[i].execute())
-            
-
+        while self.all != self.found:
+            for i in range(len(self.gene[2])):
+                if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found:
+                    self.found.append(i+10+len(self.gene[0]))
+                    self.neuron_value.append(self.netc[i].execute())
+            for networks in range(len(self.gene[2])):
+                for j in range(len(self.gene[2][networks])):
+                    self.gene[2].networks[0]
+                        
 def randgene(start=5, middle=10, prob=0.15):
     start_code = [random.randint(1, 10) for i in range(start)]
     middle_code = [random.randint(0, 1) for i in range(middle)]

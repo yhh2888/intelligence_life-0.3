@@ -5,7 +5,7 @@ sender_typelist = ['energy', 'energy_g',
                    'c_borderdistance', 'c_iscompetitorin', 'c_isfoodin', 'randompoint']
                    
 class Sender_neuron:
-    def __init__(self, ntype)
+    def __init__(self, ntype):
         
         if type(ntype) == int:
             if ntype == 1:
