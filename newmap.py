@@ -46,6 +46,25 @@ def anglecells(angle, scope=20):
 				scopelist.append([i, round(math.tan(angle*math.pi)*i)])
 	return scopelist
 
+class Food_system:
+    def __init__(self, screen, map_width, map_height, color, size, give_energy=50):
+        self.MAP_WIDTH = map_width
+        self.MAP_HEIGHT = map_height
+        self.color = color
+        self.BLOCK_SIZE = size
+        self.screen = screen
+        self.give_energy = give_energy
+
+        self.foods = []
+
+    def generate(self, number):
+        for i in range(number):
+            self.foods.append([random.randint(31, self.MAP_WIDTH/self.BLOCK_SIZE-31), random.randint(31, self.MAP_HEIGHT/self.BLOCK_SIZE-31)])
+
+    def draw(self):
+        for food in self.foods:
+            food_rect = pygame.Rect(food[0]*self.BLOCK_SIZE, food[1]*self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE)
+            pygame.draw.rect(self.screen, self.color, food_rect)
     
 class Map:
     def __init__(self, map_width, map_height, proto_num=50):
@@ -61,9 +80,13 @@ class Map:
 
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
+        self.GREEN = (50, 255, 50)
 
         self.screen = pygame.display.set_mode((self.MAP_WIDTH, self.MAP_HEIGHT))
         pygame.display.set_caption("Entity Movement")
+
+        
+        self.food = Food_system(self.screen, self.MAP_WIDTH, self.MAP_HEIGHT, self.GREEN, self.BLOCK_SIZE)
         
         for _ in range(proto_num):
             entity_x = random.randint(30, self.MAP_WIDTH/self.BLOCK_SIZE-30)
@@ -87,14 +110,23 @@ class Map:
                 if event.type == pygame.QUIT:
                     running = False
                     
-            #print(pfc()-t)
-            #t = pfc()
+            print(pfc()-t)
+            t = pfc()
             
             for entity in self.entitys:
                 entity.move()
 
-            #print(pfc()-t)
-            #t = pfc()
+            if len(self.food.foods) < 30:
+                self.food.generate(1)
+                
+
+            print(pfc()-t)
+            t = pfc()
+
+            for food in self.food.foods:
+                self.mapm[food[0], food[1]] = 2
+
+            
             
             for i in range(len(self.entitys)):
                 for j in range(i + 1, len(self.entitys)):
@@ -102,15 +134,19 @@ class Map:
                        pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
                         pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
                         self.entitys[i].x -= 1
-                        
+
                 self.mapm[self.entitys[i].x, self.entitys[i].y] = 1
-            #print(pfc()-t)
-            #t = pfc()
+
+                if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
+                    del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
+                
+            print(pfc()-t)
+            t = pfc()
 
             self.screen.fill(self.BLACK)
 
-            #print(pfc()-t)
-            #t = pfc()
+            print(pfc()-t)
+            t = pfc()
             
             for entity in self.entitys:
                 entity.view = self.mapm[max(0, entity.x-28):min(self.maptile_width+1, entity.x+28),
@@ -122,6 +158,8 @@ class Map:
                 entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
                 entity.energy_waste()
                 entity.draw()
+                
+            self.food.draw()
 
             self.mapm = torch.zeros(self.maptile_width+1, self.maptile_height+1)
 
@@ -144,7 +182,7 @@ def nearest(map_, point, loc, negative = False, inscope=10):
     if len(coord) > 0:
         squared_sum = torch.square(coord[:, 0]) + torch.square(coord[:, 1])
         index = torch.argmin(squared_sum)
-        isin = [True if torch.min(square_sum**0.5) < inscope else False][0]
+        isin = [True if torch.min(squared_sum**0.5) < inscope else False][0]
         index = torch.tensor([index//map_.shape[0], index%map_.shape[1]])
         angle = torch.round(torch.atan2(index[1], index[0])*(180/torch.pi))
     else :
