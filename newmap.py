@@ -10,6 +10,7 @@ class Entity:
         self.BLOCK_SIZE = size
         self.screen = screen
         self.energy = proto_energy
+        self.energy_g = 0
         
         self.x = x
         self.y = y
@@ -115,6 +116,7 @@ class Map:
             
             for entity in self.entitys:
                 entity.move()
+                entity.energy_g = 0
 
             if len(self.food.foods) < 30:
                 self.food.generate(1)
@@ -139,6 +141,7 @@ class Map:
 
                 if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
                     del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
+                    self.entitys[i].energy_g = 50
                 
             print(pfc()-t)
             t = pfc()
