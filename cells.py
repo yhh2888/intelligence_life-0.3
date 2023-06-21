@@ -10,27 +10,37 @@ class Sender_neuron:
         if type(ntype) == int:
             if ntype == 1:
                 self.energy = 0
+                self.val = self.energy
             elif ntype == 2:
                 self.energy_g = 0
+                self.val = self.energy_g
             elif ntype == 3:
                 self.c_fooddistance = 0
+                self.val = self.c_fooddistance
             elif ntype == 4:
                 self.c_otherdistance = 0
+                self.val = self.c_otherdistance
             elif ntype == 5:
                 self.c_foodangle = 0
+                self.val = self.c_foodangle
             elif ntype == 6:
                 self.c_otherangle = 0
+                self.val = self.c_otherangle
             elif ntype == 7:
                 self.c_borderdistance = 0
+                self.val = self.c_borderdistance
             elif ntype == 8:
                 self.c_iscompetitorin = 0
+                self.val = self.c_iscompetitorin
             elif ntype == 9:
                 self.c_isfoodin = 0
+                self.val = self.c_isfoodin
             elif ntype == 10:
                 self.randompoint = 0
-
+                self.val = self.randompoint
+        
     def execute(self):
-        pass
+        return self.val
 
     
 class Variate_neuron:
@@ -59,7 +69,7 @@ class Variate_neuron:
         self.value = self.proto
 
     def execute(self, value, type_=0):
-        self.variate(value, type_)
+        return self.variate(value, type_)
 
 class Convert_neuron:
     def __init__(self, type_, coeff, degree, const=0):
@@ -95,7 +105,7 @@ class Convert_neuron:
         return self.coeff*((value*self.degree)%2-1)+self.const
 
     def execute(self, value, type_=None):
-        self.func(value)
+        return self.func(value)
 
 class Reinf_decide:
     def __init__(self, crit=1):

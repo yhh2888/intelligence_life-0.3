@@ -60,15 +60,14 @@ class Combiner:
                 
             self.found.append(i+10)
             self.neuron_value[i+10] = self.netc[i].execute()
-
+            
         #밝혀진 변수는 추가하고 연결망 계산하고
         while self.all != self.found:
             for i in range(len(self.gene[2])):
-                if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found:
+                if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found and type(self.netc[i]) != Sender_neuron:
                     self.found.append(i+10+len(self.gene[0]))
-                    self.neuron_value.append(self.netc[i].execute())
-            for networks in range(len(self.gene[2])):
-                if [self.gene[2][2][cellsf] if self.gene[2][2][cellsf]-10 > 0 for cellsf in range(len(self.gene[2][2]))]+self.found == self.found
+                    self.neuron_value[i+10+len(self.gene[0])] = self.netc[i].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))]))
+                    print(self.netc[i].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))])))
                     
                         
 def randgene(start=5, middle=10, prob=0.15):
@@ -109,4 +108,13 @@ if __name__ == '__main__':
     maps = Map(800, 800)
     maps.run()
 
-'''
+'''a.execute(np.array([[maps.entitys[i].energy,
+                     maps.entitys[i].energy_g,
+                     maps.entitys[i].nst_food,
+                     maps.entitys[i].nst_other,
+                     maps.entitys[i].nst_food_angle,
+                     maps.entitys[i].nst_other_angle,
+                     maps.entitys[i].borderdistance,
+                     maps.entitys[i].otherisin,
+                     maps.entitys[i].foodisin,
+                     random.uniform(-1, 1)] for i in range(len(maps.entitys))]).T.tolist())'''
