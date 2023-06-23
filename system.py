@@ -44,7 +44,8 @@ class Combiner:
         self.branch = self.gene[2]
         self.branchpoint = self.gene[3]
         
-    def execute(self, mapinfo):
+    def execute(self, mapinfo, objnum):
+        print(self.gene[2])
         #밝혀진 변수들과 그 값, 그리고 전체 변수의 수 
         self.found = [i for i in range(10)]
         self.all = [i for i in range(len(self.netc)+16)]
@@ -54,15 +55,16 @@ class Combiner:
         for i in range(len(self.gene[0])):
             first_att = dir(self.netc[i])[dir(self.netc[i]).index('__weakref__')+1]
             if first_att in sender_typelist:
-                self.netc[i].info = mapinfo[sender_typelist.index(first_att)]
+                self.netc[i].val = mapinfo[sender_typelist.index(first_att)][objnum]
             else :
-                self.netc[i].info = None
+                self.netc[i].val = 0
                 
             self.found.append(i+10)
             self.neuron_value[i+10] = self.netc[i].execute()
             
         #밝혀진 변수는 추가하고 연결망 계산하고
         while self.all != self.found:
+            print(self.neuron_value)
             for i in range(len(self.gene[2])):
                 if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found and type(self.netc[i]) != Sender_neuron:
                     self.found.append(i+10+len(self.gene[0]))
@@ -117,4 +119,4 @@ if __name__ == '__main__':
                      maps.entitys[i].borderdistance,
                      maps.entitys[i].otherisin,
                      maps.entitys[i].foodisin,
-                     random.uniform(-1, 1)] for i in range(len(maps.entitys))]).T.tolist())'''
+                     random.uniform(-1, 1)] for i in range(len(maps.entitys))]).T.tolist(), 5)'''
