@@ -185,13 +185,13 @@ def nearest(map_, point, loc, negative = False, inscope=10):
     if len(coord) > 0:
         squared_sum = torch.square(coord[:, 0]) + torch.square(coord[:, 1])
         index = torch.argmin(squared_sum)
-        isin = [True if torch.min(squared_sum**0.5) < inscope else False][0]
+        isin = [1 if torch.min(squared_sum**0.5) < inscope else 0][0]
         index = torch.tensor([index//map_.shape[0], index%map_.shape[1]])
         angle = torch.round(torch.atan2(index[1], index[0])*(180/torch.pi))
     else :
-        index = None
-        isin = None
-        angle = None
+        index = torch.tensor([0, 0])
+        isin = 0
+        angle = 0
 
     return index, angle, isin
 

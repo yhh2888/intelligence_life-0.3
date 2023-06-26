@@ -110,13 +110,13 @@ if __name__ == '__main__':
     maps = Map(800, 800)
     maps.run()
 
-'''a.execute(np.array([[maps.entitys[i].energy,
-                     maps.entitys[i].energy_g,
-                     maps.entitys[i].nst_food,
-                     maps.entitys[i].nst_other,
-                     maps.entitys[i].nst_food_angle,
-                     maps.entitys[i].nst_other_angle,
-                     maps.entitys[i].borderdistance,
+'''a.execute(np.array([[maps.entitys[i].energy/300,
+                     maps.entitys[i].energy_g/30,
+                     maps.entitys[i].nst_food/15,
+                     maps.entitys[i].nst_other/15,
+                     maps.entitys[i].nst_food_angle/360,
+                     maps.entitys[i].nst_other_angle/360,
+                     maps.entitys[i].borderdistance/100,
                      maps.entitys[i].otherisin,
                      maps.entitys[i].foodisin,
-                     random.uniform(-1, 1)] for i in range(len(maps.entitys))]).T.tolist(), 5)'''
+                     random.uniform(-1, 1)] for i in range(1)]).T.tolist(), 5)'''
