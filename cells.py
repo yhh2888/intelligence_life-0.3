@@ -69,7 +69,8 @@ class Variate_neuron:
         self.value = self.proto
 
     def execute(self, value, type_=0):
-        return self.variate(value, type_)
+        self.variate(value, type_)
+        return self.value
 
 class Convert_neuron:
     def __init__(self, type_, coeff, degree, const=0):
@@ -117,6 +118,7 @@ class Reinf_decide:
     def isreinf(self):
         if self.value >= self.crit:
             self.reinforce = True
+        
 
 class Movecell:
     def __init__(self):

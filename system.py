@@ -61,15 +61,20 @@ class Combiner:
                 
             self.found.append(i+10)
             self.neuron_value[i+10] = self.netc[i].execute()
+
+            if type(self.neuron_value[i+10]) == torch.Tensor and self.neuron_value[i+10].shape == torch.Size([2]):
+                           self.neuron_value[i+10] = torch.sum(self.neuron_value[i+10])
             
         #밝혀진 변수는 추가하고 연결망 계산하고
-        while self.all != self.found:
+        while self.all[:-6] != self.found:
             print(self.neuron_value)
-            for i in range(len(self.gene[2])):
+            for i in range(len(self.gene[2])-6):
                 if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found:
                     self.found.append(i+10+len(self.gene[0]))
+                    print(self.netc[i+len(self.gene[0])], self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))])))
                     self.neuron_value[i+10+len(self.gene[0])] = self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))]))
-                    print(self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))])))
+                    
+            
                     
                         
 def randgene(start=5, middle=10, prob=0.15):
