@@ -100,7 +100,7 @@ class Convert_neuron:
         return self.coeff*math.atan(value*self.degree)/math.pi+self.const
 
     def root(self, value):
-        return self.coeff*(value**(1/self.degree))+self.const
+        return self.coeff*(abs(value)**(1/self.degree))+self.const
 
     def scoper(self, value):
         return self.coeff*((value*self.degree)%2-1)+self.const

@@ -3,6 +3,7 @@ from cells import *
 from multinet import *
 from base.randtree import randtree
 import numpy as np
+from time import perf_counter as pfc
 
 model = MyNetwork()
 dataset = MyDataset()
@@ -45,10 +46,9 @@ class Combiner:
         self.branchpoint = self.gene[3]
         
     def execute(self, mapinfo, objnum):
-        print(self.gene[2])
         #밝혀진 변수들과 그 값, 그리고 전체 변수의 수 
         self.found = [i for i in range(10)]
-        self.all = [i for i in range(len(self.netc)+16)]
+        self.all = [i for i in range(len(self.netc)+10+4)]
         self.neuron_value = [self.received_param[i] for i in range(10)]+[None for i in range(21)]
 
         #Sender Neuron에 공간정보 전달하기
@@ -67,16 +67,27 @@ class Combiner:
             
         #밝혀진 변수는 추가하고 연결망 계산하고
         while self.all[:-6] != self.found:
-            print(self.neuron_value)
             for i in range(len(self.gene[2])-6):
                 if len(set(self.found)) == len(set(self.found+self.gene[2][i][:-1])) and i+10+len(self.gene[0]) not in self.found:
                     self.found.append(i+10+len(self.gene[0]))
-                    print(self.netc[i+len(self.gene[0])], self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))])))
-                    self.neuron_value[i+10+len(self.gene[0])] = self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1]))]))
-                    
+                    self.neuron_value[i+10+len(self.gene[0])] = self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] \
+                                                                                                            for cellsf in range(len(self.gene[2][i][:-1]))]))   
+        #Movecell
+        for i in range(4):
+            self.neuron_value[-6+i] = sum([self.neuron_value[k] for k in self.gene[2][-6+i][:-1]])
+            self.found.append(len(self.gene[2])+4+len(self.gene[0])+i)
             
-                    
-                        
+        self.netc[-1].left = self.neuron_value[-6]
+        self.netc[-1].right = self.neuron_value[-5]
+        self.netc[-1].up = self.neuron_value[-4]
+        self.netc[-1].down = self.neuron_value[-3]
+
+        #reinf
+        self.netc[-2].isreinf = sum([self.neuron_value[k] for k in self.gene[2][-2][:-1]])
+        self.neuron_value[-2] = self.netc[-2].isreinf
+        self.netc[-2].strength = sum([self.neuron_value[k] for k in self.gene[2][-1][:-1]])
+        self.neuron_value[-1] = self.netc[-2].strength
+        
 def randgene(start=5, middle=10, prob=0.15):
     start_code = [random.randint(1, 10) for i in range(start)]
     middle_code = [random.randint(0, 1) for i in range(middle)]
@@ -124,4 +135,4 @@ if __name__ == '__main__':
                      maps.entitys[i].borderdistance/100,
                      maps.entitys[i].otherisin,
                      maps.entitys[i].foodisin,
-                     random.uniform(-1, 1)] for i in range(1)]).T.tolist(), 5)'''
+                     random.uniform(-1, 1)] for i in range(len(maps.entitys))]).T.tolist(), 5)'''
