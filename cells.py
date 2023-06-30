@@ -59,7 +59,10 @@ class Variate_neuron:
         elif self.variate_pattern[type_] == 2:
             self.value *= num
         elif self.variate_pattern[type_] == 3:
-            self.value /= num
+            try:
+                self.value /= num
+            except ZeroDivisionError as e:
+                self.value = 0
 
     def scope_adjust(self):
         if not self.min <= self.value <= self.max:
@@ -70,6 +73,7 @@ class Variate_neuron:
 
     def execute(self, value, type_=0):
         self.variate(value, type_)
+        self.scope_adjust()
         return self.value
 
 class Convert_neuron:
