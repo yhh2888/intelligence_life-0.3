@@ -4,8 +4,9 @@ from multinet import *
 from base.randtree import randtree
 import numpy as np
 from time import perf_counter as pfc
+import sys
 
-model = MyNetwork()
+model = MyNetwork((60, 60))
 dataset = MyDataset()
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 criterion = torch.nn.MSELoss()
@@ -86,8 +87,20 @@ class Evolution:
         for i in range(number):
             self.combs.append(Combiner(self.randgene()))
         self.maps = Map(800, 800)
-        self.maps.run()
 
+        self.maps.run()
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type==pygame.QUIT:
+                    running = False
+            self.maps.run(self.execute())
+            try:
+                for e in range(len(self.maps.entitys)):
+                    self.combs[e].received_param = model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
+            except Exception as l:
+                print(self.maps.entitys[e].x, self.maps.entitys[e].y, self.maps.entitys[e].view.shape)
+                
     def execute(self):
         self.forward_results = []
         for i in range(len(self.combs)):
@@ -105,6 +118,8 @@ class Evolution:
             self.forward_results.append([self.combs[i].netc[-2].reinforce,
                                          self.combs[i].netc[-2].strength,
                                          torch.argmax(torch.tensor(self.combs[i].neuron_value[-4:])).item()])
+
+        return self.forward_results
 
     def randgene(self, start=5, middle=10, prob=0.15):
         start_code = [random.randint(1, 10) for i in range(start)]
@@ -142,3 +157,4 @@ class Evolution:
 
 if __name__ == '__main__':
     ev = Evolution(50)
+    

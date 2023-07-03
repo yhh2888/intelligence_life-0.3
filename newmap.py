@@ -16,18 +16,27 @@ class Entity:
         self.y = y
         self.viewcode = [random.uniform(0, 2) for i in range(random.randint(3, 5))]
 
-    def move(self):
-        self.x += random.choice([-1, 0, 1])
-        self.y += random.choice([-1, 0, 1])
-        
-        if self.x < 30:
+    def move(self, movedir = None):
+        if movedir == 0:
             self.x += 1
-        elif self.x > self.MAP_WIDTH/self.BLOCK_SIZE-30:
-            self.x -= 1
-        if self.y < 30:
+        elif movedir == 1:
             self.y += 1
-        elif self.y > self.MAP_HEIGHT/self.BLOCK_SIZE-30:
+        elif movedir == 2:
+            self.x -= 1
+        elif movedir == 3:
             self.y -= 1
+        else :
+            self.x += random.choice([-1, 0, 1])
+            self.y += random.choice([-1, 0, 1])
+        
+        if self.x < 0:
+            self.x += 2
+        elif self.x > self.MAP_WIDTH/self.BLOCK_SIZE-1:
+            self.x -= 2
+        if self.y < 0:
+            self.y += 2
+        elif self.y > self.MAP_HEIGHT/self.BLOCK_SIZE-1:
+            self.y -= 2
 
     def draw(self):
         entity_rect = pygame.Rect(self.x*self.BLOCK_SIZE, self.y*self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE)
@@ -60,7 +69,7 @@ class Food_system:
 
     def generate(self, number):
         for i in range(number):
-            self.foods.append([random.randint(31, self.MAP_WIDTH/self.BLOCK_SIZE-31), random.randint(31, self.MAP_HEIGHT/self.BLOCK_SIZE-31)])
+            self.foods.append([random.randint(1, self.MAP_WIDTH/self.BLOCK_SIZE-1), random.randint(1, self.MAP_HEIGHT/self.BLOCK_SIZE-1)])
 
     def draw(self):
         for food in self.foods:
@@ -90,90 +99,83 @@ class Map:
         self.food = Food_system(self.screen, self.MAP_WIDTH, self.MAP_HEIGHT, self.GREEN, self.BLOCK_SIZE)
         
         for _ in range(proto_num):
-            entity_x = random.randint(30, self.MAP_WIDTH/self.BLOCK_SIZE-30)
-            entity_y = random.randint(30, self.MAP_HEIGHT/self.BLOCK_SIZE-30)
+            entity_x = random.randint(0, self.MAP_WIDTH/self.BLOCK_SIZE)
+            entity_y = random.randint(0, self.MAP_HEIGHT/self.BLOCK_SIZE)
             entity = Entity(self.screen, entity_x, entity_y, self.MAP_WIDTH, self.MAP_HEIGHT, self.WHITE, self.BLOCK_SIZE)
             self.entitys.append(entity)
 
         self.maptile_width = int(self.MAP_WIDTH/self.BLOCK_SIZE)
         self.maptile_height = int(self.MAP_HEIGHT/self.BLOCK_SIZE)
         
-        self.mapm = torch.zeros(self.maptile_width+1, self.maptile_height+1)
+        self.mapm = torch.zeros(self.maptile_width+60, self.maptile_height+60)
 
         self.clock = pygame.time.Clock()
+
+        self.clock.tick(60)
         
-    def run(self):
-        running = True
-        while running:
-            a=0
-            t = pfc()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    
-            print(pfc()-t)
-            t = pfc()
-            
-            for entity in self.entitys:
-                entity.move()
-                entity.energy_g = 0
-
-            if len(self.food.foods) < 30:
-                self.food.generate(1)
+    def run(self, movedata=None):
+        a=0
+        #t = pfc()
+        if movedata != None:
+            for e in range(len(self.entitys)):
+                self.entitys[e].move(movedata[e][2])
+                self.entitys[e].energy_g = 0
+        else :
+            for e in range(len(self.entitys)):
+                self.entitys[e].move()
+                self.entitys[e].energy_g = 0
                 
+        if len(self.food.foods) < 30:
+            self.food.generate(1)
 
-            print(pfc()-t)
-            t = pfc()
+        #print(pfc()-t)
+        #t = pfc()
 
-            for food in self.food.foods:
-                self.mapm[food[0], food[1]] = 2
+        for food in self.food.foods:
+            self.mapm[food[0]+30, food[1]+30] = 2
 
-            
-            
-            for i in range(len(self.entitys)):
-                for j in range(i + 1, len(self.entitys)):
-                    if self.entitys[i] != self.entitys[j] and \
-                       pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
-                        pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
-                        self.entitys[i].x -= 1
+        for i in range(len(self.entitys)):
+            for j in range(i + 1, len(self.entitys)):
+                if self.entitys[i] != self.entitys[j] and \
+                    pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
+                    pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
+                    self.entitys[i].x -= 1
 
-                self.mapm[self.entitys[i].x, self.entitys[i].y] = 1
+            self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
 
-                if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
-                    del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
-                    self.entitys[i].energy_g = 50
+            if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
+                del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
+                self.entitys[i].energy_g = 50
                 
-            print(pfc()-t)
-            t = pfc()
+        #print(pfc()-t)
+        #t = pfc()
 
-            self.screen.fill(self.BLACK)
+        self.screen.fill(self.BLACK)
 
-            print(pfc()-t)
-            t = pfc()
+        #print(pfc()-t)
+        #t = pfc()
             
-            for entity in self.entitys:
-                entity.view = self.mapm[max(0, entity.x-28):min(self.maptile_width+1, entity.x+28),
-                                        max(0, entity.y-28):min(self.maptile_height+1, entity.y+28)]
-                entity.nst_other, entity.nst_other_angle, entity.otherisin = \
-                                  nearest(entity.view, 1, torch.tensor([entity.x, entity.y]), inscope=10)
-                entity.nst_food, entity.nst_food_angle, entity.foodisin = \
-                                 nearest(entity.view, 2, torch.tensor([entity.x, entity.y]), inscope=10)
-                entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
-                entity.energy_waste()
-                entity.draw()
+        for entity in self.entitys:
+            entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+60, entity.x+60),
+                                    max(0, entity.y):min(self.maptile_height+60, entity.y+60)]
+            entity.nst_other, entity.nst_other_angle, entity.otherisin = \
+                                nearest(entity.view, 1, torch.tensor([entity.x, entity.y]), inscope=10)
+            entity.nst_food, entity.nst_food_angle, entity.foodisin = \
+                                nearest(entity.view, 2, torch.tensor([entity.x, entity.y]), inscope=10)
+            entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
+            entity.energy_waste()
+            entity.draw()
                 
-            self.food.draw()
+        self.food.draw()
 
-            self.mapm = torch.zeros(self.maptile_width+1, self.maptile_height+1)
+        self.mapm = torch.zeros(self.maptile_width+60, self.maptile_height+60)
 
-            print(pfc()-t, 'done')
+        #print(pfc()-t, 'done')
 
-            pygame.display.flip()
+        pygame.display.flip()
 
-            self.clock.tick(60)
 
-        pygame.quit()
-
+        
 def nearest(map_, point, loc, negative = False, inscope=10):
     if negative == False:
         coord = torch.nonzero(map_== point)-loc
@@ -194,7 +196,3 @@ def nearest(map_, point, loc, negative = False, inscope=10):
         angle = 0
 
     return index, angle, isin
-
-if __name__ == '__main__':
-    maps = Map(800, 800)
-    maps.run()

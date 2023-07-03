@@ -25,10 +25,10 @@ class MyDataset(Dataset):
 
 # 신경망 정의
 class MyNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, size=(11, 11)):
         super(MyNetwork, self).__init__()
-        self.fc1 = nn.Linear(11, 10)
-        self.fc2 = nn.Linear(11 , 1)
+        self.fc1 = nn.Linear(size[0], 10)
+        self.fc2 = nn.Linear(size[1] , 1)
 
     def forward(self, x):
         x = self.fc1(x).permute(0, 2, 1)
