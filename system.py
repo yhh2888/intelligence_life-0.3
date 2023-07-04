@@ -4,7 +4,9 @@ from multinet import *
 from base.randtree import randtree
 import numpy as np
 from time import perf_counter as pfc
-import sys
+import sys, warnings
+
+warnings.filterwarnings("ignore")
 
 model = MyNetwork((60, 60))
 dataset = MyDataset()
@@ -89,17 +91,34 @@ class Evolution:
         self.maps = Map(800, 800)
 
         self.maps.run()
+
+    def play(self):
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     running = False
             self.maps.run(self.execute())
+            
             try:
                 for e in range(len(self.maps.entitys)):
                     self.combs[e].received_param = model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
             except Exception as l:
                 print(self.maps.entitys[e].x, self.maps.entitys[e].y, self.maps.entitys[e].view.shape)
+
+            deleted_num = 0
+            for i in range(len(self.maps.entitys)):
+                if self.maps.entitys[i-deleted_num].energy > 300:
+                    self.maps.entitys[i-deleted_num].energy -= 150
+                    self.maps.entitys.append(Entity(self.maps.screen,
+                                                    self.maps.entitys[i-deleted_num].x, self.maps.entitys[i-deleted_num].y,
+                                                    self.maps.MAP_WIDTH, self.maps.MAP_HEIGHT,
+                                                    self.maps.WHITE, self.maps.BLOCK_SIZE))
+                    self.combs.append(Combiner(self.mutated_child(i)))
+                elif self.maps.entitys[i-deleted_num].energy < 0:
+                    del self.maps.entitys[i-deleted_num]
+                    del self.combs[i-deleted_num]
+                    deleted_num += 1
                 
     def execute(self):
         self.forward_results = []
@@ -149,12 +168,28 @@ class Evolution:
             
         for i in branch:
             roads = []
-            for j in i:
+            for j in i[:-1]:
                 roads.append(random.uniform(-0.8, 0.8))
             branchpoint.append(roads)
                 
         return (start_code, middle_code, branch, branchpoint)
 
+    def mutated_child(self, num, probability=0.01):
+        try:
+            new_gene = self.combs[num].gene
+        except Exception as e:
+            print(len(self.combs))
+
+        for i in range(len(new_gene[0])):
+            if random.random() < probability:
+                new_gene[0][i] = random.randint(1, 10)
+
+        
+        
+        return new_gene
+            
+            
 if __name__ == '__main__':
     ev = Evolution(50)
+    ev.play()
     

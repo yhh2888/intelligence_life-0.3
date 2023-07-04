@@ -16,6 +16,10 @@ class Entity:
         self.y = y
         self.viewcode = [random.uniform(0, 2) for i in range(random.randint(3, 5))]
 
+        self.energy_g, self.nst_food, self.nst_other, self.nst_food_angle, \
+        self.nst_other_angle, self.borderdistance, self.otherisin, self.foodisin = \
+        0, torch.tensor([0, 0]), torch.tensor([0, 0]), 0, 0, 0, 0, 0
+
     def move(self, movedir = None):
         if movedir == 0:
             self.x += 1
@@ -30,13 +34,13 @@ class Entity:
             self.y += random.choice([-1, 0, 1])
         
         if self.x < 0:
-            self.x += 2
+            self.x += 1
         elif self.x > self.MAP_WIDTH/self.BLOCK_SIZE-1:
-            self.x -= 2
+            self.x -= 1
         if self.y < 0:
-            self.y += 2
+            self.y += 1
         elif self.y > self.MAP_HEIGHT/self.BLOCK_SIZE-1:
-            self.y -= 2
+            self.y -= 1
 
     def draw(self):
         entity_rect = pygame.Rect(self.x*self.BLOCK_SIZE, self.y*self.BLOCK_SIZE, self.BLOCK_SIZE, self.BLOCK_SIZE)
@@ -125,7 +129,7 @@ class Map:
                 self.entitys[e].move()
                 self.entitys[e].energy_g = 0
                 
-        if len(self.food.foods) < 30:
+        while len(self.food.foods) < 300:
             self.food.generate(1)
 
         #print(pfc()-t)
@@ -139,13 +143,14 @@ class Map:
                 if self.entitys[i] != self.entitys[j] and \
                     pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
                     pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
-                    self.entitys[i].x -= 1
+                    self.entitys[i].x = 100
 
             self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
 
             if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
                 del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
-                self.entitys[i].energy_g = 50
+                self.entitys[i].energy_g = 10000/len(self.entitys)
+                self.entitys[i].energy += 10000/len(self.entitys)
                 
         #print(pfc()-t)
         #t = pfc()
@@ -159,9 +164,9 @@ class Map:
             entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+60, entity.x+60),
                                     max(0, entity.y):min(self.maptile_height+60, entity.y+60)]
             entity.nst_other, entity.nst_other_angle, entity.otherisin = \
-                                nearest(entity.view, 1, torch.tensor([entity.x, entity.y]), inscope=10)
+                                nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.nst_food, entity.nst_food_angle, entity.foodisin = \
-                                nearest(entity.view, 2, torch.tensor([entity.x, entity.y]), inscope=10)
+                                nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
             entity.energy_waste()
             entity.draw()
