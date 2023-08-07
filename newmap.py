@@ -129,7 +129,7 @@ class Map:
                 self.entitys[e].move()
                 self.entitys[e].energy_g = 0
                 
-        while len(self.food.foods) < 300:
+        while len(self.food.foods) < 1000:
             self.food.generate(1)
 
         #print(pfc()-t)
@@ -143,7 +143,7 @@ class Map:
                 if self.entitys[i] != self.entitys[j] and \
                     pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
                     pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
-                    self.entitys[i].x = 100
+                    self.entitys[i].x = abs(self.entitys[j].x-1)
 
             self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
 

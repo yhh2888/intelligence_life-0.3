@@ -53,7 +53,10 @@ class Combiner:
             if self.gene[0][i] == 3 or self.gene[0][i] == 4:
                 self.found.append(i+10+self.doubled)
                 self.found.append(i+11+self.doubled)
-                self.neuron_value[i+10+self.doubled], self.neuron_value[i+11+self.doubled] = self.netc[i].execute()
+                try:
+                    self.neuron_value[i+10+self.doubled], self.neuron_value[i+11+self.doubled] = self.netc[i].execute()
+                except Exception as e:
+                    print(e, self.netc[i].execute(), i)
                 self.doubled += 1
             else: 
                 self.found.append(i+10+self.doubled)
@@ -62,18 +65,22 @@ class Combiner:
         #밝혀진 변수는 추가하고 연결망 계산하고
         for i in range(len(self.gene[2])-6):
             self.found.append(i+10+len(self.gene[0])+self.doubled)
-            self.neuron_value[i+10+len(self.gene[0])+self.doubled] = self.netc[i+len(self.gene[0])].execute(sum([self.neuron_value[self.gene[2][i][cellsf]] \
-                                                                                                          for cellsf in range(len(self.gene[2][i][:-1]))]))
+            #None오류가 뜨면 그 변수는 총합에서 제거
+            self.neuron_value[i+10+len(self.gene[0])+self.doubled] = self.netc[i+len(self.gene[0])].execute( \
+                sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1])) if self.neuron_value[self.gene[2][i][cellsf]] != None]))
 
         #reinf
-        self.netc[-2].reinforce = bool(torch.round(torch.tensor(sum([self.neuron_value[k] for k in self.gene[2][-6][:-1]])%1)))
+        #None오류가 뜨면 그 변수는 총합에서 제거
+        self.netc[-2].reinforce = bool(torch.round(torch.tensor(sum([self.neuron_value[k] for k in self.gene[2][-6][:-1] if self.neuron_value[k] != None])%1)))
         self.neuron_value[-6] = self.netc[-2].reinforce
-        self.netc[-2].strength = sum([self.neuron_value[k] for k in self.gene[2][-5][:-1]])
+        #None오류가 뜨면 그 변수는 총합에서 제거
+        self.netc[-2].strength = sum([self.neuron_value[k] for k in self.gene[2][-5][:-1] if self.neuron_value[k] != None])
         self.neuron_value[-5] = self.netc[-2].strength
             
         #Movecell
         for i in range(4):
-            self.neuron_value[-4+i] = sum([self.neuron_value[k] for k in self.gene[2][-6+i][:-1]])
+            #None오류가 뜨면 그 변수는 총합에서 제거
+            self.neuron_value[-4+i] = sum([self.neuron_value[k] for k in self.gene[2][-6+i][:-1] if self.neuron_value[k] != None])
             self.found.append(len(self.gene[2])+4+len(self.gene[0])+i)
             
         self.netc[-1].right = self.neuron_value[-4]
@@ -114,7 +121,7 @@ class Evolution:
                                                     self.maps.entitys[i-deleted_num].x, self.maps.entitys[i-deleted_num].y,
                                                     self.maps.MAP_WIDTH, self.maps.MAP_HEIGHT,
                                                     self.maps.WHITE, self.maps.BLOCK_SIZE))
-                    self.combs.append(Combiner(self.mutated_child(i)))
+                    self.combs.append(Combiner(self.mutated_child(i-deleted_num)))
                 elif self.maps.entitys[i-deleted_num].energy < 0:
                     del self.maps.entitys[i-deleted_num]
                     del self.combs[i-deleted_num]
@@ -123,21 +130,26 @@ class Evolution:
     def execute(self):
         self.forward_results = []
         for i in range(len(self.combs)):
-            self.combs[i].execute(np.array([[self.maps.entitys[i].energy/300,
-                     self.maps.entitys[i].energy_g/30,
-                     self.maps.entitys[i].nst_food/15,
-                     self.maps.entitys[i].nst_other/15,
-                     self.maps.entitys[i].nst_food_angle/360,
-                     self.maps.entitys[i].nst_other_angle/360,
-                     self.maps.entitys[i].borderdistance/100,
-                     self.maps.entitys[i].otherisin,
-                     self.maps.entitys[i].foodisin,
-                     random.uniform(-1, 1)]]).T.tolist())
-
-            self.forward_results.append([self.combs[i].netc[-2].reinforce,
+            try:
+                self.combs[i].execute(np.array([[self.maps.entitys[i].energy/300,
+                         self.maps.entitys[i].energy_g/30,
+                         self.maps.entitys[i].nst_food/15,
+                         self.maps.entitys[i].nst_other/15,
+                         self.maps.entitys[i].nst_food_angle/360,
+                         self.maps.entitys[i].nst_other_angle/360,
+                         self.maps.entitys[i].borderdistance/100,
+                         self.maps.entitys[i].otherisin,
+                         self.maps.entitys[i].foodisin,
+                         random.uniform(-1, 1)]]).T.tolist())
+            except Exception as e:
+                print(e, i)
+            try:
+                self.forward_results.append([self.combs[i].netc[-2].reinforce,
                                          self.combs[i].netc[-2].strength,
                                          torch.argmax(torch.tensor(self.combs[i].neuron_value[-4:])).item()])
-
+            except Exception as e:
+                print(e, self.combs[i].neuron_value[-4:])
+                
         return self.forward_results
 
     def randgene(self, start=5, middle=10, prob=0.15):
@@ -178,7 +190,7 @@ class Evolution:
         try:
             new_gene = self.combs[num].gene
         except Exception as e:
-            print(len(self.combs))
+            print(len(self.combs), e)
 
         for i in range(len(new_gene[0])):
             if random.random() < probability:
