@@ -4,7 +4,7 @@ from multinet import *
 from base.randtree import randtree
 import numpy as np
 from time import perf_counter as pfc
-import sys, warnings
+import sys, warnings, traceback
 
 warnings.filterwarnings("ignore")
 
@@ -142,7 +142,7 @@ class Evolution:
                          self.maps.entitys[i].foodisin,
                          random.uniform(-1, 1)]]).T.tolist())
             except Exception as e:
-                print(e, i)
+                print(e, i, traceback.format_exc())
             try:
                 self.forward_results.append([self.combs[i].netc[-2].reinforce,
                                          self.combs[i].netc[-2].strength,
