@@ -1,7 +1,8 @@
 import random, math
 
 sender_typelist = ['energy', 'energy_g',
-                   'c_fooddistance', 'c_otherdistance', 'c_foodangle', 'c_otherangle',
+                   'c_fooddistance_x', 'c_fooddistance_y', 'c_otherdistance_x', 'c_otherdistance_y',
+                   'c_foodangle', 'c_otherangle',
                    'c_borderdistance', 'c_iscompetitorin', 'c_isfoodin', 'randompoint']
                    
 class Sender_neuron:
@@ -15,27 +16,33 @@ class Sender_neuron:
                 self.energy_g = 0
                 self.val = self.energy_g
             elif ntype == 3:
-                self.c_fooddistance = 0
-                self.val = self.c_fooddistance
+                self.c_fooddistance_x = 0
+                self.val = self.c_fooddistance_x
             elif ntype == 4:
-                self.c_otherdistance = 0
-                self.val = self.c_otherdistance
+                self.c_fooddistance_y = 0
+                self.val = self.c_fooddistance_y
             elif ntype == 5:
+                self.c_otherdistance_x = 0
+                self.val = self.c_otherdistance_x
+            elif ntype == 6:
+                self.c_otherdistance_y = 0
+                self.val = self.c_otherdistance_y
+            elif ntype == 7:
                 self.c_foodangle = 0
                 self.val = self.c_foodangle
-            elif ntype == 6:
+            elif ntype == 8:
                 self.c_otherangle = 0
                 self.val = self.c_otherangle
-            elif ntype == 7:
+            elif ntype == 9:
                 self.c_borderdistance = 0
                 self.val = self.c_borderdistance
-            elif ntype == 8:
+            elif ntype == 10:
                 self.c_iscompetitorin = 0
                 self.val = self.c_iscompetitorin
-            elif ntype == 9:
+            elif ntype == 11:
                 self.c_isfoodin = 0
                 self.val = self.c_isfoodin
-            elif ntype == 10:
+            elif ntype == 12:
                 self.randompoint = 0
                 self.val = self.randompoint
         

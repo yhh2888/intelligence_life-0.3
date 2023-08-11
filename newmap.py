@@ -16,9 +16,9 @@ class Entity:
         self.y = y
         self.viewcode = [random.uniform(0, 2) for i in range(random.randint(3, 5))]
 
-        self.energy_g, self.nst_food, self.nst_other, self.nst_food_angle, \
+        self.energy_g, self.nst_foodx, self.nst_foody, self.nst_otherx, self.nst_othery, self.nst_food_angle, \
         self.nst_other_angle, self.borderdistance, self.otherisin, self.foodisin = \
-        0, torch.tensor([0, 0]), torch.tensor([0, 0]), 0, 0, 0, 0, 0
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
     def move(self, movedir = None):
         if movedir == 0:
@@ -163,9 +163,9 @@ class Map:
         for entity in self.entitys:
             entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+60, entity.x+60),
                                     max(0, entity.y):min(self.maptile_height+60, entity.y+60)]
-            entity.nst_other, entity.nst_other_angle, entity.otherisin = \
+            entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = \
                                 nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
-            entity.nst_food, entity.nst_food_angle, entity.foodisin = \
+            entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = \
                                 nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
             entity.energy_waste()
@@ -200,4 +200,4 @@ def nearest(map_, point, loc, negative = False, inscope=10):
         isin = 0
         angle = 0
 
-    return index, angle, isin
+    return index[0], index[1], angle, isin

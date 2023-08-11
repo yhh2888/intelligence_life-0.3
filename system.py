@@ -8,7 +8,6 @@ import sys, warnings, traceback
 
 warnings.filterwarnings("ignore")
 
-model = MyNetwork((60, 60))
 dataset = MyDataset()
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 criterion = torch.nn.MSELoss()
@@ -18,6 +17,8 @@ class Combiner:
         self.received_param = [random.uniform(-1, 1) for i in range(10)]
         self.gene = gene_data
         self.netc = []
+        self.model = MyNetwork((60, 60))
+        
         for i in self.gene[0]:
             c=Sender_neuron(i)
             self.netc.append(c)
@@ -49,18 +50,8 @@ class Combiner:
                 self.netc[i].val = mapinfo[sender_typelist.index(first_att)][0]
             else :
                 self.netc[i].val = 0
-
-            if self.gene[0][i] == 3 or self.gene[0][i] == 4:
-                self.found.append(i+10+self.doubled)
-                self.found.append(i+11+self.doubled)
-                try:
-                    self.neuron_value[i+10+self.doubled], self.neuron_value[i+11+self.doubled] = self.netc[i].execute()
-                except Exception as e:
-                    print(e, self.netc[i].execute(), i)
-                self.doubled += 1
-            else: 
-                self.found.append(i+10+self.doubled)
-                self.neuron_value[i+10+self.doubled] = self.netc[i].execute()
+            self.found.append(i+10)
+            self.neuron_value[i+10] = self.netc[i].execute()
             
         #밝혀진 변수는 추가하고 연결망 계산하고
         for i in range(len(self.gene[2])-6):
@@ -109,7 +100,7 @@ class Evolution:
             
             try:
                 for e in range(len(self.maps.entitys)):
-                    self.combs[e].received_param = model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
+                    self.combs[e].received_param = self.combs[e].model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
             except Exception as l:
                 print(self.maps.entitys[e].x, self.maps.entitys[e].y, self.maps.entitys[e].view.shape)
 
@@ -133,8 +124,10 @@ class Evolution:
             try:
                 self.combs[i].execute(np.array([[self.maps.entitys[i].energy/300,
                          self.maps.entitys[i].energy_g/30,
-                         self.maps.entitys[i].nst_food/15,
-                         self.maps.entitys[i].nst_other/15,
+                         self.maps.entitys[i].nst_foodx/15,
+                         self.maps.entitys[i].nst_foody/15,
+                         self.maps.entitys[i].nst_otherx/15,
+                         self.maps.entitys[i].nst_othery/15,
                          self.maps.entitys[i].nst_food_angle/360,
                          self.maps.entitys[i].nst_other_angle/360,
                          self.maps.entitys[i].borderdistance/100,
@@ -186,18 +179,82 @@ class Evolution:
                 
         return (start_code, middle_code, branch, branchpoint)
 
-    def mutated_child(self, num, probability=0.01):
+    def mutated_child(self, num, probability=0.04):
         try:
             new_gene = self.combs[num].gene
         except Exception as e:
             print(len(self.combs), e)
 
+        #센더 뉴런 돌연변이
         for i in range(len(new_gene[0])):
             if random.random() < probability:
                 new_gene[0][i] = random.randint(1, 10)
 
-        
-        
+        #변화 뉴런 돌연변이 가능성
+        potential0 = [0, random.uniform(-1, 1),
+                                  [random.randint(0, 3) for j in range(random.randint(1, 8))],
+                                   (0, 2)]
+        potential1 = [1, random.randint(0, 4),
+                                  [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
+                                  random.uniform(0.3, 3),
+                                  random.uniform(-1, 1)]
+        #변화 뉴런 돌연변이
+        for i in range(len(new_gene[1])):
+            if random.random() < probability/2:
+                if new_gene[1][i][0] == 0:
+                    new_gene[1][i] = [1, random.randint(0, 4),
+                                      [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
+                                      random.uniform(0.3, 3),
+                                      random.uniform(-1, 1)]
+                elif new_gene[1][i][1] == 1:
+                    new_gene[1][i] = [0, random.uniform(-1, 1),
+                                      [random.randint(0, 3) for j in range(random.randint(1, 8))],
+                                       (0, 2)]
+
+            for j in range(len(new_gene[1][i])):
+                if random.random() < probability:
+                    if new_gene[1][i][0] == 0:
+                        new_gene[1][i][j] = potential0[j]
+                        potential0 = [0, random.uniform(-1, 1),
+                                  [random.randint(0, 3) for j in range(random.randint(1, 8))],
+                                   (0, 2)]
+                    elif new_gene[1][i][0] == 1:
+                        new_gene[1][i][j] = potential1[j]
+                        potential1 = [1, random.randint(0, 4),
+                                  [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
+                                  random.uniform(0.3, 3),
+                                  random.uniform(-1, 1)]
+
+        #가지 추가/변화/삭제
+        for i in range(len(new_gene[2])):
+            if random.random() < probability:
+                _3div_prob = random.random()
+                ea = random.choice([k+1 for k in range(3) for j in range((3-k)**2)])
+                if _3div_prob < 0.33 and len(new_gene[2][i]) <= new_gene[2][i][-1]-ea:
+                    new_gene[2][i] = new_gene[2][i][:-1] + random.sample([k for k in range(new_gene[2][i][-1]) if k not in new_gene[2][i]], ea) \
+                                     + [new_gene[2][i][-1]]
+                    new_gene[3][i] = new_gene[3][i][:-1] + [random.random() for k in range(ea)] + [new_gene[3][i][-1]]
+
+                elif 0.33 <= _3div_prob < 0.67:
+                    for j in range(ea):
+                        try:
+                            new_gene[2][i][random.randint(0, len(new_gene[2][i])-2)] = random.choice([k for k in range(new_gene[2][i][-1]) if k not in new_gene[2][i]])
+                        except Exception as e:
+                            print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
+
+                elif 0.67 <= _3div_prob and len(new_gene[2][i]) >= 2+ea:
+                    for j in range(ea):
+                        try:
+                            pos = random.randint(0, len(new_gene[2][i])-2)
+                        except Exception as e:
+                            print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
+                        del new_gene[2][i][pos]
+                        del new_gene[3][i][pos]
+                        
+                    
+                    
+                
+                       
         return new_gene
             
             
