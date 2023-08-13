@@ -136,7 +136,7 @@ class Evolution:
             else:
                 self.combs.append(Combiner(specify[random.randint(0, len(specify)-1)]))
         self.specify = specify
-        self.maps = Map(800, 800)
+        self.maps = Map(1000, 1000)
 
         self.maps.run()
 
@@ -359,7 +359,7 @@ class Evolution:
         #변화뉴런 추가/삭제
         if random.random() < probability*3:
             _2div_prob = random.random()
-            if _2div_prob < 0.5 and len(new_gene[2]) < 1500:
+            if _2div_prob < 0.7 and len(new_gene[2]) < 1500:
                 _middle_code0 = random.randint(0, 1)
                 if _middle_code0 == 0:
                     new_gene[1].append([0, random.uniform(-1, 1),
@@ -375,7 +375,7 @@ class Evolution:
                 new_gene[3] = new_gene[3][:-6] + [[random.random()]] + new_gene[3][-6:]
                 
                 
-            if _2div_prob >= 0.5 and len(new_gene[2]) > 25:
+            if _2div_prob >= 0.7 and len(new_gene[2]) > 25:
                 del_neuron = random.randint(0, len(new_gene[2])-8)
                 crit_num = new_gene[2][del_neuron][-1]
                 try:

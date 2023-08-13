@@ -93,7 +93,7 @@ class Map:
         
         self.entitys = []
         
-        self.BLOCK_SIZE = 2
+        self.BLOCK_SIZE = 1
 
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -139,7 +139,7 @@ class Map:
                 self.entitys[e].scoretime += 1
                 self.entitys[e].old += 1
                 
-        while len(self.food.foods) < 1500:#-((time.time()-self.timeset)%50)*20:
+        while len(self.food.foods) < 1600:#-((time.time()-self.timeset)%50)*20:
             self.food.generate(1)
 
         #print(pfc()-t)
