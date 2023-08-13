@@ -125,6 +125,7 @@ class Map:
         a=0
         
         #t = pfc()
+        
         if movedata != None:
             for e in range(len(self.entitys)):
                 self.entitys[e].move(movedata[e][2])
@@ -138,29 +139,30 @@ class Map:
                 self.entitys[e].scoretime += 1
                 self.entitys[e].old += 1
                 
-        while len(self.food.foods) < 1800-((time.time()-self.timeset)%50)*20:
+        while len(self.food.foods) < 2600:#-((time.time()-self.timeset)%50)*20:
             self.food.generate(1)
 
         #print(pfc()-t)
-            #t = pfc()
+        #t = pfc()
 
         for food in self.food.foods:
             self.mapm[food[0]+30, food[1]+30] = 2
 
+        entitys_xy = []
         for i in range(len(self.entitys)):
-            for j in range(i + 1, len(self.entitys)):
-                if self.entitys[i] != self.entitys[j] and \
-                    pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
-                    pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
-                    self.entitys[i].x = abs(self.entitys[j].x-1)
+            testing_xy = [self.entitys[i].x, self.entitys[i].y, i]
+            if testing_xy not in entitys_xy:
+                entitys_xy.append(testing_xy)
+            else :
+                self.entitys[i].x = abs(self.entitys[entitys_xy[entitys_xy.index(testing_xy)][2]].x-1)
                     
             self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
 
             if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
                 del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
-                self.entitys[i].energy_g = 10000/(self.entitys[i].scoretime+1)
-                self.entitys[i].energy += 10000/(self.entitys[i].scoretime+1)
-                self.entitys[i].score += 1/self.entitys[i].scoretime*(self.entitys[i].old/10)
+                self.entitys[i].energy_g = 2000/(self.entitys[i].scoretime**0.3+1)
+                self.entitys[i].energy += 2000/(self.entitys[i].scoretime**0.3+1)
+                self.entitys[i].score += 1/self.entitys[i].scoretime**0.3*(self.entitys[i].old/10)
                 self.entitys[i].scoretime = 0
                 
                 
@@ -175,10 +177,10 @@ class Map:
         for entity in self.entitys:
             entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+60, entity.x+60),
                                     max(0, entity.y):min(self.maptile_height+60, entity.y+60)]
-            entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = \
-                                nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
-            entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = \
-                                nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
+            entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = 0, 0, 0, 0
+                                #nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
+            entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = 0, 0, 0, 0
+                                #nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
             entity.energy_waste()
             entity.draw()

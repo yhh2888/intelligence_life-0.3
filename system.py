@@ -18,7 +18,49 @@ class Combiner:
         self.gene = gene_data
         self.netc = []
         self.model = MyNetwork((60, 60))
+
+        #진화 기록
+        if len(self.gene) < 5:
+            self.gene.append([])
         
+        #유전자형 오류 수리(세포와 브랜치의 차이가 6이 아닌 경우)
+        if len(self.gene[2])-len(self.gene[1]) != 6:
+            if len(self.gene[2])-len(self.gene[1]) < 6:
+                for i in range(len(self.gene[1])-len(self.gene[2])+6):
+                    del self.gene[1][-1]
+            elif len(self.gene[2])-len(self.gene[1]) > 6:
+                for i in range(len(self.gene[2])-len(self.gene[1])-6):
+                    del self.gene[2][-1]
+                    del self.gene[3][-1]
+
+        #유전자형 오류 수리(브랜치가 하나 이상의 세포를 건너뛰는 경우)
+        self.gene = list(self.gene)
+        
+        for i in range(len(self.gene[2])-1):
+            if self.gene[2][i][-1]+1 != self.gene[2][i+1][-1]:
+                _prebranch = self.gene[2][i][:-1]
+                self.gene[2] = self.gene[2][:i+1] + [[*[_prebranch if len(_prebranch) > 1 else [0]][0], self.gene[2][i][-1]+1]] + self.gene[2][i+1:]
+                del self.gene[2][-1]
+                self.gene[3] = self.gene[3][:i+1] + [[random.random()]] + self.gene[3][i+1:]
+                del self.gene[3][-1]
+
+        #유전자형 오류 수리(브랜치와 브랜치수치가 서로 일정하지 않은 경우)
+        for i in range(len(self.gene[2])):
+            if len(self.gene[2][i])-len(self.gene[3][i]) != 1:
+                if len(self.gene[2][i])-len(self.gene[3][i]) < 1:
+                    for i in range(min(0, len(self.gene[3][i])-len(self.gene[2][i])+1)):
+                        try:
+                            del self.gene[3][i][-1]
+                        except Exception as e:
+                            print(e)
+                elif len(self.gene[2][i])-len(self.gene[3][i]) > 1:
+                    for i in range(min(0, len(self.gene[2][i])-len(self.gene[3][i])-1)):
+                        self.gene[3][i].append(random.random())
+
+        self.gene = tuple(self.gene)
+
+        self.gene[4].append(self.gene[2])
+                    
         for i in self.gene[0]:
             c=Sender_neuron(i)
             self.netc.append(c)
@@ -37,6 +79,9 @@ class Combiner:
         self.branchpoint = self.gene[3]
         
     def execute(self, mapinfo):
+
+        #fix system 제작:
+        
         #밝혀진 변수들과 그 값, 그리고 전체 변수의 수
         self.found = [i for i in range(10)]
         self.all = [i for i in range(len(self.netc)+10+4)]
@@ -104,15 +149,21 @@ class Evolution:
         running = True
         t = time.time()
         while running:
+            #t =pfc()
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     running = False
+                    
+            
             try:
                 self.maps.run(self.execute())
             except Exception as e:
                 print(e, traceback.format_exc())
                 ev = Evolution(50, best_genes[-10:])
                 ev.play()
+
+            #print(pfc()-t)
+            #t =pfc()
                 
             try:
                 for e in range(len(self.maps.entitys)):
@@ -121,6 +172,10 @@ class Evolution:
                 print(self.maps.entitys[e].x, self.maps.entitys[e].y, self.maps.entitys[e].view.shape)
 
             deleted_num = 0
+
+            #print(pfc()-t)
+            #t =pfc()
+            
             for i in range(len(self.maps.entitys)):
                 if self.maps.entitys[i-deleted_num].energy > 1000:
                     self.maps.entitys[i-deleted_num].energy -= 800
@@ -135,7 +190,10 @@ class Evolution:
                     del self.maps.entitys[i-deleted_num]
                     del self.combs[i-deleted_num]
                     deleted_num += 1
-                
+
+            #print(pfc()-t)
+            #pt =pfc()
+            
             if time.time() - t > 60:
                 best_gene = None
                 best_objscore = 0
@@ -151,6 +209,8 @@ class Evolution:
             if len(self.combs) == 0:
                 ev = Evolution(50, best_genes[-10:])
                 ev.play()
+
+            #print(pfc()-pt, 'here')
                 
     def execute(self):
         self.forward_results = []
@@ -170,6 +230,8 @@ class Evolution:
                          random.uniform(-1, 1)]]).T.tolist())
             except Exception as e:
                 print(e, i, traceback.format_exc())
+                ev = Evolution(50, best_genes[-10:])
+                ev.play()
             try:
                 self.forward_results.append([self.combs[i].netc[-2].reinforce,
                                          self.combs[i].netc[-2].strength,
@@ -211,9 +273,9 @@ class Evolution:
                 roads.append(random.uniform(-0.8, 0.8))
             branchpoint.append(roads)
                 
-        return (start_code, middle_code, branch, branchpoint)
+        return (start_code, middle_code, branch, branchpoint, [])
 
-    def mutated_child(self, num, probability=0.05):
+    def mutated_child(self, num, probability=0.1):
         new_gene = list(self.combs[num].gene)
         prepare_gene = self.combs[num].gene
 
@@ -314,9 +376,12 @@ class Evolution:
             if _2div_prob >= 0.5 and len(new_gene[2]) > 25:
                 del_neuron = random.randint(0, len(new_gene[2])-8)
                 crit_num = new_gene[2][del_neuron][-1]
-                del new_gene[1][del_neuron]
-                del new_gene[2][del_neuron]
-                del new_gene[3][del_neuron]
+                try:
+                    del new_gene[1][del_neuron]
+                    del new_gene[2][del_neuron]
+                    del new_gene[3][del_neuron]
+                except Exception as e:
+                    print(traceback.format_exc())
                 for k in range(len(new_gene[2])):
                     deleted_instant = 0
                     for l in range(len(new_gene[2][k])):
@@ -327,16 +392,10 @@ class Evolution:
                                 del new_gene[2][k][l-deleted_instant]
                                 del new_gene[3][k][l-deleted_instant]
                             except Exception as e:
+                                print(traceback.format_exc())
                                 return prepare_gene
                             deleted_instant += 1
-        
-        
-        if len(new_gene[1])-len(new_gene[2]) != -6:
-            _2div_prob = random.random()
-            if _2div_prob < 0.9:
-                return prepare_gene
-            else :
-                return self.randgene(middle=len(new_gene[1]))
+            
         print(len(new_gene[1]), len(new_gene[2]), 'after')
     
         return tuple(new_gene)
