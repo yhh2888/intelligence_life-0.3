@@ -200,7 +200,7 @@ class Evolution:
                 for i in range(len(self.maps.entitys)):
                     if self.maps.entitys[i].score > best_objscore:
                         best_objscore = self.maps.entitys[i].score
-                        best_gene = self.combs[i].gene
+                        best_gene = self.combs[i].gene[0:4]
                 best_genes.append(best_gene)
                 with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
                     json.dump(best_genes, f, indent=1)
