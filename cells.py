@@ -1,4 +1,5 @@
 import random, math
+import numpy as np
 
 sender_typelist = ['energy', 'energy_g',
                    'c_fooddistance_x', 'c_fooddistance_y', 'c_otherdistance_x', 'c_otherdistance_y',
@@ -71,17 +72,12 @@ class Variate_neuron:
             except ZeroDivisionError as e:
                 self.value = 0
 
-    def scope_adjust(self):
-        if not self.min <= self.value <= self.max:
-            self.value = self.min+self.value%(self.max-self.min)
-
     def reset(self):
         self.value = self.proto
 
     def execute(self, value, type_=0):
         self.variate(value, type_)
-        self.scope_adjust()
-        return self.value
+        return np.tanh(self.value*0.5)
 
 class Convert_neuron:
     def __init__(self, type_, coeff, degree, const=0):
@@ -117,7 +113,7 @@ class Convert_neuron:
         return self.coeff*((value*self.degree)%2-1)+self.const
 
     def execute(self, value, type_=None):
-        return self.func(value)
+        return np.tanh(self.func(value))
 
 class Reinf_decide:
     def __init__(self, crit=1):

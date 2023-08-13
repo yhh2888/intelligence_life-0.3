@@ -4,7 +4,7 @@ from multinet import *
 from base.randtree import randtree
 import numpy as np
 from time import perf_counter as pfc
-import sys, warnings, traceback
+import sys, warnings, traceback, time, json
 
 warnings.filterwarnings("ignore")
 
@@ -41,7 +41,6 @@ class Combiner:
         self.found = [i for i in range(10)]
         self.all = [i for i in range(len(self.netc)+10+4)]
         self.neuron_value = [self.received_param[i] for i in range(10)]+[None for i in range(len(self.gene[0])+len(self.gene[1])+6)]
-        self.doubled = 0
         
         #Sender Neuron에 공간정보 전달하기
         for i in range(len(self.gene[0])):
@@ -55,9 +54,9 @@ class Combiner:
             
         #밝혀진 변수는 추가하고 연결망 계산하고
         for i in range(len(self.gene[2])-6):
-            self.found.append(i+10+len(self.gene[0])+self.doubled)
+            self.found.append(i+10+len(self.gene[0]))
             #None오류가 뜨면 그 변수는 총합에서 제거
-            self.neuron_value[i+10+len(self.gene[0])+self.doubled] = self.netc[i+len(self.gene[0])].execute( \
+            self.neuron_value[i+10+len(self.gene[0])] = self.netc[i+len(self.gene[0])].execute( \
                 sum([self.neuron_value[self.gene[2][i][cellsf]] for cellsf in range(len(self.gene[2][i][:-1])) if self.neuron_value[self.gene[2][i][cellsf]] != None]))
 
         #reinf
@@ -79,25 +78,42 @@ class Combiner:
         self.netc[-1].left = self.neuron_value[-2]
         self.netc[-1].up = self.neuron_value[-1]
 
-        
+        return (self.netc[-1].right, self.netc[-1].down, self.netc[-1].left, self.netc[-1].up)
 
 class Evolution:
-    def __init__(self, number):
+    def __init__(self, number, specify=False):
         self.combs = []
         for i in range(number):
-            self.combs.append(Combiner(self.randgene()))
+            if specify==False:
+                self.combs.append(Combiner(self.randgene()))
+            else:
+                self.combs.append(Combiner(specify[random.randint(0, len(specify)-1)]))
+        self.specify = specify
         self.maps = Map(800, 800)
 
         self.maps.run()
 
     def play(self):
+        global ev
+        
+        best_genes = []
+        if self.specify != False:
+            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+                best_genes = json.load(f)
+            
         running = True
+        t = time.time()
         while running:
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     running = False
-            self.maps.run(self.execute())
-            
+            try:
+                self.maps.run(self.execute())
+            except Exception as e:
+                print(e, traceback.format_exc())
+                ev = Evolution(50, best_genes[-10:])
+                ev.play()
+                
             try:
                 for e in range(len(self.maps.entitys)):
                     self.combs[e].received_param = self.combs[e].model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
@@ -106,17 +122,35 @@ class Evolution:
 
             deleted_num = 0
             for i in range(len(self.maps.entitys)):
-                if self.maps.entitys[i-deleted_num].energy > 300:
-                    self.maps.entitys[i-deleted_num].energy -= 150
+                if self.maps.entitys[i-deleted_num].energy > 1000:
+                    self.maps.entitys[i-deleted_num].energy -= 800
                     self.maps.entitys.append(Entity(self.maps.screen,
                                                     self.maps.entitys[i-deleted_num].x, self.maps.entitys[i-deleted_num].y,
                                                     self.maps.MAP_WIDTH, self.maps.MAP_HEIGHT,
                                                     self.maps.WHITE, self.maps.BLOCK_SIZE))
                     self.combs.append(Combiner(self.mutated_child(i-deleted_num)))
+                    ab = [self.combs[-1].gene[1], self.combs[-1].gene[2]]
+
                 elif self.maps.entitys[i-deleted_num].energy < 0:
                     del self.maps.entitys[i-deleted_num]
                     del self.combs[i-deleted_num]
                     deleted_num += 1
+                
+            if time.time() - t > 60:
+                best_gene = None
+                best_objscore = 0
+                for i in range(len(self.maps.entitys)):
+                    if self.maps.entitys[i].score > best_objscore:
+                        best_objscore = self.maps.entitys[i].score
+                        best_gene = self.combs[i].gene
+                best_genes.append(best_gene)
+                with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
+                    json.dump(best_genes, f, indent=1)
+                t = time.time()
+
+            if len(self.combs) == 0:
+                ev = Evolution(50, best_genes[-10:])
+                ev.play()
                 
     def execute(self):
         self.forward_results = []
@@ -145,7 +179,7 @@ class Evolution:
                 
         return self.forward_results
 
-    def randgene(self, start=5, middle=10, prob=0.15):
+    def randgene(self, start=5, middle=20, prob=0.15):
         start_code = [random.randint(1, 10) for i in range(start)]
         for i in start_code:
             if i == 3 or i == 4:
@@ -179,11 +213,9 @@ class Evolution:
                 
         return (start_code, middle_code, branch, branchpoint)
 
-    def mutated_child(self, num, probability=0.04):
-        try:
-            new_gene = self.combs[num].gene
-        except Exception as e:
-            print(len(self.combs), e)
+    def mutated_child(self, num, probability=0.05):
+        new_gene = list(self.combs[num].gene)
+        prepare_gene = self.combs[num].gene
 
         #센더 뉴런 돌연변이
         for i in range(len(new_gene[0])):
@@ -224,41 +256,95 @@ class Evolution:
                                   [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
                                   random.uniform(0.3, 3),
                                   random.uniform(-1, 1)]
+            
 
         #가지 추가/변화/삭제
-        for i in range(len(new_gene[2])):
-            if random.random() < probability:
-                _3div_prob = random.random()
-                ea = random.choice([k+1 for k in range(3) for j in range((3-k)**2)])
-                if _3div_prob < 0.33 and len(new_gene[2][i]) <= new_gene[2][i][-1]-ea:
-                    new_gene[2][i] = new_gene[2][i][:-1] + random.sample([k for k in range(new_gene[2][i][-1]) if k not in new_gene[2][i]], ea) \
-                                     + [new_gene[2][i][-1]]
-                    new_gene[3][i] = new_gene[3][i][:-1] + [random.random() for k in range(ea)] + [new_gene[3][i][-1]]
-
-                elif 0.33 <= _3div_prob < 0.67:
-                    for j in range(ea):
+        try:
+            for i in range(len(new_gene[2])):
+                if random.random() < probability:
+                    _3div_prob = random.random()
+                    ea = random.choice([k+1 for k in range(3) for j in range((3-k)**2)])
+                    if _3div_prob < 0.33 and len(new_gene[2][i]) <= new_gene[2][i][-1]-ea-1:
                         try:
-                            new_gene[2][i][random.randint(0, len(new_gene[2][i])-2)] = random.choice([k for k in range(new_gene[2][i][-1]) if k not in new_gene[2][i]])
+                            new_gene[2][i] = new_gene[2][i][:-1] + random.sample([k for k in range(new_gene[2][i][-1]) if (k not in new_gene[2][i] and k < new_gene[2][-1][-1]-5)], ea) \
+                                         + [new_gene[2][i][-1]]
                         except Exception as e:
-                            print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
+                            print(traceback.format_exc(), [k for k in range(new_gene[2][i][-1]) if (k not in new_gene[2][i] and k < new_gene[2][-1][-1]-5)])
+                        new_gene[3][i] = new_gene[3][i][:-1] + [random.random() for k in range(ea)] + [new_gene[3][i][-1]]
 
-                elif 0.67 <= _3div_prob and len(new_gene[2][i]) >= 2+ea:
-                    for j in range(ea):
-                        try:
-                            pos = random.randint(0, len(new_gene[2][i])-2)
-                        except Exception as e:
-                            print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
-                        del new_gene[2][i][pos]
-                        del new_gene[3][i][pos]
+                    elif 0.33 <= _3div_prob < 0.67 and len(new_gene[2][i]) < new_gene[2][i][-1]:
+                        for j in range(ea):
+                            try:
+                                new_gene[2][i][random.randint(0, len(new_gene[2][i])-2)] = random.choice([k for k in range(new_gene[2][i][-1]) if (k not in new_gene[2][i] and k < new_gene[2][-1][-1]-5)])
+                            except Exception as e:
+                                print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
+
+                    elif 0.67 <= _3div_prob and len(new_gene[2][i]) >= 2+ea:
+                        for j in range(ea):
+                            try:
+                                pos = random.randint(0, len(new_gene[2][i])-2)
+                            except Exception as e:
+                                print(new_gene[2][i], new_gene[3][i], traceback.format_exc())
+                            del new_gene[2][i][pos]
+                            del new_gene[3][i][pos]
+                            
+        except Exception as e:
+            return prepare_gene
                         
-                    
-                    
+
+        #변화뉴런 추가/삭제
+        if random.random() < probability*3:
+            _2div_prob = random.random()
+            if _2div_prob < 0.5 and len(new_gene[2]) < 500:
+                _middle_code0 = random.randint(0, 1)
+                if _middle_code0 == 0:
+                    new_gene[1].append([0, random.uniform(-1, 1),
+                                  [random.randint(0, 3) for j in range(random.randint(1, 8))],
+                                   (0, 2)])
+                elif _middle_code0 == 1:
+                    new_gene[1].append([1, random.randint(0, 4),
+                                  [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
+                                  random.uniform(0.3, 3),
+                                  random.uniform(-1, 1)])
                 
-                       
-        return new_gene
+                new_gene[2] = new_gene[2][:-6] + [[0, new_gene[2][-6][-1]]] + [k[:-1]+[k[-1]+1] for k in new_gene[2][-6:]]
+                new_gene[3] = new_gene[3][:-6] + [[random.random()]] + new_gene[3][-6:]
+                
+                
+            if _2div_prob >= 0.5 and len(new_gene[2]) > 25:
+                del_neuron = random.randint(0, len(new_gene[2])-8)
+                crit_num = new_gene[2][del_neuron][-1]
+                del new_gene[1][del_neuron]
+                del new_gene[2][del_neuron]
+                del new_gene[3][del_neuron]
+                for k in range(len(new_gene[2])):
+                    deleted_instant = 0
+                    for l in range(len(new_gene[2][k])):
+                        if new_gene[2][k][l-deleted_instant] > crit_num:
+                            new_gene[2][k][l-deleted_instant] -= 1
+                        elif new_gene[2][k][l-deleted_instant] == crit_num:
+                            try:
+                                del new_gene[2][k][l-deleted_instant]
+                                del new_gene[3][k][l-deleted_instant]
+                            except Exception as e:
+                                return prepare_gene
+                            deleted_instant += 1
+        
+        
+        if len(new_gene[1])-len(new_gene[2]) != -6:
+            _2div_prob = random.random()
+            if _2div_prob < 0.9:
+                return prepare_gene
+            else :
+                return self.randgene(middle=len(new_gene[1]))
+        print(len(new_gene[1]), len(new_gene[2]), 'after')
+    
+        return tuple(new_gene)
             
             
 if __name__ == '__main__':
-    ev = Evolution(50)
+    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+        best_genes = json.load(f)
+    ev = Evolution(50, best_genes[-10:])
     ev.play()
     

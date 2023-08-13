@@ -1,4 +1,4 @@
-import pygame, random, math, torch
+import pygame, random, math, torch, time
 from time import perf_counter as pfc
 
 class Entity:
@@ -11,6 +11,9 @@ class Entity:
         self.screen = screen
         self.energy = proto_energy
         self.energy_g = 0
+        self.score = 0
+        self.scoretime = 0
+        self.old = 0
         
         self.x = x
         self.y = y
@@ -90,7 +93,7 @@ class Map:
         
         self.entitys = []
         
-        self.BLOCK_SIZE = 4
+        self.BLOCK_SIZE = 2
 
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -99,6 +102,7 @@ class Map:
         self.screen = pygame.display.set_mode((self.MAP_WIDTH, self.MAP_HEIGHT))
         pygame.display.set_caption("Entity Movement")
 
+        self.timeset = time.time()%200
         
         self.food = Food_system(self.screen, self.MAP_WIDTH, self.MAP_HEIGHT, self.GREEN, self.BLOCK_SIZE)
         
@@ -119,21 +123,26 @@ class Map:
         
     def run(self, movedata=None):
         a=0
+        
         #t = pfc()
         if movedata != None:
             for e in range(len(self.entitys)):
                 self.entitys[e].move(movedata[e][2])
                 self.entitys[e].energy_g = 0
+                self.entitys[e].scoretime += 1
+                self.entitys[e].old += 1
         else :
             for e in range(len(self.entitys)):
                 self.entitys[e].move()
                 self.entitys[e].energy_g = 0
+                self.entitys[e].scoretime += 1
+                self.entitys[e].old += 1
                 
-        while len(self.food.foods) < 1000:
+        while len(self.food.foods) < 1800-((time.time()-self.timeset)%50)*20:
             self.food.generate(1)
 
         #print(pfc()-t)
-        #t = pfc()
+            #t = pfc()
 
         for food in self.food.foods:
             self.mapm[food[0]+30, food[1]+30] = 2
@@ -144,13 +153,16 @@ class Map:
                     pygame.Rect(self.entitys[i].x, self.entitys[i].y, self.BLOCK_SIZE, self.BLOCK_SIZE).colliderect(
                     pygame.Rect(self.entitys[j].x, self.entitys[j].y, self.BLOCK_SIZE, self.BLOCK_SIZE)):
                     self.entitys[i].x = abs(self.entitys[j].x-1)
-
+                    
             self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
 
             if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
                 del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
-                self.entitys[i].energy_g = 10000/len(self.entitys)
-                self.entitys[i].energy += 10000/len(self.entitys)
+                self.entitys[i].energy_g = 10000/(self.entitys[i].scoretime+1)
+                self.entitys[i].energy += 10000/(self.entitys[i].scoretime+1)
+                self.entitys[i].score += 1/self.entitys[i].scoretime*(self.entitys[i].old/10)
+                self.entitys[i].scoretime = 0
+                
                 
         #print(pfc()-t)
         #t = pfc()
