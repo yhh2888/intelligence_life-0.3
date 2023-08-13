@@ -19,6 +19,8 @@ class Combiner:
         self.netc = []
         self.model = MyNetwork((60, 60))
 
+        self.gene = list(self.gene)
+        
         #진화 기록
         if len(self.gene) < 5:
             self.gene.append([])
@@ -34,7 +36,7 @@ class Combiner:
                     del self.gene[3][-1]
 
         #유전자형 오류 수리(브랜치가 하나 이상의 세포를 건너뛰는 경우)
-        self.gene = list(self.gene)
+        
         
         for i in range(len(self.gene[2])-1):
             if self.gene[2][i][-1]+1 != self.gene[2][i+1][-1]:
@@ -194,7 +196,7 @@ class Evolution:
             #print(pfc()-t)
             #pt =pfc()
             
-            if time.time() - t > 60:
+            if time.time() - t > 30:
                 best_gene = None
                 best_objscore = 0
                 for i in range(len(self.maps.entitys)):
@@ -275,7 +277,7 @@ class Evolution:
                 
         return (start_code, middle_code, branch, branchpoint, [])
 
-    def mutated_child(self, num, probability=0.1):
+    def mutated_child(self, num, probability=0.05):
         new_gene = list(self.combs[num].gene)
         prepare_gene = self.combs[num].gene
 
@@ -357,7 +359,7 @@ class Evolution:
         #변화뉴런 추가/삭제
         if random.random() < probability*3:
             _2div_prob = random.random()
-            if _2div_prob < 0.5 and len(new_gene[2]) < 500:
+            if _2div_prob < 0.5 and len(new_gene[2]) < 1500:
                 _middle_code0 = random.randint(0, 1)
                 if _middle_code0 == 0:
                     new_gene[1].append([0, random.uniform(-1, 1),

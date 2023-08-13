@@ -139,7 +139,7 @@ class Map:
                 self.entitys[e].scoretime += 1
                 self.entitys[e].old += 1
                 
-        while len(self.food.foods) < 2600:#-((time.time()-self.timeset)%50)*20:
+        while len(self.food.foods) < 1500:#-((time.time()-self.timeset)%50)*20:
             self.food.generate(1)
 
         #print(pfc()-t)
