@@ -12,12 +12,36 @@ dataset = MyDataset()
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 criterion = torch.nn.MSELoss()
 
+def execute(model, datas, num_epochs=1, strength=1):
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.005*strength)
+    
+    # 학습 반복
+    for epoch in range(num_epochs):
+        for data, labels in dataloader:
+            # 입력과 라벨을 GPU로 이동 (GPU 사용 시)
+            # data = data.to(device)
+            # labels = labels.to(device)
+
+            # 순전파
+            outputs = model(data)
+
+            # 손실 계산
+            loss = criterion(outputs, labels)
+            # 역전파 및 가중치 업데이트
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
 class Combiner:
     def __init__(self, gene_data):
         self.received_param = [random.uniform(-1, 1) for i in range(10)]
         self.gene = gene_data
         self.netc = []
         self.model = MyNetwork((60, 60))
+        self.view = None
+
+        self.memoryv = []
+        self.memoryp = []
 
         self.gene = list(self.gene)
         
@@ -113,6 +137,17 @@ class Combiner:
         #None오류가 뜨면 그 변수는 총합에서 제거
         self.netc[-2].strength = sum([self.neuron_value[k] for k in self.gene[2][-5][:-1] if self.neuron_value[k] != None])
         self.neuron_value[-5] = self.netc[-2].strength
+
+        if self.netc[-2].strength > 0.5:
+            self.memoryv.append(self.view)
+            self.memoryp.append(self.received_param)
+        if self.netc[-2].reinforce > 0.9:
+            self.l_data = torch.tensor(self.memoryv)
+            self.l_labels = torch.tensor(self.memoryp)
+
+            dataset = MyDataset(self.memoryv, self.memoryp)
+            execute(self.model, DataLoader(dataset))
+            
             
         #Movecell
         for i in range(4):
@@ -136,7 +171,7 @@ class Evolution:
             else:
                 self.combs.append(Combiner(specify[random.randint(0, len(specify)-1)]))
         self.specify = specify
-        self.maps = Map(1000, 1000)
+        self.maps = Map(700, 700)
 
         self.maps.run()
 
@@ -145,7 +180,7 @@ class Evolution:
         
         best_genes = []
         if self.specify != False:
-            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+            with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
                 best_genes = json.load(f)
             
         running = True
@@ -170,6 +205,7 @@ class Evolution:
             try:
                 for e in range(len(self.maps.entitys)):
                     self.combs[e].received_param = self.combs[e].model(self.maps.entitys[e].view.unsqueeze(0)).tolist()[0][0]
+                    
             except Exception as l:
                 print(self.maps.entitys[e].x, self.maps.entitys[e].y, self.maps.entitys[e].view.shape)
 
@@ -179,6 +215,9 @@ class Evolution:
             #t =pfc()
             
             for i in range(len(self.maps.entitys)):
+
+                self.combs[e].view = self.maps.entitys[e].view.unsqueeze(0)
+                
                 if self.maps.entitys[i-deleted_num].energy > 1000:
                     self.maps.entitys[i-deleted_num].energy -= 800
                     self.maps.entitys.append(Entity(self.maps.screen,
@@ -204,7 +243,7 @@ class Evolution:
                         best_objscore = self.maps.entitys[i].score
                         best_gene = self.combs[i].gene[0:4]
                 best_genes.append(best_gene)
-                with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
+                with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json', 'w') as f:
                     json.dump(best_genes, f, indent=1)
                 t = time.time()
 
@@ -404,7 +443,7 @@ class Evolution:
             
             
 if __name__ == '__main__':
-    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
         best_genes = json.load(f)
     ev = Evolution(50, best_genes[-10:])
     ev.play()

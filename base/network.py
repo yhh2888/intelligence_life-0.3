@@ -48,7 +48,7 @@ class NeuralNetwork(nn.Module):
         self.cuda = cuda
         
         if gencode == []:
-            self.gencode = randtree(node_num).generate_random_tree(prob = neural_line_prob)
+            self.gencode = randtree(node_num).generate_random_tree(prob = neural_line_prob, sequence_mode=True)
         else :
             self.gencode = gencode
 
@@ -234,8 +234,10 @@ model_dist02 = NeuralNetwork([11*11, 32, 32, 2])
 model_dist02.base_set('distances02')
 model_dist02.roll(30, 10)'''
 
+paths = r'C:\Users\KDCA\Desktop\IL'
+
 #절약 모델 제작중
-def savingmodel(input_len=None, last=6):
+def savingmodel(input_len=None, last=6, paths=paths):
     tensors = []
                               
     with open(paths+'\\\\'+'mobs_data.json') as f:
