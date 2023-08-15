@@ -1,5 +1,6 @@
 import pygame, random, math, torch, time
 from time import perf_counter as pfc
+import keyboard
 
 class Entity:
     def __init__(self, screen, x, y, map_width, map_height, color, size, proto_energy=150):
@@ -115,16 +116,18 @@ class Map:
         self.maptile_width = int(self.MAP_WIDTH/self.BLOCK_SIZE)
         self.maptile_height = int(self.MAP_HEIGHT/self.BLOCK_SIZE)
         
-        self.mapm = torch.zeros(self.maptile_width+60, self.maptile_height+60)
+        self.mapm = torch.zeros(self.maptile_width+20, self.maptile_height+20)
 
-        self.clock = pygame.time.Clock()
-
-        self.clock.tick(60)
+        self.food_amount = 3500
         
     def run(self, movedata=None):
         a=0
         
         #t = pfc()
+        if keyboard.is_pressed('+'):
+            self.food_amount += 15
+        if keyboard.is_pressed('-'):
+            self.food_amount -= 15
         
         if movedata != None:
             for e in range(len(self.entitys)):
@@ -139,14 +142,16 @@ class Map:
                 self.entitys[e].scoretime += 1
                 self.entitys[e].old += 1
                 
-        while len(self.food.foods) < 1500:#-((time.time()-self.timeset)%50)*20:
+        while len(self.food.foods) < self.food_amount:#-((time.time()-self.timeset)%50)*20:
             self.food.generate(1)
+        while len(self.food.foods) > self.food_amount:
+            del self.food.foods[-1]
 
         #print(pfc()-t)
         #t = pfc()
 
         for food in self.food.foods:
-            self.mapm[food[0]+30, food[1]+30] = 2
+            self.mapm[food[0]+10, food[1]+10] = 2
 
         entitys_xy = []
         for i in range(len(self.entitys)):
@@ -156,12 +161,12 @@ class Map:
             else :
                 self.entitys[i].x = abs(self.entitys[entitys_xy[entitys_xy.index(testing_xy)][2]].x-1)
                     
-            self.mapm[self.entitys[i].x+30, self.entitys[i].y+30] = 1
+            self.mapm[self.entitys[i].x+10, self.entitys[i].y+10] = 1
 
             if [self.entitys[i].x, self.entitys[i].y] in self.food.foods:
                 del self.food.foods[self.food.foods.index([self.entitys[i].x, self.entitys[i].y])]
-                self.entitys[i].energy_g = 2000/(self.entitys[i].scoretime**0.3+1)
-                self.entitys[i].energy += 2000/(self.entitys[i].scoretime**0.3+1)
+                self.entitys[i].energy_g = 2000/(self.entitys[i].scoretime**0.8+1)
+                self.entitys[i].energy += 2000/(self.entitys[i].scoretime**0.8+1)
                 self.entitys[i].score += 1/self.entitys[i].scoretime**0.3*(self.entitys[i].old/10)
                 self.entitys[i].scoretime = 0
                 
@@ -175,8 +180,8 @@ class Map:
         #t = pfc()
             
         for entity in self.entitys:
-            entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+60, entity.x+60),
-                                    max(0, entity.y):min(self.maptile_height+60, entity.y+60)]
+            entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+20, entity.x+20),
+                                    max(0, entity.y):min(self.maptile_height+20, entity.y+20)]
             entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = 0, 0, 0, 0
                                 #nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = 0, 0, 0, 0
@@ -187,7 +192,7 @@ class Map:
                 
         self.food.draw()
 
-        self.mapm = torch.zeros(self.maptile_width+60, self.maptile_height+60)
+        self.mapm = torch.zeros(self.maptile_width+20, self.maptile_height+20)
 
         #print(pfc()-t, 'done')
 

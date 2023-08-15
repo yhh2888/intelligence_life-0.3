@@ -5,40 +5,39 @@ from torch.utils.data import Dataset, DataLoader
 multiplier = torch.randint(0, 100, size=(11, 11))/1210
 
 def regularize(matrix):
-    return torch.sum((torch.randint(-100, 100, size=(60, 60))/100)*matrix)/1210
+    return torch.sum((torch.randint(-100, 100, size=(20, 20))/100)*matrix)/1210
 
 
 # 커스텀 데이터셋 클래스 정의
 class MyDataset(Dataset):
     def __init__(self, data=None, labels=None):
-        # 데이터 초기화
-        if data == None:
-            self.data = torch.tensor([[[random.random() for i in range(60)] for j in range(60)] for k in range(50)])
-        else :
+        if data is None:
+            self.data = torch.rand((50, 20, 20))  # 수정: 랜덤한 데이터 생성
+        else:
             self.data = data
-        if labels == None:
-            self.labels = torch.tensor([[[regularize(self.data[i]) for i in range(10)]] for j in range(50)])
-        else :
+        if labels is None:
+            self.labels = torch.rand((50, 1, 10))  # 수정: 랜덤한 레이블 생성
+        else:
             self.labels = labels
 
     def __len__(self):
-        # 데이터셋의 총 샘플 수 반환
         return len(self.data)
 
     def __getitem__(self, idx):
-        # 주어진 인덱스에 해당하는 데이터와 라벨 반환
         return self.data[idx], self.labels[idx]
 
 # 신경망 정의
 class MyNetwork(nn.Module):
-    def __init__(self, size=(60, 60)):
+    def __init__(self, input_size=20):
         super(MyNetwork, self).__init__()
-        self.fc1 = nn.Linear(size[0], 10)
-        self.fc2 = nn.Linear(size[1] , 1)
+        self.fc1 = nn.Linear(input_size, 20)  # 수정: 입력 크기를 매개변수로 받음
+        self.fc2 = nn.Linear(20, 10)
+        self.fc3 = nn.Linear(10, 10) 
 
     def forward(self, x):
-        x = self.fc1(x).permute(0, 2, 1)
-        x = self.fc2(x).permute(0, 2, 1)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
         return x
 
 if __name__ == '__main__':         
