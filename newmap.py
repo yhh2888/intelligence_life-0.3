@@ -94,7 +94,7 @@ class Map:
         
         self.entitys = []
         
-        self.BLOCK_SIZE = 2
+        self.BLOCK_SIZE = 4
 
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
@@ -118,7 +118,7 @@ class Map:
         
         self.mapm = torch.zeros(self.maptile_width+20, self.maptile_height+20)
 
-        self.food_amount = 3500
+        self.food_amount = 2500
         
     def run(self, movedata=None):
         a=0

@@ -176,7 +176,7 @@ class Evolution:
             else:
                 self.combs.append(Combiner(specify[random.randint(0, len(specify)-1)]))
         self.specify = specify
-        self.maps = Map(700, 700)
+        self.maps = Map(1000, 1000)
 
         self.maps.run()
 
@@ -185,7 +185,7 @@ class Evolution:
         
         best_genes = []
         if self.specify != False:
-            with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
+            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
                 best_genes = json.load(f)
             
         running = True
@@ -255,7 +255,7 @@ class Evolution:
                         best_gene = self.combs[i].gene[0:4]
                 if best_gene != None:
                     best_genes.append(best_gene)
-                    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json', 'w') as f:
+                    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
                         json.dump(best_genes, f, indent=1)
                 t = time.time()
 
@@ -470,8 +470,8 @@ class Evolution:
             
             
 if __name__ == '__main__':
-    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
+    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
         best_genes = json.load(f)
-    ev = Evolution(50, best_genes[-10:])
+    ev = Evolution(50, best_genes[-50:])
     ev.play()
     
