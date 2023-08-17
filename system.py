@@ -59,13 +59,21 @@ class Combiner:
                     del self.gene[3][-1]
 
         #유전자형 오류 수리(브랜치가 하나 이상의 세포를 건너뛰는 경우)
+        deleted_instant = 0
         for i in range(len(self.gene[2])-1):
             if self.gene[2][i][-1]+1 != self.gene[2][i+1][-1]:
-                _prebranch = self.gene[2][i][:-1]
-                self.gene[2] = self.gene[2][:i+1] + [[*[_prebranch if len(_prebranch) > 1 else [0]][0], self.gene[2][i][-1]+1]] + self.gene[2][i+1:]
-                del self.gene[2][-1]
-                self.gene[3] = self.gene[3][:i+1] + [[random.random()]] + self.gene[3][i+1:]
-                del self.gene[3][-1]
+                if self.gene[2][i][-1]+1 > self.gene[2][i+1][-1]:
+                    self.gene[2] = self.gene[2][:-6] + [[0, self.gene[2][-6][-1]]] + [k[:-1]+[k[-1]+1] for k in self.gene[2][-6:]]
+                    self.gene[3] = self.gene[3][:-6] + [[random.random()]] + self.gene[3][-6:]
+                    del self.gene[2][i+1]
+                    del self.gene[3][i+1]
+
+                elif self.gene[2][i][-1]+1 < self.gene[2][i+1][-1]:
+                    _prebranch = self.gene[2][i][:-1]
+                    self.gene[2] = self.gene[2][:i+1] + [[*[_prebranch if len(_prebranch) > 1 else [0]][0], self.gene[2][i][-1]+1]] + self.gene[2][i+1:]
+                    del self.gene[2][-1]
+                    self.gene[3] = self.gene[3][:i+1] + [[random.random()]] + self.gene[3][i+1:]
+                    del self.gene[3][-1]
 
         #유전자형 오류 수리(브랜치와 브랜치수치가 서로 일정하지 않은 경우)
         for i in range(len(self.gene[2])):
@@ -177,7 +185,7 @@ class Evolution:
         
         best_genes = []
         if self.specify != False:
-            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+            with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
                 best_genes = json.load(f)
             
         running = True
@@ -247,7 +255,7 @@ class Evolution:
                         best_gene = self.combs[i].gene[0:4]
                 if best_gene != None:
                     best_genes.append(best_gene)
-                    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
+                    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json', 'w') as f:
                         json.dump(best_genes, f, indent=1)
                 t = time.time()
 
@@ -329,7 +337,13 @@ class Evolution:
             if random.random() < probability:
                 new_gene[0][i] = random.randint(1, 10)
 
-        #변화 뉴런 돌연변이 가능성
+        new_gene = self.variate_change(new_gene, probability)
+        new_gene = self.branch_change(new_gene, probability)
+        new_gene = self.variate_add_remove(new_gene, probability)
+
+        return new_gene
+
+    def variate_change(self, new_gene, probability):
         potential0 = [0, random.uniform(-1, 1),
                                   [random.randint(0, 3) for j in range(random.randint(1, 8))],
                                    (0, 2)]
@@ -363,8 +377,13 @@ class Evolution:
                                   [random.uniform(0.3, 3), random.uniform(-3, -0.3)][random.randint(0, 1)],
                                   random.uniform(0.3, 3),
                                   random.uniform(-1, 1)]
+
+        return tuple(new_gene)
             
 
+    def branch_change(self, new_gene, probability):
+        new_gene = list(new_gene)
+        prepare_gene = tuple(new_gene)
         #가지 추가/변화/삭제
         try:
             for i in range(len(new_gene[2])):
@@ -397,8 +416,12 @@ class Evolution:
                             
         except Exception as e:
             return prepare_gene
-                        
 
+        return tuple(new_gene)
+                        
+    def variate_add_remove(self, new_gene, probability):
+        new_gene = list(new_gene)
+        prepare_gene = tuple(new_gene)
         #변화뉴런 추가/삭제
         if random.random() < probability*3:
             _2div_prob = random.random()
@@ -447,7 +470,7 @@ class Evolution:
             
             
 if __name__ == '__main__':
-    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
         best_genes = json.load(f)
     ev = Evolution(50, best_genes[-10:])
     ev.play()
