@@ -60,13 +60,21 @@ class Combiner:
 
         #유전자형 오류 수리(브랜치가 하나 이상의 세포를 건너뛰는 경우)
         deleted_instant = 0
-        for i in range(len(self.gene[2])-1):
+        i = 0
+        pre_i = int(i)
+        while i < len(self.gene[2])-2:
+            i = pre_i
+            i += 1
+            pre_i = int(i)
+            i -= deleted_instant
             if self.gene[2][i][-1]+1 != self.gene[2][i+1][-1]:
                 if self.gene[2][i][-1]+1 > self.gene[2][i+1][-1]:
-                    self.gene[2] = self.gene[2][:-6] + [[0, self.gene[2][-6][-1]]] + [k[:-1]+[k[-1]+1] for k in self.gene[2][-6:]]
-                    self.gene[3] = self.gene[3][:-6] + [[random.random()]] + self.gene[3][-6:]
+                    remain_branch = self.gene[2][i+1][:-1]
                     del self.gene[2][i+1]
                     del self.gene[3][i+1]
+                    self.gene[2] = self.gene[2][:i+1] + [[*remain_branch, self.gene[2][i][-1]+1]] + self.gene[2][i+1:]
+                    self.gene[3] = self.gene[3][:i+1] + [[random.random() for i in remain_branch]] + self.gene[3][i+1:]
+                    deleted_instant += 1
 
                 elif self.gene[2][i][-1]+1 < self.gene[2][i+1][-1]:
                     _prebranch = self.gene[2][i][:-1]
@@ -74,6 +82,8 @@ class Combiner:
                     del self.gene[2][-1]
                     self.gene[3] = self.gene[3][:i+1] + [[random.random()]] + self.gene[3][i+1:]
                     del self.gene[3][-1]
+                    deleted_instant += 1
+            
 
         #유전자형 오류 수리(브랜치와 브랜치수치가 서로 일정하지 않은 경우)
         for i in range(len(self.gene[2])):
@@ -185,7 +195,7 @@ class Evolution:
         
         best_genes = []
         if self.specify != False:
-            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+            with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
                 best_genes = json.load(f)
             
         running = True
@@ -255,7 +265,7 @@ class Evolution:
                         best_gene = self.combs[i].gene[0:4]
                 if best_gene != None:
                     best_genes.append(best_gene)
-                    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
+                    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json', 'w') as f:
                         json.dump(best_genes, f, indent=1)
                 t = time.time()
 
@@ -425,7 +435,7 @@ class Evolution:
         #변화뉴런 추가/삭제
         if random.random() < probability*3:
             _2div_prob = random.random()
-            if _2div_prob < 0.5 and len(new_gene[2]) < 1500:
+            if _2div_prob < 0.7 and len(new_gene[2]) < 1500:
                 _middle_code0 = random.randint(0, 1)
                 if _middle_code0 == 0:
                     new_gene[1].append([0, random.uniform(-1, 1),
@@ -441,7 +451,7 @@ class Evolution:
                 new_gene[3] = new_gene[3][:-6] + [[random.random()]] + new_gene[3][-6:]
                 
                 
-            if _2div_prob >= 0.5 and len(new_gene[2]) > 10:
+            if _2div_prob >= 0.7 and len(new_gene[2]) > 10:
                 del_neuron = random.randint(0, len(new_gene[2])-8)
                 crit_num = new_gene[2][del_neuron][-1]
                 try:
@@ -470,8 +480,8 @@ class Evolution:
             
             
 if __name__ == '__main__':
-    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
+    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
         best_genes = json.load(f)
-    ev = Evolution(50, best_genes[-50:])
+    ev = Evolution(50, best_genes[-5:])
     ev.play()
     

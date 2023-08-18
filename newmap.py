@@ -182,10 +182,10 @@ class Map:
         for entity in self.entitys:
             entity.view = self.mapm[max(0, entity.x):min(self.maptile_width+20, entity.x+20),
                                     max(0, entity.y):min(self.maptile_height+20, entity.y+20)]
-            entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = 0, 0, 0, 0
+            entity.nst_otherx, entity.nst_othery, entity.nst_other_angle, entity.otherisin = _4th_view(entity.view)
                                 #nearest(entity.view, 1, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
-            entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = 0, 0, 0, 0
-                                #nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
+            entity.nst_foodx, entity.nst_foody, entity.nst_food_angle, entity.foodisin = \
+                                nearest(entity.view, 2, torch.tensor([entity.x+30, entity.y+30]), inscope=10)
             entity.borderdistance = min(200-entity.x, 200-entity.y, entity.x, entity.y)
             entity.energy_waste()
             entity.draw()
@@ -220,3 +220,26 @@ def nearest(map_, point, loc, negative = False, inscope=10):
         angle = 0
 
     return index[0], index[1], angle, isin
+
+def _4th_view(view):
+    if sum(view[10, :10]) != 0:
+        north = 1
+    else :
+        north = 0
+
+    if sum(view[10, 11:]) != 0:
+        south = 1
+    else :
+        south = 0
+
+    if sum(view[:10, 10]) != 0:
+        west = 1
+    else :
+        west = 0
+
+    if sum(view[11:, 10]) != 0:
+        east = 1
+    else :
+        east = 0
+
+    return north, south, west, east
