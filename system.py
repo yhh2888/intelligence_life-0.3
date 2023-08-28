@@ -218,7 +218,7 @@ class Evolution:
             deleted_instant = 0
             try:
                 for e in range(len(self.maps.entitys)):
-                    self.combs[e-deleted_instant].received_param = self.combs[e-deleted_instant].model(self.maps.entitys[e-deleted_instant].view.unsqueeze(0)).tolist()[0][0]
+                    self.combs[e-deleted_instant].received_param = self.combs[e-deleted_instant].model((self.maps.entitys[e-deleted_instant].view+torch.randn(20, 20)/100).unsqueeze(0))[0].T.tolist()[0]
                     self.combs[e-deleted_instant].view = self.maps.entitys[e-deleted_instant].view
                     if not (3<self.maps.entitys[e-deleted_instant].x<self.maps.maptile_width-3 and 3<self.maps.entitys[e-deleted_instant].y<self.maps.maptile_height-3):
                         del self.combs[e-deleted_instant]
@@ -433,7 +433,7 @@ class Evolution:
         new_gene = list(new_gene)
         prepare_gene = tuple(new_gene)
         #변화뉴런 추가/삭제
-        if random.random() < probability*3:
+        if random.random() < probability*5:
             _2div_prob = random.random()
             if _2div_prob < 0.7 and len(new_gene[2]) < 1500:
                 _middle_code0 = random.randint(0, 1)

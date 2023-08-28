@@ -30,12 +30,12 @@ class MyDataset(Dataset):
 class MyNetwork(nn.Module):
     def __init__(self, input_size=20):
         super(MyNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, 20)  # 수정: 입력 크기를 매개변수로 받음
+        self.fc1 = nn.Linear(input_size, 10)  # 수정: 입력 크기를 매개변수로 받음
         self.fc2 = nn.Linear(20, 10)
-        self.fc3 = nn.Linear(10, 10) 
+        self.fc3 = nn.Linear(10, 1) 
 
     def forward(self, x):
-        x = self.fc1(x)
+        x = self.fc1(x).permute(0, 2, 1)
         x = self.fc2(x)
         x = self.fc3(x)
         return x

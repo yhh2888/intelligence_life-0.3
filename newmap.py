@@ -118,10 +118,14 @@ class Map:
         
         self.mapm = torch.zeros(self.maptile_width+20, self.maptile_height+20)
 
-        self.food_amount = 2500
+        self.food_amount = 2200
+
+        self.font = pygame.font.SysFont("extra", 20, False, False)
         
     def run(self, movedata=None):
         a=0
+
+        text = self.font.render(str(len(self.entitys)), False, (255, 255, 255))
         
         #t = pfc()
         if keyboard.is_pressed('+'):
@@ -195,6 +199,8 @@ class Map:
         self.mapm = torch.zeros(self.maptile_width+20, self.maptile_height+20)
 
         #print(pfc()-t, 'done')
+
+        self.screen.blit(text, (10, 10))
 
         pygame.display.flip()
 
