@@ -44,7 +44,7 @@ class Combiner:
         if len(self.gene) < 5:
             self.gene.append([])
         
-        #유전자형 오류 수리(세포와 브랜치의 차이가 6이 아닌 경우)
+        '''#유전자형 오류 수리(세포와 브랜치의 차이가 6이 아닌 경우)
         if len(self.gene[2])-len(self.gene[1]) != 6:
             if len(self.gene[2])-len(self.gene[1]) < 6:
                 for i in range(len(self.gene[1])-len(self.gene[2])+6):
@@ -96,7 +96,7 @@ class Combiner:
                             print(e)
                 elif len(self.gene[2][i])-len(self.gene[3][i]) > 1:
                     for i in range(min(0, len(self.gene[2][i])-len(self.gene[3][i])-1)):
-                        self.gene[3][i].append(random.random())
+                        self.gene[3][i].append(random.random())'''
 
         self.gene = tuple(self.gene)
 
@@ -256,7 +256,7 @@ class Evolution:
             #print(pfc()-t)
             #pt =pfc()
             
-            if time.time() - t > 30:
+            if time.time() - t > 100:
                 best_gene = None
                 best_objscore = 0
                 for i in range(len(self.maps.entitys)):
@@ -340,7 +340,7 @@ class Evolution:
 
     def mutated_child(self, num, probability=0.05):
         new_gene = list(self.combs[num].gene)
-        prepare_gene = self.combs[num].gene
+        prepare_gene = list(self.combs[num].gene)
 
         #센더 뉴런 돌연변이
         for i in range(len(new_gene[0])):
@@ -349,7 +349,7 @@ class Evolution:
 
         new_gene = self.variate_change(new_gene, probability)
         new_gene = self.branch_change(new_gene, probability)
-        new_gene = self.variate_add_remove(new_gene, probability)
+        '''new_gene = self.variate_add_remove(new_gene, probability)'''
 
         return new_gene
 
@@ -474,10 +474,26 @@ class Evolution:
                                 return prepare_gene
                             deleted_instant += 1
             
-        print(len(new_gene[1]), len(new_gene[2]), 'after')
+        #print(len(new_gene[1]), len(new_gene[2]), 'after')
     
         return tuple(new_gene)
-            
+
+def handytest():
+    for j in range(len(ev.combs)):
+        for i in range(len(ev.combs[j].gene[2])-1):
+            if ev.combs[j].gene[2][i][-1] != ev.combs[j].gene[2][i+1][-1]-1:
+                print(j, i)
+                break
+    for i in range(100):
+        ev.combs[j].gene = ev.mutated_child(j)
+    for j in range(len(ev.combs)):
+        ad = [[j]]
+        for i in range(len(ev.combs[j].gene[2])-1):
+            if ev.combs[j].gene[2][i][-1] != ev.combs[j].gene[2][i+1][-1]-1:
+                ad.append(i)
+        if len(ad) != 1:
+            print(ad)
+        
             
 if __name__ == '__main__':
     with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
