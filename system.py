@@ -339,8 +339,8 @@ class Evolution:
         return (start_code, middle_code, branch, branchpoint, [])
 
     def mutated_child(self, num, probability=0.05):
-        new_gene = list(self.combs[num].gene)
-        prepare_gene = list(self.combs[num].gene)
+        new_gene = [self.combs[num].gene[i] for i in range(len(self.combs[num].gene))]
+        prepare_gene = [self.combs[num].gene[i] for i in range(len(self.combs[num].gene))]
 
         #센더 뉴런 돌연변이
         for i in range(len(new_gene[0])):
@@ -349,7 +349,7 @@ class Evolution:
 
         new_gene = self.variate_change(new_gene, probability)
         new_gene = self.branch_change(new_gene, probability)
-        '''new_gene = self.variate_add_remove(new_gene, probability)'''
+        new_gene = self.variate_add_remove(new_gene, probability)
 
         return new_gene
 
