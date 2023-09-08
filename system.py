@@ -30,7 +30,7 @@ def execute(model, dataloader, num_epochs=1, learning_rate=0.005):
 class Combiner:
     def __init__(self, gene_data):
         self.received_param = [random.uniform(-1, 1) for i in range(10)]
-        self.gene = gene_data
+        self.gene = tuple([[j for j in i] for i in gene_data])
         self.netc = []
         self.model = MyNetwork(20)
         self.view = None
@@ -44,7 +44,7 @@ class Combiner:
         if len(self.gene) < 5:
             self.gene.append([])
         
-        '''#유전자형 오류 수리(세포와 브랜치의 차이가 6이 아닌 경우)
+        #유전자형 오류 수리(세포와 브랜치의 차이가 6이 아닌 경우)
         if len(self.gene[2])-len(self.gene[1]) != 6:
             if len(self.gene[2])-len(self.gene[1]) < 6:
                 for i in range(len(self.gene[1])-len(self.gene[2])+6):
@@ -96,7 +96,7 @@ class Combiner:
                             print(e)
                 elif len(self.gene[2][i])-len(self.gene[3][i]) > 1:
                     for i in range(min(0, len(self.gene[2][i])-len(self.gene[3][i])-1)):
-                        self.gene[3][i].append(random.random())'''
+                        self.gene[3][i].append(random.random())
 
         self.gene = tuple(self.gene)
 
@@ -256,7 +256,7 @@ class Evolution:
             #print(pfc()-t)
             #pt =pfc()
             
-            if time.time() - t > 100:
+            if time.time() - t > 30:
                 best_gene = None
                 best_objscore = 0
                 for i in range(len(self.maps.entitys)):
@@ -339,8 +339,8 @@ class Evolution:
         return (start_code, middle_code, branch, branchpoint, [])
 
     def mutated_child(self, num, probability=0.05):
-        new_gene = [self.combs[num].gene[i] for i in range(len(self.combs[num].gene))]
-        prepare_gene = [self.combs[num].gene[i] for i in range(len(self.combs[num].gene))]
+        new_gene = list(self.combs[num].gene)
+        prepare_gene = list(self.combs[num].gene)
 
         #센더 뉴런 돌연변이
         for i in range(len(new_gene[0])):
@@ -349,7 +349,7 @@ class Evolution:
 
         new_gene = self.variate_change(new_gene, probability)
         new_gene = self.branch_change(new_gene, probability)
-        new_gene = self.variate_add_remove(new_gene, probability)
+        '''new_gene = self.variate_add_remove(new_gene, probability)'''
 
         return new_gene
 
@@ -435,7 +435,7 @@ class Evolution:
         #변화뉴런 추가/삭제
         if random.random() < probability*5:
             _2div_prob = random.random()
-            if _2div_prob < 0.7 and len(new_gene[2]) < 1500:
+            if _2div_prob < 0.6 and len(new_gene[2]) < 1500:
                 _middle_code0 = random.randint(0, 1)
                 if _middle_code0 == 0:
                     new_gene[1].append([0, random.uniform(-1, 1),
@@ -451,7 +451,7 @@ class Evolution:
                 new_gene[3] = new_gene[3][:-6] + [[random.random()]] + new_gene[3][-6:]
                 
                 
-            if _2div_prob >= 0.7 and len(new_gene[2]) > 10:
+            if _2div_prob >= 0.6 and len(new_gene[2]) > 10:
                 del_neuron = random.randint(0, len(new_gene[2])-8)
                 crit_num = new_gene[2][del_neuron][-1]
                 try:
@@ -474,7 +474,7 @@ class Evolution:
                                 return prepare_gene
                             deleted_instant += 1
             
-        #print(len(new_gene[1]), len(new_gene[2]), 'after')
+        print(len(new_gene[1]), len(new_gene[2]), 'after')
     
         return tuple(new_gene)
 
