@@ -195,7 +195,7 @@ class Evolution:
         
         best_genes = []
         if self.specify != False:
-            with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
+            with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
                 best_genes = json.load(f)
             
         running = True
@@ -265,7 +265,7 @@ class Evolution:
                         best_gene = self.combs[i].gene[0:4]
                 if best_gene != None:
                     best_genes.append(best_gene)
-                    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json', 'w') as f:
+                    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json', 'w') as f:
                         json.dump(best_genes, f, indent=1)
                 t = time.time()
 
@@ -496,7 +496,7 @@ def handytest():
         
             
 if __name__ == '__main__':
-    with open(r'C:\Users\KDCA\Desktop\IL\best_obj.json') as f:
+    with open(r'C:\Users\hyunhoyang\Desktop\IL\best_obj.json') as f:
         best_genes = json.load(f)
     ev = Evolution(50, best_genes[-5:])
     ev.play()
