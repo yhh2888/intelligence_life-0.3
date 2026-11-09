@@ -5,14 +5,11 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda
 from torch.optim.lr_scheduler import ExponentialLR
 import numpy as np
-import time, os, sys
+import time, os
 from pathlib import Path
 
-sys.path.append(r'C:\Users\KDCA\Desktop\IL\base')
-sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\base')
-
-from randtree import randtree
-from feature_analysis import *
+from .randtree import randtree
+from .feature_analysis import *
 
 train_dataloader = []
 test_dataloader = []

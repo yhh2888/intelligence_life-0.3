@@ -1,12 +1,10 @@
-import torch, json, os, sys
+import torch, json, os
 import numpy as np
 from pathlib import Path
 from time import perf_counter
 from scipy.stats import norm
 
-sys.path.append(r'C:\Users\KDCA\Desktop\IL\geometry')
-sys.path.append(r'C:\Users\hyunhoyang\Desktop\IL\geometry')
-from default_functions import movepoint
+from geometry.default_functions import movepoint
 
 if __name__ == '__main__':
     paths = str(Path(os.getcwd()).parent)
