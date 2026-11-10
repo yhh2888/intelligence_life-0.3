@@ -1,8 +1,9 @@
-import random, time
+import random, time, sys, os
 import numpy as np
 from collections import deque
 
-from .calculation import *
+sys.path.append(os.getcwd() + r'\geometry')
+from calculation import *
 
 def dir4_response(directions, method = []):
     default_dir = ['up', 'down', 'left', 'right']

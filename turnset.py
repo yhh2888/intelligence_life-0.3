@@ -4,7 +4,6 @@ import pygame, sys, os
 import random, time
 import numpy as np
 import torch, json, traceback
-from numba import jit
 
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR
@@ -20,6 +19,7 @@ from base.bp_temp import *
 from base.network import NeuralNetwork, structure_set
 from base.feature_analysis import labeler, distances, directions, get_matrix, cross_dir
 from tempgame import Entity, Board
+from train_imitation import ImitationPolicy
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -79,7 +79,7 @@ class Game:
         image = surface.subsurface(handle_surface.get_clip())
         return image.copy()   
 
-    def run_by_AI(self, view_lock = False, net=None, time_=False):
+    def run_by_AI(self, view_lock = False, net=None, time_=False, collect_data=False):
         sew = 0
         wait = 0
         self.board.screen.fill((240, 240, 240))
@@ -90,6 +90,7 @@ class Game:
         self.killscore = 0
         Exceptor = None
         supervise = []
+        self.imitation_data = []
         
         self.player.lifes = 10
         self.player.view_lock = view_lock
@@ -122,9 +123,15 @@ class Game:
         '''maf_now,'''
         
         self.netmodel = net
-        self.netmodel.optim = torch.optim.Adam(self.netmodel.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
-                             amsgrad=False)
-        self.netmodel.sched = ExponentialLR(self.netmodel.optim, gamma=0.9)
+        imitation_policy = isinstance(net, ImitationPolicy)
+        if net is None and not collect_data:
+            raise ValueError('Pass a model with net=..., or set collect_data=True')
+        if net is not None and not collect_data and not imitation_policy:
+            self.netmodel.optim = torch.optim.Adam(self.netmodel.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-10, weight_decay=1e-3,
+                                 amsgrad=False)
+            self.netmodel.sched = ExponentialLR(self.netmodel.optim, gamma=0.9)
+        if imitation_policy:
+            self.netmodel.eval()
         loss_fn = nn.CrossEntropyLoss()
     
         netresult = torch.tensor([0])
@@ -165,7 +172,8 @@ class Game:
 
         self.chunks = {}
 
-        self.netmodel.received_data = []
+        if self.netmodel is not None and not imitation_policy:
+            self.netmodel.received_data = []
         
         while running:
             if time_==True and dist_now[0] != None:
@@ -235,56 +243,82 @@ class Game:
             
             values = []
             mobxys = [i[0:2] for i in self.mobs.moblist]
+            imitation_observation = self._imitation_observation(
+                [self.player.x, self.player.y], mobxys
+            ) if collect_data or imitation_policy else None
+            imitation_action = 'stop'
             contemp = None
-            avoidloc = movepoint([self.player.x, self.player.y], mobxys, 100, 3)
-            
+            avoidloc = None
+
             movedir = [0,0,0,0]
             virtual_movedir = [0,0,0,0]
-            if avoidloc == None:
-                avoidloc = avoider(self.mobs.moblist, 20, 10, [self.player.x, self.player.y])
-            elif avoidloc != None:
-                nearest = distance_response(distance(mobxys, [self.player.x, self.player.y])).nearest_response(mobxys)[0]
-                avoidaim = [self.player.x+avoidloc[0], self.player.y+avoidloc[1]]
-                if abs(avoidaim[0]-nearest[0]) == 2 and abs(avoidaim[1]-nearest[1]) == 2:
-                    randomxy = random.randint(0, 1)
-                    avoidloc[randomxy] += nearest[randomxy]-avoidaim[randomxy]
-                contemp = None
-                if avoidloc[0] > 0:
-                    xdir = 1
-                elif avoidloc[0] < 0:
-                    xdir = -1
-                else :
-                    xdir = 0
-                if avoidloc[1] > 0:
-                    ydir = 1
-                elif avoidloc[1] < 0:
-                    ydir = -1
-                else :
-                    ydir = 0
-                    
-                pluslist = [[xdir, 0], [0, ydir]][oscillater]
-                avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
-
-                if random.random()>0.5:
-                    if oscillater == 0:
-                        oscillater = 1
-                    elif oscillater == 1:
-                        oscillater = 0
+            if imitation_policy:
+                imitation_action = self.netmodel.predict(imitation_observation)
+                if imitation_action in ('right', 'down', 'left', 'up'):
+                    self.player.move_code(imitation_action)
+                    virtual_movedir = {
+                        'right': [1, 0, 0, 0],
+                        'down': [0, 1, 0, 0],
+                        'left': [0, 0, 1, 0],
+                        'up': [0, 0, 0, 1],
+                    }[imitation_action]
+            else:
+                avoidloc = movepoint([self.player.x, self.player.y], mobxys, 100, 3)
+                if avoidloc == None:
+                    avoidloc = avoider(self.mobs.moblist, 20, 10, [self.player.x, self.player.y])
+                elif avoidloc != None:
+                    nearest = distance_response(distance(mobxys, [self.player.x, self.player.y])).nearest_response(mobxys)[0]
+                    avoidaim = [self.player.x+avoidloc[0], self.player.y+avoidloc[1]]
+                    if abs(avoidaim[0]-nearest[0]) == 2 and abs(avoidaim[1]-nearest[1]) == 2:
+                        randomxy = random.randint(0, 1)
+                        avoidloc[randomxy] += nearest[randomxy]-avoidaim[randomxy]
+                    contemp = None
+                    if avoidloc[0] > 0:
+                        xdir = 1
+                    elif avoidloc[0] < 0:
+                        xdir = -1
+                    else :
+                        xdir = 0
+                    if avoidloc[1] > 0:
+                        ydir = 1
+                    elif avoidloc[1] < 0:
+                        ydir = -1
+                    else :
+                        ydir = 0
                         
-                if pluslist == [1, 0]:
-                    self.player.move_code('right')
-                    virtual_movedir = [1, 0, 0, 0]
-                elif pluslist == [-1, 0]:
-                    self.player.move_code('left')
-                    virtual_movedir = [0, 0, 1, 0]
-                elif pluslist == [0, 1]:
-                    self.player.move_code('down')
-                    virtual_movedir = [0, 1, 0, 0]
-                elif pluslist == [0, -1]:
-                    self.player.move_code('up')
-                    virtual_movedir = [0, 0, 0, 1]
-                if avoidloc == []:
-                    avoidloc = None
+                    pluslist = [[xdir, 0], [0, ydir]][oscillater]
+                    avoidloc = [avoidloc[0]-pluslist[0], avoidloc[1]-pluslist[1]]
+
+                    if random.random()>0.5:
+                        if oscillater == 0:
+                            oscillater = 1
+                        elif oscillater == 1:
+                            oscillater = 0
+
+                    if pluslist == [1, 0]:
+                        self.player.move_code('right')
+                        virtual_movedir = [1, 0, 0, 0]
+                        imitation_action = 'right'
+                    elif pluslist == [-1, 0]:
+                        self.player.move_code('left')
+                        virtual_movedir = [0, 0, 1, 0]
+                        imitation_action = 'left'
+                    elif pluslist == [0, 1]:
+                        self.player.move_code('down')
+                        virtual_movedir = [0, 1, 0, 0]
+                        imitation_action = 'down'
+                    elif pluslist == [0, -1]:
+                        self.player.move_code('up')
+                        virtual_movedir = [0, 0, 0, 1]
+                        imitation_action = 'up'
+                    if avoidloc == []:
+                        avoidloc = None
+
+            if collect_data:
+                self.imitation_data.append({
+                    'observation': imitation_observation,
+                    'action': imitation_action,
+                })
                     
             if netresult == 0:
                 #self.player.move_code('right')
@@ -470,12 +504,13 @@ class Game:
             if self.player.lifes < 0:
                 running = False
                 
-                self.netmodel.feature_label = self.term_data
-                print(len(self.term_data))
-                self.netmodel.ted = DataLoader(self.netmodel.feature_label[int(len(self.netmodel.feature_label)//1.2):],
-                                               batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
-                self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
-                                               batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
+                if self.netmodel is not None and not imitation_policy:
+                    self.netmodel.feature_label = self.term_data
+                    print(len(self.term_data))
+                    self.netmodel.ted = DataLoader(self.netmodel.feature_label[int(len(self.netmodel.feature_label)//1.2):],
+                                                   batch_size=max(1, (len(self.netmodel.feature_label)-int(len(self.netmodel.feature_label)//1.2))//100))
+                    self.netmodel.trd = DataLoader(self.netmodel.feature_label[0:int(len(self.netmodel.feature_label)//1.2)],
+                                                   batch_size=max(1, ((int(len(self.netmodel.feature_label)//1.2)))//100))
 
                 #self.netmodel.roll(7, 3, last = max(100, len(self.term_data)))
                 pygame.init()
@@ -501,7 +536,7 @@ class Game:
                     if self.player.view_lock == False:
                         pass
                     
-                    if data != []:
+                    if data != [] and self.netmodel is not None and not imitation_policy:
                         self.netmodel.received_data.append(data)
                         
                     self.mobs.distance_cal()
@@ -528,9 +563,23 @@ class Game:
             '''
             if time_==True and dist_now[0] != None:
                 print('draw page :', perf_counter()-t)
-            
-            
+
+        return self.turns+self.killscore, self.term_data
+
+    @staticmethod
+    def _imitation_observation(player_loc, mob_positions):
+        observation = [0.0] * 121
+        for mob_x, mob_y in mob_positions:
+            dx = int(round(mob_x - player_loc[0]))
+            dy = int(round(mob_y - player_loc[1]))
+            if -5 <= dx <= 5 and -5 <= dy <= 5:
+                index = (dy + 5) * 11 + dx + 5
+                observation[index] = 1.0
+        return observation
+
+
 if __name__ == '__main__':
     game = Game(20, 20)
-    game.run()
+    net = NeuralNetwork(380)
+    game.run_by_AI(net=net)
     pygame.quit()
